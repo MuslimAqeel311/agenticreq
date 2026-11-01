@@ -9,7 +9,7 @@ pydantic>=2.6,<3
 pyyaml>=6.0
 rich>=13.0
 typer>=0.12
-tomli>=2.0; python_version < "3.11"
+tomli>=2.5.0; python_version < "3.11"
 
 # --- dev / test (pytest, mypy, capture hooks, Cedar tests) ---
 pytest>=8
