@@ -1,0 +1,14 @@
+You are at step 1 of 5: audit.
+Start with a quick scan. It reads the project and needs no setup.
+
+Next: run a quick scan of this folder: agenticreq audit
+
+The 5 steps:
+  ✗ 1. audit     quick scan, no setup                       agenticreq audit
+    2. spec      write what the agent must and must not do  agenticreq init
+    3. check     compare spec.yml with the project          agenticreq check
+    4. mock-run  test run with mock tools                   agenticreq mocks, then agenticreq mock-run
+    5. sign-off  owner confirms what the scan cannot see    add entries under confirmed: in spec.yml
+
+spec.yml is missing: create it with: agenticreq init
+mocks.yml is missing: create it with: agenticreq mocks

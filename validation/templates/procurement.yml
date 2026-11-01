@@ -1,0 +1,24 @@
+# Procurement agent — template. Replace every TODO with your real tool names and rules;
+# `agenticreq check` fails (AS-101) while a TODO is left, on purpose.
+agent_id: procurement-agent
+risk_level: high
+goal:
+  statement: Raise purchase orders for low-stock items within policy
+  done_criteria: [every low-stock SKU has an open PO or an escalation]
+out_of_scope: [vendor onboarding, price negotiation]
+role_boundary:
+  allowed_tools: [TODO_read_inventory_tool, TODO_create_po_tool, TODO_pay_tool]
+prohibited:
+  - {tool: TODO_refund_tool, reason: refunds belong to finance}
+approval_required:
+  - {tool: TODO_pay_tool, approver: finance-lead, timeout: 4h, on_timeout: safe_stop}
+limits:
+  - {tool: TODO_pay_tool, arg: amount, limit: {max: 5000}}
+  - {tool: TODO_create_po_tool, arg: quantity, limit: {min: 1, max: 100}}
+escalation:
+  - {metric: order_total, op: ">", threshold: 10000, to: procurement-manager}
+untrusted_inputs:
+  - {source: TODO_supplier_email_or_doc_tool, kind: retrieved_document}
+owner: TODO@your-company.com
+technical_owner: TODO@your-company.com
+write_safety: {idempotency_key: true}   # every PO / payment must be safe to retry

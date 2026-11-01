@@ -1,0 +1,103 @@
+{
+ "react-agent": {
+  "coverage": "2/2",
+  "zero_touch": true,
+  "changed": [],
+  "libs": [
+   "httpx",
+   "httpx2"
+  ],
+  "blocked": [],
+  "error": "",
+  "offered": [
+   "search"
+  ]
+ },
+ "memory-agent": {
+  "coverage": "2/2",
+  "zero_touch": true,
+  "changed": [],
+  "libs": [
+   "httpx",
+   "httpx2"
+  ],
+  "blocked": [],
+  "error": "",
+  "offered": [
+   "upsert_memory"
+  ]
+ },
+ "data-enrichment": {
+  "coverage": "1/1",
+  "zero_touch": true,
+  "changed": [],
+  "libs": [
+   "httpx",
+   "httpx2"
+  ],
+  "blocked": [],
+  "error": "During task with name 'tools' and id 'f2a2af93-fbcc-46c2-f888-fc03c429cac2'",
+  "offered": [
+   "Info",
+   "scrape_website",
+   "search"
+  ]
+ },
+ "openai-cs-agents-demo": {
+  "coverage": "3/3",
+  "zero_touch": true,
+  "changed": [],
+  "libs": [
+   "httpx2"
+  ],
+  "blocked": [],
+  "error": "agents.exceptions.ModelBehaviorError: Invalid JSON when parsing model output",
+  "offered": [
+   "get_trip_details",
+   "transfer_to_booking_and_cancellation_agent",
+   "transfer_to_faq_agent",
+   "transfer_to_flight_information_agent",
+   "transfer_to_refunds_and_compensation_agent",
+   "transfer_to_seat_and_special_services_agent"
+  ]
+ },
+ "openai-agents/financial_research_agent": {
+  "coverage": "1/1",
+  "zero_touch": true,
+  "changed": [],
+  "libs": [
+   "httpx2"
+  ],
+  "blocked": [],
+  "error": "agents.exceptions.ModelBehaviorError: Invalid JSON when parsing model output",
+  "offered": []
+ },
+ "pydantic-ai/bank_support": {
+  "coverage": "4/4",
+  "zero_touch": true,
+  "changed": [],
+  "libs": [
+   "httpx2"
+  ],
+  "blocked": [],
+  "error": "",
+  "offered": [
+   "customer_balance",
+   "final_result"
+  ]
+ },
+ "crewAI-examples/stock_analysis": {
+  "coverage": "0/0",
+  "zero_touch": true,
+  "changed": [],
+  "libs": [
+   "httpx",
+   "httpx2"
+  ],
+  "blocked": [
+   "dns:api.scarf.sh"
+  ],
+  "error": "ImportError: cannot import name 'BaseTool' from 'crewai_tools' (venvs/stock_analysis/lib/python3.12/site-packages/crewai_tools/__init__.py). Did you mean: 'RagTool'?",
+  "offered": []
+ }
+}

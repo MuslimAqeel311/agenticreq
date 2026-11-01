@@ -1,0 +1,712 @@
+{
+ "entry": "tests/fixtures/agents/oai_agents_chain/agent.py",
+ "runs": 1,
+ "coverage": "6/6",
+ "zero_touch": true,
+ "changed_files": [],
+ "libs_hooked": [
+  "httpx",
+  "httpx2"
+ ],
+ "versions": {
+  "httpx": "0.28.1",
+  "httpx2": "2.13.1",
+  "openai": "3.31.0",
+  "langgraph": "1.2.15",
+  "openai-agents": "0.23.1",
+  "smolagents": "1.26.0",
+  "langchain-core": "1.6.10"
+ },
+ "llm_misses": [],
+ "egress_blocked": [],
+ "scrubbed_env": [
+  "CLAUDE_CODE_MESSAGING_TOKEN",
+  "SSH_AUTH_SOCK"
+ ],
+ "run_errors": {},
+ "sandbox": "mock-tools:tests/fixtures/agents/oai_agents_chain/mocks.yml",
+ "calls": [
+  {
+   "index": 0,
+   "run_id": "run-0",
+   "provider": "openai_responses",
+   "url": "http://127.0.0.1:9/v1/responses",
+   "client_lib": "httpx2",
+   "model": "gpt-4.1-2025-04-14",
+   "system_prompt": "You handle procurement requests.",
+   "system_prompt_sha256": "05dea225aa12e984b35dfbe39a7a3efa5973ae20494a3b3ec29058557099c45d",
+   "tools": [
+    {
+     "name": "get_inventory",
+     "description": "Look up stock for a SKU.",
+     "params": [
+      {
+       "name": "sku",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_responses",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "get_inventory",
+      "description": "Look up stock for a SKU.",
+      "parameters": {
+       "properties": {
+        "sku": {
+         "title": "Sku",
+         "type": "string"
+        }
+       },
+       "required": [
+        "sku"
+       ],
+       "title": "get_inventory_args",
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    },
+    {
+     "name": "transfer_to_policy_analyst",
+     "description": "Handoff to the Policy Analyst agent to handle the request. ",
+     "params": [],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_responses",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "transfer_to_policy_analyst",
+      "description": "Handoff to the Policy Analyst agent to handle the request. ",
+      "parameters": {
+       "additionalProperties": false,
+       "type": "object",
+       "properties": {},
+       "required": []
+      }
+     }
+    }
+   ],
+   "tool_calls": [
+    {
+     "name": "get_inventory",
+     "arguments": {
+      "sku": "test"
+     },
+     "id": "call_ac_1_get_inventory"
+    }
+   ],
+   "tool_results": [],
+   "prior_tool_calls": [],
+   "message_count": 1,
+   "trace_id": null,
+   "parent_id": null,
+   "overhead_ms": 0.21876600021641934,
+   "synthetic": true
+  },
+  {
+   "index": 1,
+   "run_id": "run-0",
+   "provider": "openai_responses",
+   "url": "http://127.0.0.1:9/v1/responses",
+   "client_lib": "httpx2",
+   "model": "gpt-4.1-2025-04-14",
+   "system_prompt": "You handle procurement requests.",
+   "system_prompt_sha256": "05dea225aa12e984b35dfbe39a7a3efa5973ae20494a3b3ec29058557099c45d",
+   "tools": [
+    {
+     "name": "get_inventory",
+     "description": "Look up stock for a SKU.",
+     "params": [
+      {
+       "name": "sku",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_responses",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "get_inventory",
+      "description": "Look up stock for a SKU.",
+      "parameters": {
+       "properties": {
+        "sku": {
+         "title": "Sku",
+         "type": "string"
+        }
+       },
+       "required": [
+        "sku"
+       ],
+       "title": "get_inventory_args",
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    },
+    {
+     "name": "transfer_to_policy_analyst",
+     "description": "Handoff to the Policy Analyst agent to handle the request. ",
+     "params": [],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_responses",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "transfer_to_policy_analyst",
+      "description": "Handoff to the Policy Analyst agent to handle the request. ",
+      "parameters": {
+       "additionalProperties": false,
+       "type": "object",
+       "properties": {},
+       "required": []
+      }
+     }
+    }
+   ],
+   "tool_calls": [
+    {
+     "name": "transfer_to_policy_analyst",
+     "arguments": {},
+     "id": "call_ac_2_transfer_to_policy_analyst"
+    }
+   ],
+   "tool_results": [
+    {
+     "call_id": "call_ac_1_get_inventory",
+     "name": null,
+     "content": "3 units"
+    }
+   ],
+   "prior_tool_calls": [
+    {
+     "name": "get_inventory",
+     "arguments": {
+      "sku": "test"
+     },
+     "id": "call_ac_1_get_inventory"
+    }
+   ],
+   "message_count": 3,
+   "trace_id": null,
+   "parent_id": null,
+   "overhead_ms": 0.0902559995665797,
+   "synthetic": true
+  },
+  {
+   "index": 2,
+   "run_id": "run-0",
+   "provider": "openai_responses",
+   "url": "http://127.0.0.1:9/v1/responses",
+   "client_lib": "httpx2",
+   "model": "gpt-4.1-2025-04-14",
+   "system_prompt": "You analyse procurement policy clauses.",
+   "system_prompt_sha256": "fad2de39422a013b52650869d9e5da3dc7199926ac5c09dcd1b5cbf47001ce54",
+   "tools": [
+    {
+     "name": "lookup_clause",
+     "description": "Fetch a policy clause.",
+     "params": [
+      {
+       "name": "clause_id",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_responses",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "lookup_clause",
+      "description": "Fetch a policy clause.",
+      "parameters": {
+       "properties": {
+        "clause_id": {
+         "title": "Clause Id",
+         "type": "string"
+        }
+       },
+       "required": [
+        "clause_id"
+       ],
+       "title": "lookup_clause_args",
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    },
+    {
+     "name": "transfer_to_payments",
+     "description": "Handoff to the Payments agent to handle the request. ",
+     "params": [],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_responses",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "transfer_to_payments",
+      "description": "Handoff to the Payments agent to handle the request. ",
+      "parameters": {
+       "additionalProperties": false,
+       "type": "object",
+       "properties": {},
+       "required": []
+      }
+     }
+    }
+   ],
+   "tool_calls": [
+    {
+     "name": "lookup_clause",
+     "arguments": {
+      "clause_id": "test"
+     },
+     "id": "call_ac_3_lookup_clause"
+    }
+   ],
+   "tool_results": [
+    {
+     "call_id": "call_ac_1_get_inventory",
+     "name": null,
+     "content": "3 units"
+    },
+    {
+     "call_id": "call_ac_2_transfer_to_policy_analyst",
+     "name": null,
+     "content": "{\"assistant\": \"Policy Analyst\"}"
+    }
+   ],
+   "prior_tool_calls": [
+    {
+     "name": "get_inventory",
+     "arguments": {
+      "sku": "test"
+     },
+     "id": "call_ac_1_get_inventory"
+    },
+    {
+     "name": "transfer_to_policy_analyst",
+     "arguments": {},
+     "id": "call_ac_2_transfer_to_policy_analyst"
+    }
+   ],
+   "message_count": 5,
+   "trace_id": null,
+   "parent_id": null,
+   "overhead_ms": 0.14489600016531767,
+   "synthetic": true
+  },
+  {
+   "index": 3,
+   "run_id": "run-0",
+   "provider": "openai_responses",
+   "url": "http://127.0.0.1:9/v1/responses",
+   "client_lib": "httpx2",
+   "model": "gpt-4.1-2025-04-14",
+   "system_prompt": "You analyse procurement policy clauses.",
+   "system_prompt_sha256": "fad2de39422a013b52650869d9e5da3dc7199926ac5c09dcd1b5cbf47001ce54",
+   "tools": [
+    {
+     "name": "lookup_clause",
+     "description": "Fetch a policy clause.",
+     "params": [
+      {
+       "name": "clause_id",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_responses",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "lookup_clause",
+      "description": "Fetch a policy clause.",
+      "parameters": {
+       "properties": {
+        "clause_id": {
+         "title": "Clause Id",
+         "type": "string"
+        }
+       },
+       "required": [
+        "clause_id"
+       ],
+       "title": "lookup_clause_args",
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    },
+    {
+     "name": "transfer_to_payments",
+     "description": "Handoff to the Payments agent to handle the request. ",
+     "params": [],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_responses",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "transfer_to_payments",
+      "description": "Handoff to the Payments agent to handle the request. ",
+      "parameters": {
+       "additionalProperties": false,
+       "type": "object",
+       "properties": {},
+       "required": []
+      }
+     }
+    }
+   ],
+   "tool_calls": [
+    {
+     "name": "transfer_to_payments",
+     "arguments": {},
+     "id": "call_ac_4_transfer_to_payments"
+    }
+   ],
+   "tool_results": [
+    {
+     "call_id": "call_ac_1_get_inventory",
+     "name": null,
+     "content": "3 units"
+    },
+    {
+     "call_id": "call_ac_2_transfer_to_policy_analyst",
+     "name": null,
+     "content": "{\"assistant\": \"Policy Analyst\"}"
+    },
+    {
+     "call_id": "call_ac_3_lookup_clause",
+     "name": null,
+     "content": "clause"
+    }
+   ],
+   "prior_tool_calls": [
+    {
+     "name": "get_inventory",
+     "arguments": {
+      "sku": "test"
+     },
+     "id": "call_ac_1_get_inventory"
+    },
+    {
+     "name": "transfer_to_policy_analyst",
+     "arguments": {},
+     "id": "call_ac_2_transfer_to_policy_analyst"
+    },
+    {
+     "name": "lookup_clause",
+     "arguments": {
+      "clause_id": "test"
+     },
+     "id": "call_ac_3_lookup_clause"
+    }
+   ],
+   "message_count": 7,
+   "trace_id": null,
+   "parent_id": null,
+   "overhead_ms": 0.11712600007740548,
+   "synthetic": true
+  },
+  {
+   "index": 4,
+   "run_id": "run-0",
+   "provider": "openai_responses",
+   "url": "http://127.0.0.1:9/v1/responses",
+   "client_lib": "httpx2",
+   "model": "gpt-4.1-2025-04-14",
+   "system_prompt": "You pay approved invoices.",
+   "system_prompt_sha256": "c13dbacc8f6ffe31fa4cc980760e89f97cba55797cbc95d46a362e76da7ee998",
+   "tools": [
+    {
+     "name": "pay_invoice",
+     "description": "Pay a supplier invoice.",
+     "params": [
+      {
+       "name": "invoice_id",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "amount",
+       "type": "number",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_responses",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "pay_invoice",
+      "description": "Pay a supplier invoice.",
+      "parameters": {
+       "properties": {
+        "invoice_id": {
+         "title": "Invoice Id",
+         "type": "string"
+        },
+        "amount": {
+         "title": "Amount",
+         "type": "number"
+        }
+       },
+       "required": [
+        "invoice_id",
+        "amount"
+       ],
+       "title": "pay_invoice_args",
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    }
+   ],
+   "tool_calls": [
+    {
+     "name": "pay_invoice",
+     "arguments": {
+      "invoice_id": "INV-1",
+      "amount": 10
+     },
+     "id": "call_ac_5_pay_invoice"
+    }
+   ],
+   "tool_results": [
+    {
+     "call_id": "call_ac_1_get_inventory",
+     "name": null,
+     "content": "3 units"
+    },
+    {
+     "call_id": "call_ac_2_transfer_to_policy_analyst",
+     "name": null,
+     "content": "{\"assistant\": \"Policy Analyst\"}"
+    },
+    {
+     "call_id": "call_ac_3_lookup_clause",
+     "name": null,
+     "content": "clause"
+    },
+    {
+     "call_id": "call_ac_4_transfer_to_payments",
+     "name": null,
+     "content": "{\"assistant\": \"Payments\"}"
+    }
+   ],
+   "prior_tool_calls": [
+    {
+     "name": "get_inventory",
+     "arguments": {
+      "sku": "test"
+     },
+     "id": "call_ac_1_get_inventory"
+    },
+    {
+     "name": "transfer_to_policy_analyst",
+     "arguments": {},
+     "id": "call_ac_2_transfer_to_policy_analyst"
+    },
+    {
+     "name": "lookup_clause",
+     "arguments": {
+      "clause_id": "test"
+     },
+     "id": "call_ac_3_lookup_clause"
+    },
+    {
+     "name": "transfer_to_payments",
+     "arguments": {},
+     "id": "call_ac_4_transfer_to_payments"
+    }
+   ],
+   "message_count": 9,
+   "trace_id": null,
+   "parent_id": null,
+   "overhead_ms": 0.11161099973833188,
+   "synthetic": true
+  },
+  {
+   "index": 5,
+   "run_id": "run-0",
+   "provider": "openai_responses",
+   "url": "http://127.0.0.1:9/v1/responses",
+   "client_lib": "httpx2",
+   "model": "gpt-4.1-2025-04-14",
+   "system_prompt": "You pay approved invoices.",
+   "system_prompt_sha256": "c13dbacc8f6ffe31fa4cc980760e89f97cba55797cbc95d46a362e76da7ee998",
+   "tools": [
+    {
+     "name": "pay_invoice",
+     "description": "Pay a supplier invoice.",
+     "params": [
+      {
+       "name": "invoice_id",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "amount",
+       "type": "number",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_responses",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "pay_invoice",
+      "description": "Pay a supplier invoice.",
+      "parameters": {
+       "properties": {
+        "invoice_id": {
+         "title": "Invoice Id",
+         "type": "string"
+        },
+        "amount": {
+         "title": "Amount",
+         "type": "number"
+        }
+       },
+       "required": [
+        "invoice_id",
+        "amount"
+       ],
+       "title": "pay_invoice_args",
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    }
+   ],
+   "tool_calls": [],
+   "tool_results": [
+    {
+     "call_id": "call_ac_1_get_inventory",
+     "name": null,
+     "content": "3 units"
+    },
+    {
+     "call_id": "call_ac_2_transfer_to_policy_analyst",
+     "name": null,
+     "content": "{\"assistant\": \"Policy Analyst\"}"
+    },
+    {
+     "call_id": "call_ac_3_lookup_clause",
+     "name": null,
+     "content": "clause"
+    },
+    {
+     "call_id": "call_ac_4_transfer_to_payments",
+     "name": null,
+     "content": "{\"assistant\": \"Payments\"}"
+    },
+    {
+     "call_id": "call_ac_5_pay_invoice",
+     "name": null,
+     "content": "paid"
+    }
+   ],
+   "prior_tool_calls": [
+    {
+     "name": "get_inventory",
+     "arguments": {
+      "sku": "test"
+     },
+     "id": "call_ac_1_get_inventory"
+    },
+    {
+     "name": "transfer_to_policy_analyst",
+     "arguments": {},
+     "id": "call_ac_2_transfer_to_policy_analyst"
+    },
+    {
+     "name": "lookup_clause",
+     "arguments": {
+      "clause_id": "test"
+     },
+     "id": "call_ac_3_lookup_clause"
+    },
+    {
+     "name": "transfer_to_payments",
+     "arguments": {},
+     "id": "call_ac_4_transfer_to_payments"
+    },
+    {
+     "name": "pay_invoice",
+     "arguments": {
+      "invoice_id": "INV-1",
+      "amount": 10
+     },
+     "id": "call_ac_5_pay_invoice"
+    }
+   ],
+   "message_count": 11,
+   "trace_id": null,
+   "parent_id": null,
+   "overhead_ms": 0.14071199984755367,
+   "synthetic": true
+  }
+ ]
+}

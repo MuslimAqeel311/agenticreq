@@ -1,0 +1,51 @@
+# spec.yml - Level 1 (user-level) requirements for fin-qa-agent.
+#
+# IMPORTANT: this file was written by hand from the project brief because the `agentconf`
+# library was not available in the build environment (see README, "Unresolved findings").
+# The `_derived` section that `agentconf init` generates is therefore NOT present.
+# On your machine run:   agentconf init . --out spec.generated.yml
+# then copy its `_derived` block into this file and run `agentconf validate spec.yml`.
+# Field names below follow the brief; if `agentconf params` prints different names, rename them.
+
+agent_id: fin-qa-agent
+owner: ${OWNER}                     # read from env OWNER (placeholder in .env.example)
+technical_owner: ${TECHNICAL_OWNER} # read from env TECHNICAL_OWNER (placeholder in .env.example)
+risk_level: low                     # read-only, public data
+
+goal: answer factual questions about public companies from SEC filings, with citations
+
+out_of_scope:
+  - investment advice (buy/sell/hold)
+  - price predictions
+  - tax/legal advice
+  - private companies
+  - non-SEC sources
+  - any write action
+
+role_boundary: read-only research assistant; cannot act on behalf of the user anywhere
+
+prohibited:
+  - giving investment advice
+  - fetching any domain other than sec.gov and data.sec.gov
+  - shell execution
+  - arbitrary file access
+  - modifying its own prompt, config or code
+  - logging secrets
+
+approval_required: none for read tools; ingesting more than 3 new filings in one question requires explicit user confirmation
+
+limits:
+  max_iterations: 8
+  max_tool_calls_per_question: 12
+  max_question_chars: 1000
+  sec_rate_limit_per_second: 10
+  temperature: 0
+
+escalation: if the answer is not found, figures conflict between sources, or confidence is low, say so, ask a clarifying question or tell the user to check the filing manually; never guess
+
+untrusted_inputs:
+  - filing text
+  - EDGAR API responses
+  - user question text
+
+data_rules: public data only; no personal data stored; logs contain tool name, arguments, duration and status only; no API keys in logs

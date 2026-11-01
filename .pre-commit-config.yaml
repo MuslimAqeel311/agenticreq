@@ -1,0 +1,31 @@
+# pip install pre-commit && pre-commit install
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: end-of-file-fixer
+        exclude: ^(tests/fixtures/|tests/golden/|validation/|spec\.schema\.json$|src/agenticreq/spec\.schema\.json$)
+      - id: check-yaml
+        exclude: ^tests/fixtures/
+      - id: check-toml
+      - id: check-added-large-files
+        args: ["--maxkb=500"]
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.17.3
+    hooks:
+      - id: ruff-check
+      - id: ruff-format
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy --strict
+        entry: python -m mypy
+        language: system
+        pass_filenames: false
+        types: [python]
+      - id: spec-schema
+        name: spec.schema.json is current
+        entry: python scripts/export_schema.py --check
+        language: system
+        pass_filenames: false
+        files: ^src/agenticreq/(models/|params\.py|schema\.py)

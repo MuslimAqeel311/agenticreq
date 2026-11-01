@@ -1,0 +1,21 @@
+# langchain-ai/memory-agent @adc8f52
+# ASSUMED operator policy (the template ships none), written before running `check`.
+agent_id: memory-agent
+risk_level: medium
+goal:
+  statement: Chat with a user and remember durable facts about them across sessions
+  done_criteria: [new facts stored once; corrections update the existing memory]
+out_of_scope: [storing secrets or payment data]
+role_boundary:
+  allowed_tools: [upsert_memory]
+prohibited: []
+approval_required: []
+limits:
+  - {tool: upsert_memory, arg: content, limit: {max_length: 2000}}
+escalation: []
+untrusted_inputs: []
+owner: assistant-team@example.com
+technical_owner: platform@example.com
+data_rules:
+  never_store: [password, card_number]
+bounds: {max_steps: 10}

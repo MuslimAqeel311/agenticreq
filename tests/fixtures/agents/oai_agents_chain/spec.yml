@@ -1,0 +1,26 @@
+agent_id: procurement-triage
+risk_level: high
+goal:
+  statement: Triage procurement requests
+  done_criteria: [request routed or answered]
+out_of_scope: [payments]
+role_boundary:
+  allowed_tools: [get_inventory]
+prohibited:
+  - tool: pay_invoice
+    reason: triage must never move money, directly or through a delegate
+approval_required: []
+limits: []
+escalation:
+  - {metric: open_requests, op: ">", threshold: 50, to: procurement-manager}
+untrusted_inputs: []
+owner: procurement-ops@example.com
+technical_owner: platform@example.com
+topology: hierarchical
+agent_registry:
+  - {id: procurement-triage, match: "You handle procurement requests", tools: [get_inventory]}
+  - {id: policy-analyst, match: "You analyse procurement policy", tools: [lookup_clause]}
+  - {id: payments, match: "You pay approved invoices", tools: [pay_invoice]}
+declared_delegation:
+  - procurement-triage -> policy-analyst
+max_delegation_depth: 1

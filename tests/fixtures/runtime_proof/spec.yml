@@ -1,0 +1,17 @@
+agent_id: records-agent
+risk_level: low
+goal:
+  statement: Manage records
+  done_criteria: [records cleaned]
+out_of_scope: [billing]
+prohibited:
+  - {tool: wire_transfer, reason: never moves money}
+approval_required:
+  - {tool: delete_record, approver: ops-lead}
+limits: []
+escalation:
+  - {metric: risk_score, op: ">=", threshold: 8, to: ops-lead}
+untrusted_inputs: []
+owner: owner@example.com
+technical_owner: eng@example.com
+data_rules: {}

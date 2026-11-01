@@ -1,0 +1,4 @@
+tools:
+  get_inventory: {args: {sku: A-100}}
+  submit_order: {args: {sku: A-100, quantity: 5}}
+  pay_invoice: {args: {invoice_id: INV-1, amount: 100}}

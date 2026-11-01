@@ -1,0 +1,13 @@
+You are at step 3 of 5: check.
+Compare spec.yml with the project. Each gap is something the spec asks for that the project does not do yet.
+
+Next: fix the 3 gaps under "Spec vs code gaps" (in the project or in spec.yml), then run: agenticreq check
+
+The 5 steps:
+  ✓ 1. audit     quick scan, no setup                       agenticreq audit
+  ✓ 2. spec      write what the agent must and must not do  agenticreq init
+  ✗ 3. check     compare spec.yml with the project          agenticreq check
+    4. mock-run  test run with mock tools                   agenticreq mocks, then agenticreq mock-run
+    5. sign-off  owner confirms what the scan cannot see    add entries under confirmed: in spec.yml
+
+mocks.yml is missing: create it with: agenticreq mocks

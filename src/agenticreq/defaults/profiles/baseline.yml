@@ -1,0 +1,4 @@
+# Built-in profile: conservative defaults shared by most agents
+self_modification: false
+audit_log: true
+version_pinning: true

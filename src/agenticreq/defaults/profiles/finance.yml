@@ -1,0 +1,10 @@
+# Built-in profile: use with `extends: profile:finance`
+risk_level: high
+prohibited:
+  - tool: issue_refund
+    reason: refunds are handled by the finance team, never by an agent
+untrusted_inputs:
+  - source: email
+    kind: inbound
+data_rules:
+  never_store: [card_number, cvv]

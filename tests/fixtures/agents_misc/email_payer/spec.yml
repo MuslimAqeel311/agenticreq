@@ -1,0 +1,17 @@
+agent_id: ap-agent
+risk_level: high
+goal: {statement: Pay approved supplier invoices, done_criteria: [every approved invoice paid once]}
+out_of_scope: [vendor onboarding]
+prohibited:
+  - {tool: issue_refund, reason: refunds are finance-only}
+approval_required:
+  - {tool: pay_invoice, approver: finance-lead, timeout: 4h, on_timeout: safe_stop}
+limits:
+  pay_invoice:
+    amount: {max: 5000}
+escalation:
+  - {metric: invoice_amount, op: ">", threshold: 5000, to: finance-lead}
+untrusted_inputs:
+  - {source: read_inbox, kind: email}
+owner: ap-ops@example.com
+technical_owner: platform@example.com

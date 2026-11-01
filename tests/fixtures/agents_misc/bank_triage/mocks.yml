@@ -1,0 +1,18 @@
+entry: agent.py:run
+args: {task: "What is my balance?"}
+python:
+order: [transfer_to_accounts, transfer_to_fraud, transfer_to_loans, get_balances, flag_transaction, loan_estimate]
+tools:
+  get_balances: {args: {customer_id: c1}}
+  flag_transaction: {args: {txn_id: t1}}
+  loan_estimate: {args: {amount: 1000}}
+runs:
+  - name: accounts
+    args: {task: "What is my balance?"}
+    order: [transfer_to_accounts, get_balances]
+  - name: fraud
+    args: {task: "I see a charge I do not recognise"}
+    order: [transfer_to_fraud, flag_transaction]
+  - name: loans
+    args: {task: "Can I get a loan?"}
+    order: [transfer_to_loans, loan_estimate]

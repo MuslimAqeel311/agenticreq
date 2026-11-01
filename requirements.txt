@@ -1,0 +1,23 @@
+# Single requirements file for agenticreq (runtime + dev/test).
+# Keep in sync with [project].dependencies and [project.optional-dependencies].dev in pyproject.toml.
+# Preferred install: `pip install -e ".[dev]"`. This file is for environments that need a plain list.
+# Tested (macOS, Python 3.11): pydantic 2.14.1, PyYAML 6.0.3, rich 15.0.0, typer 0.27.3,
+#   pytest 9.1.1, mypy 2.4.0, httpx 0.28.1, httpx2 2.13.1, cedarpy 4.12.2
+
+# --- runtime ---
+pydantic>=2.6,<3
+pyyaml>=6.0
+rich>=13.0
+typer>=0.12
+tomli>=2.0; python_version < "3.11"
+
+# --- dev / test (pytest, mypy, capture hooks, Cedar tests) ---
+pytest>=8
+mypy>=1.8
+types-PyYAML
+httpx>=0.25
+httpx2>=2.0
+cedarpy>=4.0
+
+# OPA tests need the `opa` binary on PATH or in .tools/opa (not a pip package).
+# CrewAI integration needs openai<3, so it lives in a separate venv (.venv-crewai); it is not listed here.

@@ -1,0 +1,17 @@
+# alias -> dated snapshot, used by `agenticreq fix` (AS-210).
+# VERIFY against provider docs before applying; snapshots get deprecated.
+version: 1
+pins:
+  gpt-4o: gpt-4o-2024-08-06
+  gpt-4o-mini: gpt-4o-mini-2024-07-18
+  gpt-4.1: gpt-4.1-2025-04-14
+  gpt-4.1-mini: gpt-4.1-mini-2025-04-14
+  gpt-4.1-nano: gpt-4.1-nano-2025-04-14
+  o3: o3-2025-04-16
+  o4-mini: o4-mini-2025-04-16
+  claude-sonnet-4-5: claude-sonnet-4-5-20250929
+  claude-haiku-4-5: claude-haiku-4-5-20251001
+  claude-opus-4-1: claude-opus-4-1-20250805
+  claude-sonnet-4-0: claude-sonnet-4-20250514
+  claude-opus-4-0: claude-opus-4-20250514
+  claude-3-5-haiku-latest: claude-3-5-haiku-20241022

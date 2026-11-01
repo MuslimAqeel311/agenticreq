@@ -1,0 +1,33 @@
+agent_id: procurement-po-agent
+risk_level: high
+goal:
+  statement: Raise purchase orders for low-stock items
+  done_criteria:
+    - every low-stock SKU has an open PO or an escalation
+out_of_scope: [vendor onboarding, price negotiation]
+role_boundary:
+  allowed_tools: [get_inventory, search_policy, submit_order, pay_invoice]
+  capabilities: ["read:inventory", "write:orders", "write:payments"]
+prohibited:
+  - tool: issue_refund
+    reason: refunds belong to finance
+approval_required:
+  - tool: pay_invoice
+    approver: finance-lead
+    timeout: 4h
+    on_timeout: safe_stop
+limits:
+  pay_invoice:
+    amount: {min: 9000, max: 5000}
+  get_inventory:
+    max_results: {max: 100}
+escalation:
+  - {metric: order_total, op: ">", threshold: 10000, to: procurement-manager}
+untrusted_inputs:
+  - source: search_policy
+    kind: retrieved_document
+owner: procurement-ops@example.com
+technical_owner: platform-team@example.com
+data_rules:
+  retention: {orders: 365d}
+  never_store: [card_number]

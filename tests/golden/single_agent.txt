@@ -1,0 +1,51 @@
+agenticreq check · support-agent · spec: spec.yml · no mock run yet
+
+Result: FAIL    2 gaps · 16 sign-offs left · 2 to check · 3 passed
+
+SPEC VS CODE GAPS (2)
+  ✗ progress_guard.max_no_progress_steps  No max_no_progress_steps set: write a value, or not_needed
+                                          with a reason.
+  ✗ environment_separation                Configuration is not separated by environment: no
+                                          configuration is read from the environment (os.environ /
+                                          getenv / dotenv / a Settings class); endpoints, keys and
+                                          models are fixed in code.
+
+HUMAN SIGN-OFF (16 left · 0 signed)
+  SIGN-OFF out_of_scope            Does the agent stay out of the listed topics? Confirm under
+                                   confirmed: in spec.yml.
+  SIGN-OFF escalation              Who handles hard cases? Confirm under confirmed: in spec.yml.
+  SIGN-OFF owner                   Who owns this agent? Confirm under confirmed: in spec.yml.
+  SIGN-OFF stop_conditions         Does the agent stop when the stop conditions are met? Confirm
+                                   under confirmed: in spec.yml.
+  SIGN-OFF termination_authority   Who may stop the agent? Confirm under confirmed: in spec.yml.
+  SIGN-OFF tool_result_validation  Are tool results validated before use? Confirm under confirmed:
+                                   in spec.yml.
+  SIGN-OFF tool_error_contract     Do tools return errors in the agreed shape? Confirm under
+                                   confirmed: in spec.yml.
+  SIGN-OFF context_policy          Is the must-never-drop context always kept? Confirm under
+                                   confirmed: in spec.yml.
+  SIGN-OFF memory_policy           Are memory writes validated? Confirm under confirmed: in
+                                   spec.yml.
+  SIGN-OFF fallback_policy         Does the fallback behave as written? Confirm under confirmed: in
+                                   spec.yml.
+  SIGN-OFF secrets_policy          Are secrets kept in a secret store? Confirm under confirmed: in
+                                   spec.yml.
+  SIGN-OFF clarification_policy    Does the agent ask when the request is unclear? Confirm under
+                                   confirmed: in spec.yml.
+  SIGN-OFF kill_switch             Can the agent be stopped at once in production? Confirm under
+                                   confirmed: in spec.yml.
+  SIGN-OFF handoff_contract        Is the handoff payload checked? Confirm under confirmed: in
+                                   spec.yml.
+  SIGN-OFF audit_log               Found: audit hook (OpenAI Agents SDK traces every run by default
+                                   and nothing disables it (set_tracing_disabled /
+                                   RunConfig(tracing_disabled=True))). Confirm it works under
+                                   confirmed: in spec.yml.
+  SIGN-OFF regression_triggers     Do changes trigger the regression suite? Confirm under confirmed:
+                                   in spec.yml.
+
+Check with a mock run: 2 items, shown after the spec vs project gaps are fixed
+
+PASSED (3)
+  ✓ role_boundary     Found in code: lookup_order.
+  ✓ bounds.max_steps  Found in code: 10.
+  ✓ version_pinning   Found in code: gpt-4o-2024-08-06.

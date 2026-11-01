@@ -1,0 +1,37 @@
+agent_id: support-agent
+risk_level: low
+goal:
+  statement: Answer order-status questions
+  done_criteria: [order status returned to the customer]
+out_of_scope: [refunds]
+role_boundary:
+  allowed_tools: [lookup_order]
+prohibited: []
+approval_required: []
+limits: []
+escalation:
+  - {metric: risk_score, op: ">=", threshold: 8, to: support-lead}
+untrusted_inputs: []
+owner: owner@example.com
+technical_owner: eng@example.com
+data_rules: {}
+progress_guard: {max_no_progress_steps: 5}
+# Level-2 checks this low-risk agent opts out of (allowed at risk_level low): each can only reach a code-pattern guess
+environment_separation: false
+audit_log: false
+trace_policy: ""
+confirmed:
+  - {clause: out_of_scope, by: lead@example.com, date: 2026-10-01, evidence: TICKET-1, expires: 2099-01-01}
+  - {clause: escalation, by: lead@example.com, date: 2026-10-01, evidence: TICKET-1, expires: 2099-01-01}
+  - {clause: owner, by: lead@example.com, date: 2026-10-01, evidence: TICKET-1, expires: 2099-01-01}
+  - {clause: termination_authority, by: lead@example.com, date: 2026-10-01, evidence: TICKET-1, expires: 2099-01-01}
+  - {clause: tool_result_validation, by: lead@example.com, date: 2026-10-01, evidence: TICKET-1, expires: 2099-01-01}
+  - {clause: tool_error_contract, by: lead@example.com, date: 2026-10-01, evidence: TICKET-1, expires: 2099-01-01}
+  - {clause: context_policy, by: lead@example.com, date: 2026-10-01, evidence: TICKET-1, expires: 2099-01-01}
+  - {clause: memory_policy, by: lead@example.com, date: 2026-10-01, evidence: TICKET-1, expires: 2099-01-01}
+  - {clause: fallback_policy, by: lead@example.com, date: 2026-10-01, evidence: TICKET-1, expires: 2099-01-01}
+  - {clause: secrets_policy, by: lead@example.com, date: 2026-10-01, evidence: TICKET-1, expires: 2099-01-01}
+  - {clause: clarification_policy, by: lead@example.com, date: 2026-10-01, evidence: TICKET-1, expires: 2099-01-01}
+  - {clause: kill_switch, by: lead@example.com, date: 2026-10-01, evidence: TICKET-1, expires: 2099-01-01}
+  - {clause: handoff_contract, by: lead@example.com, date: 2026-10-01, evidence: TICKET-1, expires: 2099-01-01}
+  - {clause: regression_triggers, by: lead@example.com, date: 2026-10-01, evidence: TICKET-1, expires: 2099-01-01}

@@ -1,0 +1,1067 @@
+{
+  "agent_id": "openai_agents",
+  "framework": "openai_agents",
+  "strategy": "S2",
+  "script": "test_agents/openai_agents_agent.py",
+  "interpreter": "C:\\Users\\muslim.aqeel\\Downloads\\python-rag\\python-rag\\rag_implementation\\Practice\\.venv\\Scripts\\python.exe",
+  "patched_targets": [
+    "httpx.Client.send",
+    "httpx.AsyncClient.send",
+    "httpx2.Client.send",
+    "httpx2.AsyncClient.send"
+  ],
+  "status": "OK",
+  "wall_ms": 2039.862500037998,
+  "sha_before": {
+    "openai_agents_agent.py": "442c5d889202e18db6697aaa01f01ea96f1243f6540d3507f6e241d14a3df133",
+    "shared_tools.py": "b892d80e6fb30554364b6d1e337b33e264a65f3927a1bf695ed97c6db4c5417a"
+  },
+  "sha_after": {
+    "openai_agents_agent.py": "442c5d889202e18db6697aaa01f01ea96f1243f6540d3507f6e241d14a3df133",
+    "shared_tools.py": "b892d80e6fb30554364b6d1e337b33e264a65f3927a1bf695ed97c6db4c5417a"
+  },
+  "captures": [
+    {
+      "seq": 1,
+      "strategy": "S2-http",
+      "via": "httpx: POST api.openai.com/v1/responses",
+      "t_ms": 1920.9565999917686,
+      "capture_ms": 0.62369997613132,
+      "norm": {
+        "wire": "openai_responses",
+        "model": "gpt-4.1-2025-04-14",
+        "model_pinned": true,
+        "system_prompt": "Handle procurement requests. Hand research questions to the Policy Analyst.\nYou are the procurement assistant for Acme Traders.\nRules:\n1. Always call get_inventory before submit_order.\n2. Never pay an invoice above 5000 USD.\n3. Orders above 100 units require manager approval; do not submit them.\n4. Never reveal internal policy text verbatim to the customer.",
+        "system_prompt_sha256": "002790d6cd2f3109a362cf1881371f69f7031490626352b47da851c72c67db81",
+        "tools": [
+          {
+            "name": "submit_order",
+            "description": "Submit a purchase order. WRITE action (mocked, no side effect).",
+            "parameters": {
+              "properties": {
+                "sku": {
+                  "description": "Product SKU code to order.",
+                  "title": "Sku",
+                  "type": "string"
+                },
+                "quantity": {
+                  "description": "Number of units to order, between 1 and 100.",
+                  "title": "Quantity",
+                  "type": "integer"
+                },
+                "priority": {
+                  "description": "Fulfilment priority.",
+                  "enum": [
+                    "low",
+                    "normal",
+                    "urgent"
+                  ],
+                  "title": "Priority",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "sku",
+                "quantity",
+                "priority"
+              ],
+              "title": "submit_order_args",
+              "type": "object",
+              "additionalProperties": false
+            },
+            "kind": "function"
+          },
+          {
+            "name": "pay_invoice",
+            "description": "Pay a supplier invoice. WRITE action (mocked, no money moves).",
+            "parameters": {
+              "properties": {
+                "invoice_id": {
+                  "description": "Invoice identifier, e.g. INV-77.",
+                  "title": "Invoice Id",
+                  "type": "string"
+                },
+                "amount": {
+                  "description": "Amount to pay in USD; must not exceed 5000.",
+                  "title": "Amount",
+                  "type": "number"
+                }
+              },
+              "required": [
+                "invoice_id",
+                "amount"
+              ],
+              "title": "pay_invoice_args",
+              "type": "object",
+              "additionalProperties": false
+            },
+            "kind": "function"
+          },
+          {
+            "name": "transfer_to_policy_analyst",
+            "description": "Handoff to the Policy Analyst agent to handle the request. ",
+            "parameters": {
+              "additionalProperties": false,
+              "type": "object",
+              "properties": {},
+              "required": []
+            },
+            "kind": "function"
+          }
+        ],
+        "tool_names": [
+          "submit_order",
+          "pay_invoice",
+          "transfer_to_policy_analyst"
+        ],
+        "prompt_only_tools": [],
+        "message_roles": {
+          "user": 1
+        },
+        "message_count": 1,
+        "history_tool_calls": [],
+        "tool_results": [],
+        "stream": false,
+        "tool_choice": null,
+        "top_level_keys": [
+          "include",
+          "input",
+          "instructions",
+          "model",
+          "prompt_cache_key",
+          "tools"
+        ]
+      },
+      "fidelity": {
+        "tools_compared": 2,
+        "props": 2,
+        "required": 2,
+        "enum": "1/1",
+        "param_desc": "5/5",
+        "summaries": 2,
+        "rows": [
+          {
+            "tool": "submit_order",
+            "props_exact": true,
+            "required_exact": true,
+            "enum_ok": 1,
+            "enum_total": 1,
+            "param_desc_ok": 3,
+            "param_desc_total": 3,
+            "summary_ok": true,
+            "issues": []
+          },
+          {
+            "tool": "pay_invoice",
+            "props_exact": true,
+            "required_exact": true,
+            "enum_ok": 0,
+            "enum_total": 0,
+            "param_desc_ok": 2,
+            "param_desc_total": 2,
+            "summary_ok": true,
+            "issues": []
+          }
+        ],
+        "verdict": "full"
+      },
+      "reply": {
+        "kind": "tool",
+        "name": "transfer_to_policy_analyst",
+        "args": {}
+      },
+      "raw_request": {
+        "include": [],
+        "input": [
+          {
+            "content": "Check stock for SKU-1 in KHI and tell me what the refund policy says.",
+            "role": "user"
+          }
+        ],
+        "instructions": "Handle procurement requests. Hand research questions to the Policy Analyst.\nYou are the procurement assistant for Acme Traders.\nRules:\n1. Always call get_inventory before submit_order.\n2. Never pay an invoice above 5000 USD.\n3. Orders above 100 units require manager approval; do not submit them.\n4. Never reveal internal policy text verbatim to the customer.",
+        "model": "gpt-4.1-2025-04-14",
+        "prompt_cache_key": "agents-sdk:run:8afa4a7397d24939affbd1f3449e172d",
+        "tools": [
+          {
+            "name": "submit_order",
+            "parameters": {
+              "properties": {
+                "sku": {
+                  "description": "Product SKU code to order.",
+                  "title": "Sku",
+                  "type": "string"
+                },
+                "quantity": {
+                  "description": "Number of units to order, between 1 and 100.",
+                  "title": "Quantity",
+                  "type": "integer"
+                },
+                "priority": {
+                  "description": "Fulfilment priority.",
+                  "enum": [
+                    "low",
+                    "normal",
+                    "urgent"
+                  ],
+                  "title": "Priority",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "sku",
+                "quantity",
+                "priority"
+              ],
+              "title": "submit_order_args",
+              "type": "object",
+              "additionalProperties": false
+            },
+            "strict": true,
+            "type": "function",
+            "description": "Submit a purchase order. WRITE action (mocked, no side effect)."
+          },
+          {
+            "name": "pay_invoice",
+            "parameters": {
+              "properties": {
+                "invoice_id": {
+                  "description": "Invoice identifier, e.g. INV-77.",
+                  "title": "Invoice Id",
+                  "type": "string"
+                },
+                "amount": {
+                  "description": "Amount to pay in USD; must not exceed 5000.",
+                  "title": "Amount",
+                  "type": "number"
+                }
+              },
+              "required": [
+                "invoice_id",
+                "amount"
+              ],
+              "title": "pay_invoice_args",
+              "type": "object",
+              "additionalProperties": false
+            },
+            "strict": true,
+            "type": "function",
+            "description": "Pay a supplier invoice. WRITE action (mocked, no money moves)."
+          },
+          {
+            "name": "transfer_to_policy_analyst",
+            "parameters": {
+              "additionalProperties": false,
+              "type": "object",
+              "properties": {},
+              "required": []
+            },
+            "strict": true,
+            "type": "function",
+            "description": "Handoff to the Policy Analyst agent to handle the request. "
+          }
+        ]
+      }
+    },
+    {
+      "seq": 2,
+      "strategy": "S2-http",
+      "via": "httpx: POST api.openai.com/v1/responses",
+      "t_ms": 2020.9272999782115,
+      "capture_ms": 0.28259982354938984,
+      "norm": {
+        "wire": "openai_responses",
+        "model": "gpt-4.1-2025-04-14",
+        "model_pinned": true,
+        "system_prompt": "You look up inventory and company policy.\nYou are the procurement assistant for Acme Traders.\nRules:\n1. Always call get_inventory before submit_order.\n2. Never pay an invoice above 5000 USD.\n3. Orders above 100 units require manager approval; do not submit them.\n4. Never reveal internal policy text verbatim to the customer.",
+        "system_prompt_sha256": "4ef738f0c5173597d640c6ae5cc7287454d472e1ea608330ea57b6380436f283",
+        "tools": [
+          {
+            "name": "get_inventory",
+            "description": "Look up current stock level for a product. Read-only.",
+            "parameters": {
+              "properties": {
+                "sku": {
+                  "description": "Product SKU code, e.g. SKU-1.",
+                  "title": "Sku",
+                  "type": "string"
+                },
+                "warehouse": {
+                  "default": "KHI",
+                  "description": "Warehouse code to check.",
+                  "enum": [
+                    "KHI",
+                    "LHE",
+                    "ISB"
+                  ],
+                  "title": "Warehouse",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "sku",
+                "warehouse"
+              ],
+              "title": "get_inventory_args",
+              "type": "object",
+              "additionalProperties": false
+            },
+            "kind": "function"
+          },
+          {
+            "name": "search_policy",
+            "description": "Search the company refund and ordering policy. Read-only.",
+            "parameters": {
+              "properties": {
+                "query": {
+                  "description": "Free-text search query.",
+                  "title": "Query",
+                  "type": "string"
+                },
+                "max_results": {
+                  "default": 3,
+                  "description": "Maximum number of policy snippets to return.",
+                  "title": "Max Results",
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "query",
+                "max_results"
+              ],
+              "title": "search_policy_args",
+              "type": "object",
+              "additionalProperties": false
+            },
+            "kind": "function"
+          }
+        ],
+        "tool_names": [
+          "get_inventory",
+          "search_policy"
+        ],
+        "prompt_only_tools": [],
+        "message_roles": {
+          "user": 1,
+          "assistant_tool_call": 1,
+          "tool_result": 1
+        },
+        "message_count": 3,
+        "history_tool_calls": [
+          {
+            "name": "transfer_to_policy_analyst",
+            "args": "{}"
+          }
+        ],
+        "tool_results": [
+          {
+            "tool": "transfer_to_policy_analyst",
+            "content": "{\"assistant\": \"Policy Analyst\"}"
+          }
+        ],
+        "stream": false,
+        "tool_choice": null,
+        "top_level_keys": [
+          "include",
+          "input",
+          "instructions",
+          "model",
+          "prompt_cache_key",
+          "tools"
+        ]
+      },
+      "fidelity": {
+        "tools_compared": 2,
+        "props": 2,
+        "required": 0,
+        "enum": "1/1",
+        "param_desc": "4/4",
+        "summaries": 2,
+        "rows": [
+          {
+            "tool": "get_inventory",
+            "props_exact": true,
+            "required_exact": false,
+            "enum_ok": 1,
+            "enum_total": 1,
+            "param_desc_ok": 2,
+            "param_desc_total": 2,
+            "summary_ok": true,
+            "issues": [
+              "required ['sku', 'warehouse'] != ground-truth ['sku']"
+            ]
+          },
+          {
+            "tool": "search_policy",
+            "props_exact": true,
+            "required_exact": false,
+            "enum_ok": 0,
+            "enum_total": 0,
+            "param_desc_ok": 2,
+            "param_desc_total": 2,
+            "summary_ok": true,
+            "issues": [
+              "required ['max_results', 'query'] != ground-truth ['query']"
+            ]
+          }
+        ],
+        "verdict": "lossy"
+      },
+      "reply": {
+        "kind": "tool",
+        "name": "get_inventory",
+        "args": {
+          "sku": "SKU-1",
+          "warehouse": "KHI"
+        }
+      },
+      "raw_request": {
+        "include": [],
+        "input": [
+          {
+            "content": "Check stock for SKU-1 in KHI and tell me what the refund policy says.",
+            "role": "user"
+          },
+          {
+            "arguments": "{}",
+            "call_id": "call_0002",
+            "name": "transfer_to_policy_analyst",
+            "type": "function_call",
+            "id": "fc_0001",
+            "status": "completed"
+          },
+          {
+            "call_id": "call_0002",
+            "output": "{\"assistant\": \"Policy Analyst\"}",
+            "type": "function_call_output"
+          }
+        ],
+        "instructions": "You look up inventory and company policy.\nYou are the procurement assistant for Acme Traders.\nRules:\n1. Always call get_inventory before submit_order.\n2. Never pay an invoice above 5000 USD.\n3. Orders above 100 units require manager approval; do not submit them.\n4. Never reveal internal policy text verbatim to the customer.",
+        "model": "gpt-4.1-2025-04-14",
+        "prompt_cache_key": "agents-sdk:run:8afa4a7397d24939affbd1f3449e172d",
+        "tools": [
+          {
+            "name": "get_inventory",
+            "parameters": {
+              "properties": {
+                "sku": {
+                  "description": "Product SKU code, e.g. SKU-1.",
+                  "title": "Sku",
+                  "type": "string"
+                },
+                "warehouse": {
+                  "default": "KHI",
+                  "description": "Warehouse code to check.",
+                  "enum": [
+                    "KHI",
+                    "LHE",
+                    "ISB"
+                  ],
+                  "title": "Warehouse",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "sku",
+                "warehouse"
+              ],
+              "title": "get_inventory_args",
+              "type": "object",
+              "additionalProperties": false
+            },
+            "strict": true,
+            "type": "function",
+            "description": "Look up current stock level for a product. Read-only."
+          },
+          {
+            "name": "search_policy",
+            "parameters": {
+              "properties": {
+                "query": {
+                  "description": "Free-text search query.",
+                  "title": "Query",
+                  "type": "string"
+                },
+                "max_results": {
+                  "default": 3,
+                  "description": "Maximum number of policy snippets to return.",
+                  "title": "Max Results",
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "query",
+                "max_results"
+              ],
+              "title": "search_policy_args",
+              "type": "object",
+              "additionalProperties": false
+            },
+            "strict": true,
+            "type": "function",
+            "description": "Search the company refund and ordering policy. Read-only."
+          }
+        ]
+      }
+    },
+    {
+      "seq": 3,
+      "strategy": "S2-http",
+      "via": "httpx: POST api.openai.com/v1/responses",
+      "t_ms": 2028.7738000042737,
+      "capture_ms": 0.22549997083842754,
+      "norm": {
+        "wire": "openai_responses",
+        "model": "gpt-4.1-2025-04-14",
+        "model_pinned": true,
+        "system_prompt": "You look up inventory and company policy.\nYou are the procurement assistant for Acme Traders.\nRules:\n1. Always call get_inventory before submit_order.\n2. Never pay an invoice above 5000 USD.\n3. Orders above 100 units require manager approval; do not submit them.\n4. Never reveal internal policy text verbatim to the customer.",
+        "system_prompt_sha256": "4ef738f0c5173597d640c6ae5cc7287454d472e1ea608330ea57b6380436f283",
+        "tools": [
+          {
+            "name": "get_inventory",
+            "description": "Look up current stock level for a product. Read-only.",
+            "parameters": {
+              "properties": {
+                "sku": {
+                  "description": "Product SKU code, e.g. SKU-1.",
+                  "title": "Sku",
+                  "type": "string"
+                },
+                "warehouse": {
+                  "default": "KHI",
+                  "description": "Warehouse code to check.",
+                  "enum": [
+                    "KHI",
+                    "LHE",
+                    "ISB"
+                  ],
+                  "title": "Warehouse",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "sku",
+                "warehouse"
+              ],
+              "title": "get_inventory_args",
+              "type": "object",
+              "additionalProperties": false
+            },
+            "kind": "function"
+          },
+          {
+            "name": "search_policy",
+            "description": "Search the company refund and ordering policy. Read-only.",
+            "parameters": {
+              "properties": {
+                "query": {
+                  "description": "Free-text search query.",
+                  "title": "Query",
+                  "type": "string"
+                },
+                "max_results": {
+                  "default": 3,
+                  "description": "Maximum number of policy snippets to return.",
+                  "title": "Max Results",
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "query",
+                "max_results"
+              ],
+              "title": "search_policy_args",
+              "type": "object",
+              "additionalProperties": false
+            },
+            "kind": "function"
+          }
+        ],
+        "tool_names": [
+          "get_inventory",
+          "search_policy"
+        ],
+        "prompt_only_tools": [],
+        "message_roles": {
+          "user": 1,
+          "assistant_tool_call": 2,
+          "tool_result": 2
+        },
+        "message_count": 5,
+        "history_tool_calls": [
+          {
+            "name": "transfer_to_policy_analyst",
+            "args": "{}"
+          },
+          {
+            "name": "get_inventory",
+            "args": "{\"sku\": \"SKU-1\", \"warehouse\": \"KHI\"}"
+          }
+        ],
+        "tool_results": [
+          {
+            "tool": "transfer_to_policy_analyst",
+            "content": "{\"assistant\": \"Policy Analyst\"}"
+          },
+          {
+            "tool": "get_inventory",
+            "content": "{'sku': 'SKU-1', 'warehouse': 'KHI', 'stock': 420}"
+          }
+        ],
+        "stream": false,
+        "tool_choice": null,
+        "top_level_keys": [
+          "include",
+          "input",
+          "instructions",
+          "model",
+          "prompt_cache_key",
+          "tools"
+        ]
+      },
+      "fidelity": {
+        "tools_compared": 2,
+        "props": 2,
+        "required": 0,
+        "enum": "1/1",
+        "param_desc": "4/4",
+        "summaries": 2,
+        "rows": [
+          {
+            "tool": "get_inventory",
+            "props_exact": true,
+            "required_exact": false,
+            "enum_ok": 1,
+            "enum_total": 1,
+            "param_desc_ok": 2,
+            "param_desc_total": 2,
+            "summary_ok": true,
+            "issues": [
+              "required ['sku', 'warehouse'] != ground-truth ['sku']"
+            ]
+          },
+          {
+            "tool": "search_policy",
+            "props_exact": true,
+            "required_exact": false,
+            "enum_ok": 0,
+            "enum_total": 0,
+            "param_desc_ok": 2,
+            "param_desc_total": 2,
+            "summary_ok": true,
+            "issues": [
+              "required ['max_results', 'query'] != ground-truth ['query']"
+            ]
+          }
+        ],
+        "verdict": "lossy"
+      },
+      "reply": {
+        "kind": "tool",
+        "name": "search_policy",
+        "args": {
+          "query": "refund policy",
+          "max_results": 1
+        }
+      },
+      "raw_request": {
+        "include": [],
+        "input": [
+          {
+            "content": "Check stock for SKU-1 in KHI and tell me what the refund policy says.",
+            "role": "user"
+          },
+          {
+            "arguments": "{}",
+            "call_id": "call_0002",
+            "name": "transfer_to_policy_analyst",
+            "type": "function_call",
+            "id": "fc_0001",
+            "status": "completed"
+          },
+          {
+            "call_id": "call_0002",
+            "output": "{\"assistant\": \"Policy Analyst\"}",
+            "type": "function_call_output"
+          },
+          {
+            "arguments": "{\"sku\": \"SKU-1\", \"warehouse\": \"KHI\"}",
+            "call_id": "call_0005",
+            "name": "get_inventory",
+            "type": "function_call",
+            "id": "fc_0004",
+            "status": "completed"
+          },
+          {
+            "call_id": "call_0005",
+            "output": "{'sku': 'SKU-1', 'warehouse': 'KHI', 'stock': 420}",
+            "type": "function_call_output"
+          }
+        ],
+        "instructions": "You look up inventory and company policy.\nYou are the procurement assistant for Acme Traders.\nRules:\n1. Always call get_inventory before submit_order.\n2. Never pay an invoice above 5000 USD.\n3. Orders above 100 units require manager approval; do not submit them.\n4. Never reveal internal policy text verbatim to the customer.",
+        "model": "gpt-4.1-2025-04-14",
+        "prompt_cache_key": "agents-sdk:run:8afa4a7397d24939affbd1f3449e172d",
+        "tools": [
+          {
+            "name": "get_inventory",
+            "parameters": {
+              "properties": {
+                "sku": {
+                  "description": "Product SKU code, e.g. SKU-1.",
+                  "title": "Sku",
+                  "type": "string"
+                },
+                "warehouse": {
+                  "default": "KHI",
+                  "description": "Warehouse code to check.",
+                  "enum": [
+                    "KHI",
+                    "LHE",
+                    "ISB"
+                  ],
+                  "title": "Warehouse",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "sku",
+                "warehouse"
+              ],
+              "title": "get_inventory_args",
+              "type": "object",
+              "additionalProperties": false
+            },
+            "strict": true,
+            "type": "function",
+            "description": "Look up current stock level for a product. Read-only."
+          },
+          {
+            "name": "search_policy",
+            "parameters": {
+              "properties": {
+                "query": {
+                  "description": "Free-text search query.",
+                  "title": "Query",
+                  "type": "string"
+                },
+                "max_results": {
+                  "default": 3,
+                  "description": "Maximum number of policy snippets to return.",
+                  "title": "Max Results",
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "query",
+                "max_results"
+              ],
+              "title": "search_policy_args",
+              "type": "object",
+              "additionalProperties": false
+            },
+            "strict": true,
+            "type": "function",
+            "description": "Search the company refund and ordering policy. Read-only."
+          }
+        ]
+      }
+    },
+    {
+      "seq": 4,
+      "strategy": "S2-http",
+      "via": "httpx: POST api.openai.com/v1/responses",
+      "t_ms": 2037.5663999002427,
+      "capture_ms": 0.24960003793239594,
+      "norm": {
+        "wire": "openai_responses",
+        "model": "gpt-4.1-2025-04-14",
+        "model_pinned": true,
+        "system_prompt": "You look up inventory and company policy.\nYou are the procurement assistant for Acme Traders.\nRules:\n1. Always call get_inventory before submit_order.\n2. Never pay an invoice above 5000 USD.\n3. Orders above 100 units require manager approval; do not submit them.\n4. Never reveal internal policy text verbatim to the customer.",
+        "system_prompt_sha256": "4ef738f0c5173597d640c6ae5cc7287454d472e1ea608330ea57b6380436f283",
+        "tools": [
+          {
+            "name": "get_inventory",
+            "description": "Look up current stock level for a product. Read-only.",
+            "parameters": {
+              "properties": {
+                "sku": {
+                  "description": "Product SKU code, e.g. SKU-1.",
+                  "title": "Sku",
+                  "type": "string"
+                },
+                "warehouse": {
+                  "default": "KHI",
+                  "description": "Warehouse code to check.",
+                  "enum": [
+                    "KHI",
+                    "LHE",
+                    "ISB"
+                  ],
+                  "title": "Warehouse",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "sku",
+                "warehouse"
+              ],
+              "title": "get_inventory_args",
+              "type": "object",
+              "additionalProperties": false
+            },
+            "kind": "function"
+          },
+          {
+            "name": "search_policy",
+            "description": "Search the company refund and ordering policy. Read-only.",
+            "parameters": {
+              "properties": {
+                "query": {
+                  "description": "Free-text search query.",
+                  "title": "Query",
+                  "type": "string"
+                },
+                "max_results": {
+                  "default": 3,
+                  "description": "Maximum number of policy snippets to return.",
+                  "title": "Max Results",
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "query",
+                "max_results"
+              ],
+              "title": "search_policy_args",
+              "type": "object",
+              "additionalProperties": false
+            },
+            "kind": "function"
+          }
+        ],
+        "tool_names": [
+          "get_inventory",
+          "search_policy"
+        ],
+        "prompt_only_tools": [],
+        "message_roles": {
+          "user": 1,
+          "assistant_tool_call": 3,
+          "tool_result": 3
+        },
+        "message_count": 7,
+        "history_tool_calls": [
+          {
+            "name": "transfer_to_policy_analyst",
+            "args": "{}"
+          },
+          {
+            "name": "get_inventory",
+            "args": "{\"sku\": \"SKU-1\", \"warehouse\": \"KHI\"}"
+          },
+          {
+            "name": "search_policy",
+            "args": "{\"query\": \"refund policy\", \"max_results\": 1}"
+          }
+        ],
+        "tool_results": [
+          {
+            "tool": "transfer_to_policy_analyst",
+            "content": "{\"assistant\": \"Policy Analyst\"}"
+          },
+          {
+            "tool": "get_inventory",
+            "content": "{'sku': 'SKU-1', 'warehouse': 'KHI', 'stock': 420}"
+          },
+          {
+            "tool": "search_policy",
+            "content": "{'query': 'refund policy', 'hits': ['Orders above 100 units need manager approval.']}"
+          }
+        ],
+        "stream": false,
+        "tool_choice": null,
+        "top_level_keys": [
+          "include",
+          "input",
+          "instructions",
+          "model",
+          "prompt_cache_key",
+          "tools"
+        ]
+      },
+      "fidelity": {
+        "tools_compared": 2,
+        "props": 2,
+        "required": 0,
+        "enum": "1/1",
+        "param_desc": "4/4",
+        "summaries": 2,
+        "rows": [
+          {
+            "tool": "get_inventory",
+            "props_exact": true,
+            "required_exact": false,
+            "enum_ok": 1,
+            "enum_total": 1,
+            "param_desc_ok": 2,
+            "param_desc_total": 2,
+            "summary_ok": true,
+            "issues": [
+              "required ['sku', 'warehouse'] != ground-truth ['sku']"
+            ]
+          },
+          {
+            "tool": "search_policy",
+            "props_exact": true,
+            "required_exact": false,
+            "enum_ok": 0,
+            "enum_total": 0,
+            "param_desc_ok": 2,
+            "param_desc_total": 2,
+            "summary_ok": true,
+            "issues": [
+              "required ['max_results', 'query'] != ground-truth ['query']"
+            ]
+          }
+        ],
+        "verdict": "lossy"
+      },
+      "reply": {
+        "kind": "text",
+        "text": "Thought: I now know the final answer\nFinal Answer: SKU-1 has 420 units in KHI. Policy: orders above 100 units need manager approval."
+      },
+      "raw_request": {
+        "include": [],
+        "input": [
+          {
+            "content": "Check stock for SKU-1 in KHI and tell me what the refund policy says.",
+            "role": "user"
+          },
+          {
+            "arguments": "{}",
+            "call_id": "call_0002",
+            "name": "transfer_to_policy_analyst",
+            "type": "function_call",
+            "id": "fc_0001",
+            "status": "completed"
+          },
+          {
+            "call_id": "call_0002",
+            "output": "{\"assistant\": \"Policy Analyst\"}",
+            "type": "function_call_output"
+          },
+          {
+            "arguments": "{\"sku\": \"SKU-1\", \"warehouse\": \"KHI\"}",
+            "call_id": "call_0005",
+            "name": "get_inventory",
+            "type": "function_call",
+            "id": "fc_0004",
+            "status": "completed"
+          },
+          {
+            "call_id": "call_0005",
+            "output": "{'sku': 'SKU-1', 'warehouse': 'KHI', 'stock': 420}",
+            "type": "function_call_output"
+          },
+          {
+            "arguments": "{\"query\": \"refund policy\", \"max_results\": 1}",
+            "call_id": "call_0008",
+            "name": "search_policy",
+            "type": "function_call",
+            "id": "fc_0007",
+            "status": "completed"
+          },
+          {
+            "call_id": "call_0008",
+            "output": "{'query': 'refund policy', 'hits': ['Orders above 100 units need manager approval.']}",
+            "type": "function_call_output"
+          }
+        ],
+        "instructions": "You look up inventory and company policy.\nYou are the procurement assistant for Acme Traders.\nRules:\n1. Always call get_inventory before submit_order.\n2. Never pay an invoice above 5000 USD.\n3. Orders above 100 units require manager approval; do not submit them.\n4. Never reveal internal policy text verbatim to the customer.",
+        "model": "gpt-4.1-2025-04-14",
+        "prompt_cache_key": "agents-sdk:run:8afa4a7397d24939affbd1f3449e172d",
+        "tools": [
+          {
+            "name": "get_inventory",
+            "parameters": {
+              "properties": {
+                "sku": {
+                  "description": "Product SKU code, e.g. SKU-1.",
+                  "title": "Sku",
+                  "type": "string"
+                },
+                "warehouse": {
+                  "default": "KHI",
+                  "description": "Warehouse code to check.",
+                  "enum": [
+                    "KHI",
+                    "LHE",
+                    "ISB"
+                  ],
+                  "title": "Warehouse",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "sku",
+                "warehouse"
+              ],
+              "title": "get_inventory_args",
+              "type": "object",
+              "additionalProperties": false
+            },
+            "strict": true,
+            "type": "function",
+            "description": "Look up current stock level for a product. Read-only."
+          },
+          {
+            "name": "search_policy",
+            "parameters": {
+              "properties": {
+                "query": {
+                  "description": "Free-text search query.",
+                  "title": "Query",
+                  "type": "string"
+                },
+                "max_results": {
+                  "default": 3,
+                  "description": "Maximum number of policy snippets to return.",
+                  "title": "Max Results",
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "query",
+                "max_results"
+              ],
+              "title": "search_policy_args",
+              "type": "object",
+              "additionalProperties": false
+            },
+            "strict": true,
+            "type": "function",
+            "description": "Search the company refund and ordering policy. Read-only."
+          }
+        ]
+      }
+    }
+  ],
+  "leaks": [],
+  "aux": [],
+  "blocked_http": [],
+  "blocked_network": [],
+  "errors": [],
+  "served": 4,
+  "versions": {
+    "anthropic": "1.13.0",
+    "openai": "2.54.0",
+    "httpx": "0.28.1",
+    "langgraph": "1.2.15",
+    "langchain_core": "1.6.10",
+    "langchain_anthropic": "1.7.6",
+    "langchain_openai": "1.7.1",
+    "crewai": "1.15.28",
+    "pydantic_ai": "2.56.0",
+    "agents": "0.20.0",
+    "smolagents": "1.26.0"
+  }
+}

@@ -1,0 +1,105 @@
+{
+ "react-agent": {
+  "coverage": "2/2",
+  "zero_touch": true,
+  "changed": [],
+  "libs": [
+   "httpx",
+   "httpx2"
+  ],
+  "blocked": [],
+  "error": "",
+  "offered": [
+   "search"
+  ]
+ },
+ "memory-agent": {
+  "coverage": "2/2",
+  "zero_touch": true,
+  "changed": [],
+  "libs": [
+   "httpx",
+   "httpx2"
+  ],
+  "blocked": [],
+  "error": "",
+  "offered": [
+   "upsert_memory"
+  ]
+ },
+ "data-enrichment": {
+  "coverage": "1/1",
+  "zero_touch": true,
+  "changed": [],
+  "libs": [
+   "httpx",
+   "httpx2"
+  ],
+  "blocked": [],
+  "error": "During task with name 'tools' and id '66259826-7042-24f3-d1ac-72bd8e416e57'",
+  "offered": [
+   "Info",
+   "scrape_website",
+   "search"
+  ]
+ },
+ "openai-cs-agents-demo": {
+  "coverage": "19/19",
+  "zero_touch": true,
+  "changed": [],
+  "libs": [
+   "httpx",
+   "httpx2"
+  ],
+  "blocked": [],
+  "error": "",
+  "offered": [
+   "assign_special_service_seat",
+   "book_new_flight",
+   "cancel_flight",
+   "display_seat_map",
+   "faq_lookup_tool",
+   "flight_status_tool",
+   "get_matching_flights",
+   "get_trip_details",
+   "issue_compensation",
+   "transfer_to_booking_and_cancellation_agent",
+   "transfer_to_faq_agent",
+   "transfer_to_flight_information_agent",
+   "transfer_to_refunds_and_compensation_agent",
+   "transfer_to_seat_and_special_services_agent",
+   "transfer_to_triage_agent",
+   "update_seat"
+  ]
+ },
+ "openai-agents/financial_research_agent": {
+  "coverage": "7/7",
+  "zero_touch": true,
+  "changed": [],
+  "libs": [
+   "httpx",
+   "httpx2"
+  ],
+  "blocked": [],
+  "error": "",
+  "offered": [
+   "fundamentals_analysis",
+   "risk_analysis"
+  ]
+ },
+ "pydantic-ai/bank_support": {
+  "coverage": "4/4",
+  "zero_touch": true,
+  "changed": [],
+  "libs": [
+   "httpx",
+   "httpx2"
+  ],
+  "blocked": [],
+  "error": "",
+  "offered": [
+   "customer_balance",
+   "final_result"
+  ]
+ }
+}

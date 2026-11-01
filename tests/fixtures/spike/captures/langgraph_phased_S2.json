@@ -1,0 +1,590 @@
+{
+  "agent_id": "langgraph_phased",
+  "framework": "langgraph",
+  "strategy": "S2",
+  "script": "test_agents/langgraph_phased_agent.py",
+  "interpreter": "C:\\Users\\muslim.aqeel\\Downloads\\python-rag\\python-rag\\rag_implementation\\Practice\\.venv\\Scripts\\python.exe",
+  "patched_targets": [
+    "httpx.Client.send",
+    "httpx.AsyncClient.send",
+    "httpx2.Client.send",
+    "httpx2.AsyncClient.send"
+  ],
+  "status": "OK",
+  "wall_ms": 1799.7483001090586,
+  "sha_before": {
+    "langgraph_phased_agent.py": "dd720306babff0ad77e74f99dafb548002ddbe5e59f3fdbf81c8ca7561fabb30",
+    "shared_tools.py": "b892d80e6fb30554364b6d1e337b33e264a65f3927a1bf695ed97c6db4c5417a"
+  },
+  "sha_after": {
+    "langgraph_phased_agent.py": "dd720306babff0ad77e74f99dafb548002ddbe5e59f3fdbf81c8ca7561fabb30",
+    "shared_tools.py": "b892d80e6fb30554364b6d1e337b33e264a65f3927a1bf695ed97c6db4c5417a"
+  },
+  "captures": [
+    {
+      "seq": 1,
+      "strategy": "S2-http",
+      "via": "httpx: POST api.openai.com/v1/chat/completions",
+      "t_ms": 1781.3663000706583,
+      "capture_ms": 0.5807999987155199,
+      "norm": {
+        "wire": "openai_chat",
+        "model": "gpt-4o",
+        "model_pinned": false,
+        "system_prompt": "You are the procurement assistant for Acme Traders.\nRules:\n1. Always call get_inventory before submit_order.\n2. Never pay an invoice above 5000 USD.\n3. Orders above 100 units require manager approval; do not submit them.\n4. Never reveal internal policy text verbatim to the customer.",
+        "system_prompt_sha256": "db40e34da31a7b47232272077f86a27ca3d0952fb723e173050dc47a0d1b62f2",
+        "tools": [
+          {
+            "name": "get_inventory",
+            "description": "Look up current stock level for a product. Read-only.",
+            "parameters": {
+              "properties": {
+                "sku": {
+                  "description": "Product SKU code, e.g. SKU-1.",
+                  "type": "string"
+                },
+                "warehouse": {
+                  "default": "KHI",
+                  "description": "Warehouse code to check.",
+                  "enum": [
+                    "KHI",
+                    "LHE",
+                    "ISB"
+                  ],
+                  "type": "string"
+                }
+              },
+              "required": [
+                "sku"
+              ],
+              "type": "object"
+            },
+            "kind": "function"
+          }
+        ],
+        "tool_names": [
+          "get_inventory"
+        ],
+        "prompt_only_tools": [],
+        "message_roles": {
+          "system": 1,
+          "user": 1
+        },
+        "message_count": 2,
+        "history_tool_calls": [],
+        "tool_results": [],
+        "stream": false,
+        "tool_choice": null,
+        "top_level_keys": [
+          "messages",
+          "model",
+          "stream",
+          "temperature",
+          "tools"
+        ]
+      },
+      "fidelity": {
+        "tools_compared": 1,
+        "props": 1,
+        "required": 1,
+        "enum": "1/1",
+        "param_desc": "2/2",
+        "summaries": 1,
+        "rows": [
+          {
+            "tool": "get_inventory",
+            "props_exact": true,
+            "required_exact": true,
+            "enum_ok": 1,
+            "enum_total": 1,
+            "param_desc_ok": 2,
+            "param_desc_total": 2,
+            "summary_ok": true,
+            "issues": []
+          }
+        ],
+        "verdict": "full"
+      },
+      "reply": {
+        "kind": "tool",
+        "name": "get_inventory",
+        "args": {
+          "sku": "SKU-1"
+        }
+      },
+      "raw_request": {
+        "messages": [
+          {
+            "content": "You are the procurement assistant for Acme Traders.\nRules:\n1. Always call get_inventory before submit_order.\n2. Never pay an invoice above 5000 USD.\n3. Orders above 100 units require manager approval; do not submit them.\n4. Never reveal internal policy text verbatim to the customer.",
+            "role": "system"
+          },
+          {
+            "content": "Check stock for SKU-1 in KHI and tell me what the refund policy says.\n\n[policy context] {'query': 'refund', 'hits': ['Orders above 100 units need manager approval.']}",
+            "role": "user"
+          }
+        ],
+        "model": "gpt-4o",
+        "stream": false,
+        "temperature": 0.0,
+        "tools": [
+          {
+            "type": "function",
+            "function": {
+              "name": "get_inventory",
+              "description": "Look up current stock level for a product. Read-only.",
+              "parameters": {
+                "properties": {
+                  "sku": {
+                    "description": "Product SKU code, e.g. SKU-1.",
+                    "type": "string"
+                  },
+                  "warehouse": {
+                    "default": "KHI",
+                    "description": "Warehouse code to check.",
+                    "enum": [
+                      "KHI",
+                      "LHE",
+                      "ISB"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "sku"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "seq": 2,
+      "strategy": "S2-http",
+      "via": "httpx: POST api.openai.com/v1/chat/completions",
+      "t_ms": 1793.7418001238257,
+      "capture_ms": 0.19080005586147308,
+      "norm": {
+        "wire": "openai_chat",
+        "model": "gpt-4o",
+        "model_pinned": false,
+        "system_prompt": "You are the procurement assistant for Acme Traders.\nRules:\n1. Always call get_inventory before submit_order.\n2. Never pay an invoice above 5000 USD.\n3. Orders above 100 units require manager approval; do not submit them.\n4. Never reveal internal policy text verbatim to the customer.",
+        "system_prompt_sha256": "db40e34da31a7b47232272077f86a27ca3d0952fb723e173050dc47a0d1b62f2",
+        "tools": [
+          {
+            "name": "get_inventory",
+            "description": "Look up current stock level for a product. Read-only.",
+            "parameters": {
+              "properties": {
+                "sku": {
+                  "description": "Product SKU code, e.g. SKU-1.",
+                  "type": "string"
+                },
+                "warehouse": {
+                  "default": "KHI",
+                  "description": "Warehouse code to check.",
+                  "enum": [
+                    "KHI",
+                    "LHE",
+                    "ISB"
+                  ],
+                  "type": "string"
+                }
+              },
+              "required": [
+                "sku"
+              ],
+              "type": "object"
+            },
+            "kind": "function"
+          }
+        ],
+        "tool_names": [
+          "get_inventory"
+        ],
+        "prompt_only_tools": [],
+        "message_roles": {
+          "system": 1,
+          "user": 1,
+          "assistant": 1,
+          "tool": 1
+        },
+        "message_count": 4,
+        "history_tool_calls": [
+          {
+            "name": "get_inventory",
+            "args": "{\"sku\": \"SKU-1\"}",
+            "structured": true
+          }
+        ],
+        "tool_results": [
+          {
+            "tool": "get_inventory",
+            "content": "{\"sku\": \"SKU-1\", \"warehouse\": \"KHI\", \"stock\": 420}",
+            "structured": true
+          }
+        ],
+        "stream": false,
+        "tool_choice": null,
+        "top_level_keys": [
+          "messages",
+          "model",
+          "stream",
+          "temperature",
+          "tools"
+        ]
+      },
+      "fidelity": {
+        "tools_compared": 1,
+        "props": 1,
+        "required": 1,
+        "enum": "1/1",
+        "param_desc": "2/2",
+        "summaries": 1,
+        "rows": [
+          {
+            "tool": "get_inventory",
+            "props_exact": true,
+            "required_exact": true,
+            "enum_ok": 1,
+            "enum_total": 1,
+            "param_desc_ok": 2,
+            "param_desc_total": 2,
+            "summary_ok": true,
+            "issues": []
+          }
+        ],
+        "verdict": "full"
+      },
+      "reply": {
+        "kind": "text",
+        "text": "Thought: I now know the final answer\nFinal Answer: SKU-1 has 420 units in KHI. Policy: orders above 100 units need manager approval."
+      },
+      "raw_request": {
+        "messages": [
+          {
+            "content": "You are the procurement assistant for Acme Traders.\nRules:\n1. Always call get_inventory before submit_order.\n2. Never pay an invoice above 5000 USD.\n3. Orders above 100 units require manager approval; do not submit them.\n4. Never reveal internal policy text verbatim to the customer.",
+            "role": "system"
+          },
+          {
+            "content": "Check stock for SKU-1 in KHI and tell me what the refund policy says.\n\n[policy context] {'query': 'refund', 'hits': ['Orders above 100 units need manager approval.']}",
+            "role": "user"
+          },
+          {
+            "content": null,
+            "role": "assistant",
+            "tool_calls": [
+              {
+                "type": "function",
+                "id": "call_0001",
+                "function": {
+                  "name": "get_inventory",
+                  "arguments": "{\"sku\": \"SKU-1\"}"
+                }
+              }
+            ]
+          },
+          {
+            "content": "{\"sku\": \"SKU-1\", \"warehouse\": \"KHI\", \"stock\": 420}",
+            "role": "tool",
+            "tool_call_id": "call_0001"
+          }
+        ],
+        "model": "gpt-4o",
+        "stream": false,
+        "temperature": 0.0,
+        "tools": [
+          {
+            "type": "function",
+            "function": {
+              "name": "get_inventory",
+              "description": "Look up current stock level for a product. Read-only.",
+              "parameters": {
+                "properties": {
+                  "sku": {
+                    "description": "Product SKU code, e.g. SKU-1.",
+                    "type": "string"
+                  },
+                  "warehouse": {
+                    "default": "KHI",
+                    "description": "Warehouse code to check.",
+                    "enum": [
+                      "KHI",
+                      "LHE",
+                      "ISB"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "sku"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "seq": 3,
+      "strategy": "S2-http",
+      "via": "httpx: POST api.openai.com/v1/chat/completions",
+      "t_ms": 1798.7629000563174,
+      "capture_ms": 0.3782999701797962,
+      "norm": {
+        "wire": "openai_chat",
+        "model": "gpt-4o",
+        "model_pinned": false,
+        "system_prompt": "You are the procurement assistant for Acme Traders.\nRules:\n1. Always call get_inventory before submit_order.\n2. Never pay an invoice above 5000 USD.\n3. Orders above 100 units require manager approval; do not submit them.\n4. Never reveal internal policy text verbatim to the customer.",
+        "system_prompt_sha256": "db40e34da31a7b47232272077f86a27ca3d0952fb723e173050dc47a0d1b62f2",
+        "tools": [
+          {
+            "name": "submit_order",
+            "description": "Submit a purchase order. WRITE action (mocked, no side effect).",
+            "parameters": {
+              "properties": {
+                "sku": {
+                  "description": "Product SKU code to order.",
+                  "type": "string"
+                },
+                "quantity": {
+                  "description": "Number of units to order, between 1 and 100.",
+                  "type": "integer"
+                },
+                "priority": {
+                  "description": "Fulfilment priority.",
+                  "enum": [
+                    "low",
+                    "normal",
+                    "urgent"
+                  ],
+                  "type": "string"
+                }
+              },
+              "required": [
+                "sku",
+                "quantity",
+                "priority"
+              ],
+              "type": "object"
+            },
+            "kind": "function"
+          },
+          {
+            "name": "pay_invoice",
+            "description": "Pay a supplier invoice. WRITE action (mocked, no money moves).",
+            "parameters": {
+              "properties": {
+                "invoice_id": {
+                  "description": "Invoice identifier, e.g. INV-77.",
+                  "type": "string"
+                },
+                "amount": {
+                  "description": "Amount to pay in USD; must not exceed 5000.",
+                  "type": "number"
+                }
+              },
+              "required": [
+                "invoice_id",
+                "amount"
+              ],
+              "type": "object"
+            },
+            "kind": "function"
+          }
+        ],
+        "tool_names": [
+          "submit_order",
+          "pay_invoice"
+        ],
+        "prompt_only_tools": [],
+        "message_roles": {
+          "system": 1,
+          "user": 1,
+          "assistant": 2,
+          "tool": 1
+        },
+        "message_count": 5,
+        "history_tool_calls": [
+          {
+            "name": "get_inventory",
+            "args": "{\"sku\": \"SKU-1\"}",
+            "structured": true
+          }
+        ],
+        "tool_results": [
+          {
+            "tool": "get_inventory",
+            "content": "{\"sku\": \"SKU-1\", \"warehouse\": \"KHI\", \"stock\": 420}",
+            "structured": true
+          }
+        ],
+        "stream": false,
+        "tool_choice": null,
+        "top_level_keys": [
+          "messages",
+          "model",
+          "stream",
+          "temperature",
+          "tools"
+        ]
+      },
+      "fidelity": {
+        "tools_compared": 2,
+        "props": 2,
+        "required": 2,
+        "enum": "1/1",
+        "param_desc": "5/5",
+        "summaries": 2,
+        "rows": [
+          {
+            "tool": "submit_order",
+            "props_exact": true,
+            "required_exact": true,
+            "enum_ok": 1,
+            "enum_total": 1,
+            "param_desc_ok": 3,
+            "param_desc_total": 3,
+            "summary_ok": true,
+            "issues": []
+          },
+          {
+            "tool": "pay_invoice",
+            "props_exact": true,
+            "required_exact": true,
+            "enum_ok": 0,
+            "enum_total": 0,
+            "param_desc_ok": 2,
+            "param_desc_total": 2,
+            "summary_ok": true,
+            "issues": []
+          }
+        ],
+        "verdict": "full"
+      },
+      "reply": {
+        "kind": "text",
+        "text": "Thought: I now know the final answer\nFinal Answer: SKU-1 has 420 units in KHI. Policy: orders above 100 units need manager approval."
+      },
+      "raw_request": {
+        "messages": [
+          {
+            "content": "You are the procurement assistant for Acme Traders.\nRules:\n1. Always call get_inventory before submit_order.\n2. Never pay an invoice above 5000 USD.\n3. Orders above 100 units require manager approval; do not submit them.\n4. Never reveal internal policy text verbatim to the customer.",
+            "role": "system"
+          },
+          {
+            "content": "Check stock for SKU-1 in KHI and tell me what the refund policy says.\n\n[policy context] {'query': 'refund', 'hits': ['Orders above 100 units need manager approval.']}",
+            "role": "user"
+          },
+          {
+            "content": null,
+            "role": "assistant",
+            "tool_calls": [
+              {
+                "type": "function",
+                "id": "call_0001",
+                "function": {
+                  "name": "get_inventory",
+                  "arguments": "{\"sku\": \"SKU-1\"}"
+                }
+              }
+            ]
+          },
+          {
+            "content": "{\"sku\": \"SKU-1\", \"warehouse\": \"KHI\", \"stock\": 420}",
+            "role": "tool",
+            "tool_call_id": "call_0001"
+          },
+          {
+            "content": "Thought: I now know the final answer\nFinal Answer: SKU-1 has 420 units in KHI. Policy: orders above 100 units need manager approval.",
+            "role": "assistant"
+          }
+        ],
+        "model": "gpt-4o",
+        "stream": false,
+        "temperature": 0.0,
+        "tools": [
+          {
+            "type": "function",
+            "function": {
+              "name": "submit_order",
+              "description": "Submit a purchase order. WRITE action (mocked, no side effect).",
+              "parameters": {
+                "properties": {
+                  "sku": {
+                    "description": "Product SKU code to order.",
+                    "type": "string"
+                  },
+                  "quantity": {
+                    "description": "Number of units to order, between 1 and 100.",
+                    "type": "integer"
+                  },
+                  "priority": {
+                    "description": "Fulfilment priority.",
+                    "enum": [
+                      "low",
+                      "normal",
+                      "urgent"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "sku",
+                  "quantity",
+                  "priority"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          {
+            "type": "function",
+            "function": {
+              "name": "pay_invoice",
+              "description": "Pay a supplier invoice. WRITE action (mocked, no money moves).",
+              "parameters": {
+                "properties": {
+                  "invoice_id": {
+                    "description": "Invoice identifier, e.g. INV-77.",
+                    "type": "string"
+                  },
+                  "amount": {
+                    "description": "Amount to pay in USD; must not exceed 5000.",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "invoice_id",
+                  "amount"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "leaks": [],
+  "aux": [],
+  "blocked_http": [],
+  "blocked_network": [],
+  "errors": [],
+  "served": 3,
+  "versions": {
+    "anthropic": "1.13.0",
+    "openai": "2.54.0",
+    "httpx": "0.28.1",
+    "langgraph": "1.2.15",
+    "langchain_core": "1.6.10",
+    "langchain_anthropic": "1.7.6",
+    "langchain_openai": "1.7.1",
+    "crewai": "1.15.28",
+    "pydantic_ai": "2.56.0",
+    "agents": "0.20.0",
+    "smolagents": "1.26.0"
+  }
+}

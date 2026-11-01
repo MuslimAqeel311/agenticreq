@@ -1,0 +1,10 @@
+entry: agent.py:run
+args: {task: billing}
+tools:
+  get_invoice: {args: {ref: i1}}
+  open_ticket: {args: {ref: t1}}
+  quote_price: {args: {ref: q1}}
+runs:
+  - {name: billing, args: {task: billing}}
+  - {name: support, args: {task: support}}
+  - {name: sales, args: {task: sales}}

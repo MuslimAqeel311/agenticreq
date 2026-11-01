@@ -1,0 +1,26 @@
+agent_id: bank-triage
+risk_level: medium
+goal:
+  statement: Route banking requests to a specialist
+  done_criteria: [request routed or answered]
+out_of_scope: []
+role_boundary:
+  allowed_tools: [get_balances, flag_transaction, loan_estimate]
+prohibited: []
+approval_required: []
+limits: []
+escalation: []
+untrusted_inputs: []
+owner: bank-ops@example.com
+technical_owner: platform@example.com
+topology: hierarchical
+agent_registry:
+  - {id: triage, match: "You route banking requests", tools: []}
+  - {id: accounts, match: "You answer account questions", tools: [get_balances]}
+  - {id: fraud, match: "You review suspicious activity", tools: [flag_transaction]}
+  - {id: loans, match: "You quote loans", tools: [loan_estimate]}
+declared_delegation:
+  - triage -> accounts
+  - triage -> fraud
+  - triage -> loans
+max_delegation_depth: 1

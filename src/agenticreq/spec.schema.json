@@ -1,0 +1,3698 @@
+{
+  "$defs": {
+    "AgentEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "title": "Id",
+              "type": "string"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "role": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Role"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "tools": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "title": "Tools",
+              "type": "array"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "prohibited": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "title": "Prohibited",
+              "type": "array"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "system_prompt_sha256": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "System Prompt Sha256"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "match": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Match"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "title": "AgentEntry",
+      "type": "object"
+    },
+    "AggregateBudget": {
+      "additionalProperties": false,
+      "properties": {
+        "max_cost_usd": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Max Cost Usd"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "max_steps": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Max Steps"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "max_tool_calls": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Max Tool Calls"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        }
+      },
+      "title": "AggregateBudget",
+      "type": "object"
+    },
+    "ApprovalRule": {
+      "additionalProperties": false,
+      "properties": {
+        "tool": {
+          "anyOf": [
+            {
+              "title": "Tool",
+              "type": "string"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "approver": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Approver"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "timeout": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Timeout"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "on_timeout": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "enum": [
+                    "safe_stop",
+                    "deny",
+                    "escalate",
+                    "proceed"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "On Timeout"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        }
+      },
+      "required": [
+        "tool"
+      ],
+      "title": "ApprovalRule",
+      "type": "object"
+    },
+    "Attestation": {
+      "additionalProperties": false,
+      "description": "One entry under ``confirmed:``: a person's answer for a sign-off item. Which fields it needs depends on the\nanswer (``signoff.assess`` reports a missing one): yes = by, date, expires, evidence; no and not_needed = by,\ndate, reason.",
+      "properties": {
+        "clause": {
+          "anyOf": [
+            {
+              "title": "Clause",
+              "type": "string"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "answer": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "default": "yes",
+                  "enum": [
+                    "yes",
+                    "no",
+                    "not_needed"
+                  ],
+                  "title": "Answer",
+                  "type": "string"
+                },
+                {
+                  "type": "boolean"
+                }
+              ],
+              "default": "yes"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "by": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "By"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "date": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Date"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "expires": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Expires"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "evidence": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Evidence"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Reason"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        }
+      },
+      "required": [
+        "clause"
+      ],
+      "title": "Attestation",
+      "type": "object"
+    },
+    "Bounds": {
+      "additionalProperties": false,
+      "properties": {
+        "max_steps": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Max Steps"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "max_cost_usd": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Max Cost Usd"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "max_duration_s": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Max Duration S"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "max_retries": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Max Retries"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "max_tool_calls": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Max Tool Calls"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        }
+      },
+      "title": "Bounds",
+      "type": "object"
+    },
+    "ContextPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "must_never_drop": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "title": "Must Never Drop",
+              "type": "array"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "max_tokens": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Max Tokens"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        }
+      },
+      "title": "ContextPolicy",
+      "type": "object"
+    },
+    "DataRules": {
+      "additionalProperties": false,
+      "properties": {
+        "retention": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Retention",
+                  "type": "object"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "never_store": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "title": "Never Store",
+              "type": "array"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        }
+      },
+      "title": "DataRules",
+      "type": "object"
+    },
+    "DelegationEdge": {
+      "additionalProperties": false,
+      "properties": {
+        "from": {
+          "anyOf": [
+            {
+              "title": "From",
+              "type": "string"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "to": {
+          "anyOf": [
+            {
+              "title": "To",
+              "type": "string"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        }
+      },
+      "required": [
+        "from",
+        "to"
+      ],
+      "title": "DelegationEdge",
+      "type": "object"
+    },
+    "DetectorSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "anyOf": [
+            {
+              "title": "Type",
+              "type": "string"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "params": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "title": "Params",
+              "type": "object"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "DetectorSpec",
+      "type": "object"
+    },
+    "EgressPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "allow": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "title": "Allow",
+              "type": "array"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "default": {
+          "anyOf": [
+            {
+              "enum": [
+                "deny",
+                "allow"
+              ],
+              "type": "string",
+              "default": "deny",
+              "title": "Default"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        }
+      },
+      "title": "EgressPolicy",
+      "type": "object"
+    },
+    "EscalationRule": {
+      "additionalProperties": false,
+      "properties": {
+        "metric": {
+          "anyOf": [
+            {
+              "title": "Metric",
+              "type": "string"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "op": {
+          "anyOf": [
+            {
+              "enum": [
+                ">",
+                ">=",
+                "<",
+                "<=",
+                "==",
+                "!="
+              ],
+              "title": "Op",
+              "type": "string"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "threshold": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "title": "Threshold"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "to": {
+          "anyOf": [
+            {
+              "title": "To",
+              "type": "string"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        }
+      },
+      "required": [
+        "metric",
+        "op",
+        "threshold",
+        "to"
+      ],
+      "title": "EscalationRule",
+      "type": "object"
+    },
+    "Goal": {
+      "additionalProperties": false,
+      "properties": {
+        "statement": {
+          "anyOf": [
+            {
+              "title": "Statement",
+              "type": "string"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "done_criteria": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "title": "Done Criteria",
+              "type": "array"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        }
+      },
+      "required": [
+        "statement"
+      ],
+      "title": "Goal",
+      "type": "object"
+    },
+    "LimitEntry": {
+      "additionalProperties": false,
+      "description": "Normalised limit: one tool argument and its bound.",
+      "properties": {
+        "tool": {
+          "anyOf": [
+            {
+              "title": "Tool",
+              "type": "string"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "arg": {
+          "anyOf": [
+            {
+              "title": "Arg",
+              "type": "string"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "limit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LimitSpec"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        }
+      },
+      "required": [
+        "tool",
+        "arg",
+        "limit"
+      ],
+      "title": "LimitEntry",
+      "type": "object"
+    },
+    "LimitSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "min": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Min"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "max": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Max"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "max_length": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Max Length"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "enum": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "items": {},
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Enum"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "pattern": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Pattern"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        }
+      },
+      "title": "LimitSpec",
+      "type": "object"
+    },
+    "MemoryPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "anyOf": [
+            {
+              "default": false,
+              "title": "Enabled",
+              "type": "boolean"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "write_validation": {
+          "anyOf": [
+            {
+              "default": true,
+              "title": "Write Validation",
+              "type": "boolean"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        }
+      },
+      "title": "MemoryPolicy",
+      "type": "object"
+    },
+    "OutputSizeLimits": {
+      "additionalProperties": false,
+      "properties": {
+        "max_chars": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Max Chars"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "max_items": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Max Items"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        }
+      },
+      "title": "OutputSizeLimits",
+      "type": "object"
+    },
+    "ProgressGuard": {
+      "additionalProperties": false,
+      "properties": {
+        "max_no_progress_steps": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Max No Progress Steps"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        }
+      },
+      "title": "ProgressGuard",
+      "type": "object"
+    },
+    "Prohibition": {
+      "additionalProperties": false,
+      "properties": {
+        "tool": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Tool"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "action": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Action"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Reason"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "detector": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DetectorSpec"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        }
+      },
+      "title": "Prohibition",
+      "type": "object"
+    },
+    "RoleBoundary": {
+      "additionalProperties": false,
+      "description": "Structured capability set \u2014 not prose.",
+      "properties": {
+        "allowed_tools": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "title": "Allowed Tools",
+              "type": "array"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "capabilities": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "title": "Capabilities",
+              "type": "array"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "data_access": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "title": "Data Access",
+              "type": "array"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        }
+      },
+      "title": "RoleBoundary",
+      "type": "object"
+    },
+    "UntrustedInput": {
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "anyOf": [
+            {
+              "title": "Source",
+              "type": "string"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "kind": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Kind"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        }
+      },
+      "required": [
+        "source"
+      ],
+      "title": "UntrustedInput",
+      "type": "object"
+    },
+    "Waiver": {
+      "additionalProperties": false,
+      "properties": {
+        "rule_id": {
+          "anyOf": [
+            {
+              "title": "Rule Id",
+              "type": "string"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "subject": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Subject"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "title": "Reason",
+              "type": "string"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "approved_by": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Approved By"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "expires": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Expires"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        }
+      },
+      "required": [
+        "rule_id",
+        "reason"
+      ],
+      "title": "Waiver",
+      "type": "object"
+    },
+    "WriteSafety": {
+      "additionalProperties": false,
+      "properties": {
+        "idempotency_key": {
+          "anyOf": [
+            {
+              "default": false,
+              "title": "Idempotency Key",
+              "type": "boolean"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "compensating_action": {
+          "anyOf": [
+            {
+              "default": false,
+              "title": "Compensating Action",
+              "type": "boolean"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        }
+      },
+      "title": "WriteSafety",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "spec_version": {
+      "anyOf": [
+        {
+          "default": 1,
+          "title": "Spec Version",
+          "type": "integer"
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "extends": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Extends"
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "_derived": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Derived"
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "confirmed": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/Attestation"
+          },
+          "title": "Confirmed",
+          "type": "array"
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "tool_effects": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "enum": [
+                  "read",
+                  "write"
+                ],
+                "type": "string"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tool Effects"
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "waivers": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/Waiver"
+          },
+          "title": "Waivers",
+          "type": "array"
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "agent_id": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Agent Id",
+          "description": "Level 1 (Identity). Also called: agent_id (name, agent_name, id)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "risk_level": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "enum": [
+                "low",
+                "medium",
+                "high",
+                "critical"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Risk Level",
+          "description": "Level 1 (Identity). selects every Level-2/3 default and floor. Also called: risk_level (risk, risk_tier, criticality)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "goal": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Goal"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "description": "Level 1 (Intent). done_criteria must be measurable. Also called: goal (objective, purpose, mission)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "out_of_scope": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Out Of Scope",
+          "description": "Level 1 (Intent). Also called: out_of_scope (off_topic, excluded_topics, not_allowed_topics)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "role_boundary": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RoleBoundary"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Level 1 (Authority). Also called: role_boundary (permitted_tools, tool_allowlist, tool_permissions)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "prohibited": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Prohibition"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          ],
+          "default": null,
+          "description": "Level 1 (Authority). presence of a tool in code is not permission; only the spec says what is forbidden. Also called: prohibited (forbidden, banned, blocked, denied)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "approval_required": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ApprovalRule"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          ],
+          "default": null,
+          "description": "Level 1 (Authority). Also called: approval_required (human_approval, needs_approval, requires_approval, hitl)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "limits": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LimitEntry"
+                  },
+                  {
+                    "type": "object"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Level 1 (Authority). the money / quantity thresholds. Also called: limits (thresholds, caps, max_values)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "escalation": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/EscalationRule"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Escalation",
+          "description": "Level 1 (Oversight). must be {metric, op, threshold, to}. Also called: escalation (escalate, escalation_rules, handoff_to_human)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "untrusted_inputs": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/UntrustedInput"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          ],
+          "default": null,
+          "description": "Level 1 (Trust). Also called: untrusted_inputs (untrusted_sources, tainted_inputs, external_inputs)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "owner": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Owner",
+          "description": "Level 1 (Accountability). Also called: owner (business_owner, product_owner, accountable)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "technical_owner": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Technical Owner",
+          "description": "Level 1 (Accountability). written together with owner. Also called: technical_owner (tech_owner, engineering_owner, maintainer)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "data_rules": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DataRules"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Level 1 (Trust)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "fail_closed": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fail Closed",
+          "description": "Level 2 (Tool Discipline)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "bounds": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Bounds"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Level 2 (Goal & Termination). max_steps, max_cost_usd, max_duration_s. Also called: bounds (budgets, run_limits); bounds.max_steps (max_iterations, max_turns, recursion_limit, step_limit); bounds.max_cost_usd (max_cost, cost_limit, budget_usd); bounds.max_duration_s (timeout, max_duration, time_limit); bounds.max_tool_calls (tool_call_limit, max_tools); bounds.max_retries (retries, retry_limit)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "stop_conditions": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Stop Conditions",
+          "description": "Level 2 (Goal & Termination). needs traces / real captures."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "progress_guard": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProgressGuard"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Level 2 (Goal & Termination). needs traces / real captures."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "completion_verification": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Completion Verification",
+          "description": "Level 2 (Goal & Termination)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "termination_authority": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Termination Authority",
+          "description": "Level 2 (Goal & Termination)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "goal_drift_guard": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Goal Drift Guard",
+          "description": "Level 2 (Goal & Termination)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "tool_schema_strictness": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "enum": [
+                "strict",
+                "lenient"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tool Schema Strictness",
+          "description": "Level 2 (Tool Discipline). needs a mock run."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "tool_result_validation": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tool Result Validation",
+          "description": "Level 2 (Tool Discipline)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "tool_error_contract": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tool Error Contract",
+          "description": "Level 2 (Tool Discipline)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "read_write_separation": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Read Write Separation",
+          "description": "Level 2 (Tool Discipline)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "tool_inventory_report": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tool Inventory Report",
+          "description": "Level 2 (Tool Discipline). declared vs observed inventory; also `agenticreq stats`."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "unbounded_tool_policy": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "enum": [
+                "forbid",
+                "warn",
+                "allow"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unbounded Tool Policy",
+          "description": "Level 2 (Tool Discipline). http / sql / shell / search tools."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "output_size_limits": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OutputSizeLimits"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Level 2 (Reliability & Recovery)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "dry_run_required": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Dry Run Required",
+          "description": "Level 2 (Tool Discipline)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "context_policy": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ContextPolicy"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Level 2 (State & Context)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "memory_policy": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MemoryPolicy"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Level 2 (State & Context)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "checkpointing": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Checkpointing",
+          "description": "Level 2 (State & Context). verified for LangGraph; other frameworks wait for a mock run."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "structured_output": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Structured Output",
+          "description": "Level 2 (State & Context)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "write_safety": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WriteSafety"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Level 2 (Reliability & Recovery). idempotency key on writes."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "fallback_policy": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fallback Policy",
+          "description": "Level 2 (Reliability & Recovery)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "rate_limits": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rate Limits",
+          "description": "Level 2 (Reliability & Recovery). needs timestamps (a mock run / OTLP spans) and a requests_per_minute key."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "trust_boundary": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Trust Boundary",
+          "description": "Level 2 (Security & Trust)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "identity_propagation": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Identity Propagation",
+          "description": "Level 2 (Security & Trust)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "egress_policy": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EgressPolicy"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Level 2 (Security & Trust)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "secrets_policy": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Secrets Policy",
+          "description": "Level 2 (Security & Trust). hard-coded secrets."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "self_modification": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Self Modification",
+          "description": "Level 2 (Security & Trust)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "sandbox_policy": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sandbox Policy",
+          "description": "Level 2 (Security & Trust)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "clarification_policy": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Clarification Policy",
+          "description": "Level 2 (Human Oversight)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "confidence_threshold": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Confidence Threshold",
+          "description": "Level 2 (Human Oversight)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "on_approval_timeout": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "enum": [
+                "safe_stop",
+                "deny",
+                "escalate",
+                "proceed"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "On Approval Timeout",
+          "description": "Level 2 (Human Oversight)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "kill_switch": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Kill Switch",
+          "description": "Level 2 (Human Oversight). Also called: kill_switch (emergency_stop, off_switch, stop_switch)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "handoff_contract": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Handoff Contract",
+          "description": "Level 2 (Human Oversight)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "trace_policy": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Trace Policy",
+          "description": "Level 2 (Observability & Change Safety)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "audit_log": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Audit Log",
+          "description": "Level 2 (Observability & Change Safety). audit logging hooks. Also called: audit_log (audit_trail, audit_logging, tool_call_log)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "log_immutable": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Log Immutable",
+          "description": "Level 2 (Observability & Change Safety)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "version_pinning": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Version Pinning",
+          "description": "Level 2 (Observability & Change Safety). model version pinned. Also called: version_pinning (model_pinning, pin_model, pinned_model)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "regression_triggers": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Regression Triggers",
+          "description": "Level 2 (Observability & Change Safety)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "rollback_path": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rollback Path",
+          "description": "Level 2 (Observability & Change Safety)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "drift_monitors": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Drift Monitors",
+          "description": "Level 2 (Observability & Change Safety)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "environment_separation": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Environment Separation",
+          "description": "Level 2 (Observability & Change Safety)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "topology": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "enum": [
+                "single",
+                "pipeline",
+                "supervisor",
+                "hierarchical",
+                "swarm",
+                "peer"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Topology",
+          "description": "Level 3 (Multi-Agent). single | pipeline | supervisor | hierarchical | swarm | peer."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "agent_registry": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/AgentEntry"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Agent Registry",
+          "description": "Level 3 (Multi-Agent)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "declared_delegation": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DelegationEdge"
+                  },
+                  {
+                    "type": "string",
+                    "pattern": "->"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Level 3 (Multi-Agent)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "max_delegation_depth": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Delegation Depth",
+          "description": "Level 3 (Multi-Agent)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "authority_inheritance": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "enum": [
+                "subset",
+                "independent"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Authority Inheritance",
+          "description": "Level 3 (Multi-Agent). a delegate holds a subset of its delegator."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "transitive_prohibition": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Transitive Prohibition",
+          "description": "Level 3 (Multi-Agent). A \u2192 B \u2192 C cannot reach a prohibited tool."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "no_cycles": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "No Cycles",
+          "description": "Level 3 (Multi-Agent)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "cross_agent_trust": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "enum": [
+                "none",
+                "verified",
+                "full"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cross Agent Trust",
+          "description": "Level 3 (Multi-Agent). `none`: a sibling agent's output is untrusted input."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "context_isolation": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Context Isolation",
+          "description": "Level 3 (Multi-Agent)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "conflict_resolution": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Conflict Resolution",
+          "description": "Level 3 (Multi-Agent)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "aggregate_budget": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AggregateBudget"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Level 3 (Multi-Agent)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "concurrency_policy": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Concurrency Policy",
+          "description": "Level 3 (Multi-Agent)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "failure_isolation": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Failure Isolation",
+          "description": "Level 3 (Multi-Agent)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "end_to_end_trace_id": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "End To End Trace Id",
+          "description": "Level 3 (Multi-Agent)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    }
+  },
+  "title": "agenticreq spec.yml",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

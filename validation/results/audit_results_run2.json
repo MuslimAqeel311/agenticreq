@@ -1,0 +1,801 @@
+{
+ "react-agent": {
+  "framework": "langgraph 1.2.15 (runtime)",
+  "frameworks": [
+   "langgraph",
+   "langchain"
+  ],
+  "exec": "schema-based",
+  "declared": [
+   "search"
+  ],
+  "bound": [
+   "search"
+  ],
+  "observed": [
+   "search"
+  ],
+  "proven": 0,
+  "heuristic": 1,
+  "unknown": 0,
+  "observed_conf": 0,
+  "blockers": 0,
+  "warnings": 1,
+  "unknowns": 0,
+  "passed": 2,
+  "coverage": [
+   5,
+   5
+  ],
+  "rules": {
+   "AS-208": 1
+  },
+  "findings": [
+   {
+    "rule": "AS-208",
+    "sev": "warning",
+    "conf": "heuristic",
+    "title": "No step / iteration bound found",
+    "where": "None",
+    "detail": "no recursion_limit / max_iter / max_turns / max_steps found; the medium default is max_steps=50"
+   }
+  ],
+  "files": 7,
+  "errors": []
+ },
+ "memory-agent": {
+  "framework": "langgraph 1.2.15 (runtime)",
+  "frameworks": [
+   "langgraph",
+   "langchain"
+  ],
+  "exec": "schema-based",
+  "declared": [
+   "upsert_memory"
+  ],
+  "bound": [
+   "upsert_memory"
+  ],
+  "observed": [
+   "upsert_memory"
+  ],
+  "proven": 0,
+  "heuristic": 2,
+  "unknown": 0,
+  "observed_conf": 0,
+  "blockers": 0,
+  "warnings": 2,
+  "unknowns": 0,
+  "passed": 2,
+  "coverage": [
+   6,
+   6
+  ],
+  "rules": {
+   "AS-208": 1,
+   "AS-211": 1
+  },
+  "findings": [
+   {
+    "rule": "AS-208",
+    "sev": "warning",
+    "conf": "heuristic",
+    "title": "No step / iteration bound found",
+    "where": "None",
+    "detail": "no recursion_limit / max_iter / max_turns / max_steps found; the medium default is max_steps=50"
+   },
+   {
+    "rule": "AS-211",
+    "sev": "warning",
+    "conf": "heuristic",
+    "title": "Write tool upsert_memory has no idempotency key",
+    "where": "src/memory_agent/tools.py:10",
+    "detail": "upsert_memory takes no idempotency key and its body repeats the side effect on a retry (fresh id / record append / remote write)"
+   }
+  ],
+  "files": 7,
+  "errors": []
+ },
+ "data-enrichment": {
+  "framework": "langgraph 1.2.15 (runtime)",
+  "frameworks": [
+   "langgraph",
+   "langchain"
+  ],
+  "exec": "schema-based",
+  "declared": [
+   "scrape_website",
+   "search"
+  ],
+  "bound": [
+   "scrape_website",
+   "search"
+  ],
+  "observed": [
+   "Info",
+   "scrape_website",
+   "search"
+  ],
+  "proven": 1,
+  "heuristic": 2,
+  "unknown": 0,
+  "observed_conf": 0,
+  "blockers": 0,
+  "warnings": 3,
+  "unknowns": 0,
+  "passed": 3,
+  "coverage": [
+   6,
+   6
+  ],
+  "rules": {
+   "AS-202": 1,
+   "AS-208": 1,
+   "AS-216": 1
+  },
+  "findings": [
+   {
+    "rule": "AS-202",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "Info offered to the model but not declared in code",
+    "where": "None",
+    "detail": "the wire carried tool 'Info', which no tool declaration in the scanned code defines and which is not a known framework-injected tool"
+   },
+   {
+    "rule": "AS-208",
+    "sev": "warning",
+    "conf": "heuristic",
+    "title": "No step / iteration bound found",
+    "where": "None",
+    "detail": "no recursion_limit / max_iter / max_turns / max_steps found; the medium default is max_steps=50"
+   },
+   {
+    "rule": "AS-216",
+    "sev": "warning",
+    "conf": "heuristic",
+    "title": "scrape_website fetches a model-controlled URL",
+    "where": "src/enrichment_agent/tools.py:52",
+    "detail": "scrape_website passes a parameter into an HTTP call; egress_policy allow=[]"
+   }
+  ],
+  "files": 7,
+  "errors": []
+ },
+ "open_deep_research": {
+  "framework": "langgraph 1.2.15 (installed)",
+  "frameworks": [
+   "langgraph",
+   "langchain"
+  ],
+  "exec": "schema-based",
+  "declared": [
+   "ConductResearch",
+   "ResearchComplete",
+   "azureaisearch_search",
+   "duckduckgo_search",
+   "tavily_search",
+   "think_tool"
+  ],
+  "bound": [
+   "ConductResearch",
+   "ResearchComplete",
+   "think_tool"
+  ],
+  "observed": null,
+  "proven": 3,
+  "heuristic": 1,
+  "unknown": 1,
+  "observed_conf": 0,
+  "blockers": 0,
+  "warnings": 4,
+  "unknowns": 1,
+  "passed": 1,
+  "coverage": [
+   5,
+   5
+  ],
+  "rules": {
+   "AS-208": 1,
+   "AS-210": 3,
+   "AS-903": 1
+  },
+  "findings": [
+   {
+    "rule": "AS-208",
+    "sev": "warning",
+    "conf": "heuristic",
+    "title": "No step / iteration bound found",
+    "where": "None",
+    "detail": "no recursion_limit / max_iter / max_turns / max_steps found; the medium default is max_steps=50"
+   },
+   {
+    "rule": "AS-210",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "Model 'gpt-4.1' is not pinned",
+    "where": "src/legacy/configuration.py:40",
+    "detail": "gpt-4.1 is an alias; the provider can change the model behind it (6 call sites)"
+   },
+   {
+    "rule": "AS-210",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "Model 'claude-3-7-sonnet-latest' is not pinned",
+    "where": "src/legacy/configuration.py:48",
+    "detail": "claude-3-7-sonnet-latest is an alias; the provider can change the model behind it"
+   },
+   {
+    "rule": "AS-210",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "Model 'openai:gpt-4.1-mini' is not pinned",
+    "where": "src/open_deep_research/configuration.py:121",
+    "detail": "openai:gpt-4.1-mini is an alias; the provider can change the model behind it"
+   },
+   {
+    "rule": "AS-903",
+    "sev": "info",
+    "conf": "unknown",
+    "title": "No runtime capture or trace supplied",
+    "where": "None",
+    "detail": "only static (AST) evidence: never_reached, undeclared-tool and schema-fidelity checks did not run"
+   }
+  ],
+  "files": 13,
+  "errors": []
+ },
+ "gpt-researcher/multi_agents": {
+  "framework": "langgraph 1.2.15 (installed)",
+  "frameworks": [
+   "langgraph",
+   "openai-agents",
+   "autogen",
+   "langchain"
+  ],
+  "exec": "schema-based",
+  "declared": [],
+  "bound": [],
+  "observed": null,
+  "proven": 0,
+  "heuristic": 0,
+  "unknown": 1,
+  "observed_conf": 0,
+  "blockers": 0,
+  "warnings": 0,
+  "unknowns": 1,
+  "passed": 1,
+  "coverage": [
+   1,
+   1
+  ],
+  "rules": {
+   "AS-903": 1
+  },
+  "findings": [
+   {
+    "rule": "AS-903",
+    "sev": "info",
+    "conf": "unknown",
+    "title": "No runtime capture or trace supplied",
+    "where": "None",
+    "detail": "only static (AST) evidence: never_reached, undeclared-tool and schema-fidelity checks did not run"
+   }
+  ],
+  "files": 125,
+  "errors": []
+ },
+ "openai-cs-agents-demo": {
+  "framework": "openai-agents 0.24.0 (runtime)",
+  "frameworks": [
+   "openai-agents"
+  ],
+  "exec": "schema-based",
+  "declared": [
+   "assign_special_service_seat",
+   "baggage_tool",
+   "book_new_flight",
+   "cancel_flight",
+   "display_seat_map",
+   "faq_lookup_tool",
+   "flight_status_tool",
+   "get_matching_flights",
+   "get_trip_details",
+   "issue_compensation",
+   "update_seat"
+  ],
+  "bound": [
+   "assign_special_service_seat",
+   "book_new_flight",
+   "cancel_flight",
+   "display_seat_map",
+   "faq_lookup_tool",
+   "flight_status_tool",
+   "get_matching_flights",
+   "get_trip_details",
+   "issue_compensation",
+   "update_seat"
+  ],
+  "observed": [
+   "assign_special_service_seat",
+   "book_new_flight",
+   "cancel_flight",
+   "display_seat_map",
+   "faq_lookup_tool",
+   "flight_status_tool",
+   "get_matching_flights",
+   "get_trip_details",
+   "issue_compensation",
+   "transfer_to_booking_and_cancellation_agent",
+   "transfer_to_faq_agent",
+   "transfer_to_flight_information_agent",
+   "transfer_to_refunds_and_compensation_agent",
+   "transfer_to_seat_and_special_services_agent",
+   "transfer_to_triage_agent",
+   "update_seat"
+  ],
+  "proven": 16,
+  "heuristic": 3,
+  "unknown": 1,
+  "observed_conf": 0,
+  "blockers": 3,
+  "warnings": 16,
+  "unknowns": 1,
+  "passed": 15,
+  "coverage": [
+   29,
+   35
+  ],
+  "rules": {
+   "AS-201": 1,
+   "AS-210": 2,
+   "AS-212": 3,
+   "AS-604": 2,
+   "AS-608": 4,
+   "AS-603": 3,
+   "AS-605": 3,
+   "AS-302": 1,
+   "AS-303": 1
+  },
+  "findings": [
+   {
+    "rule": "AS-201",
+    "sev": "info",
+    "conf": "unknown",
+    "title": "baggage_tool never reached the model boundary",
+    "where": "airline/tools.py:152",
+    "detail": "baggage_tool is declared in code but was not offered to the model in 1 run(s): not bound to any agent in code. Unknown, not PASS."
+   },
+   {
+    "rule": "AS-210",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "Model 'gpt-5.2' is not pinned",
+    "where": "airline/agents.py:25",
+    "detail": "gpt-5.2 is an alias; the provider can change the model behind it (7 call sites)"
+   },
+   {
+    "rule": "AS-210",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "Model 'gpt-4.1-mini' is not pinned",
+    "where": "airline/guardrails.py:14",
+    "detail": "gpt-4.1-mini is an alias; the provider can change the model behind it (3 call sites)"
+   },
+   {
+    "rule": "AS-212",
+    "sev": "warning",
+    "conf": "heuristic",
+    "title": "Write tool book_new_flight runs without approval",
+    "where": "airline/tools.py:208",
+    "detail": "book_new_flight looks like a high-impact write and nothing gates it (no approval_required entry, no interrupt/HITL in code)"
+   },
+   {
+    "rule": "AS-212",
+    "sev": "warning",
+    "conf": "heuristic",
+    "title": "Write tool issue_compensation runs without approval",
+    "where": "airline/tools.py:303",
+    "detail": "issue_compensation looks like a high-impact write and nothing gates it (no approval_required entry, no interrupt/HITL in code)"
+   },
+   {
+    "rule": "AS-212",
+    "sev": "warning",
+    "conf": "heuristic",
+    "title": "Write tool cancel_flight runs without approval",
+    "where": "airline/tools.py:342",
+    "detail": "cancel_flight looks like a high-impact write and nothing gates it (no approval_required entry, no interrupt/HITL in code)"
+   },
+   {
+    "rule": "AS-604",
+    "sev": "blocker",
+    "conf": "proven",
+    "title": "assign_special_service_seat: contradictory field contract (seat_request)",
+    "where": "airline/tools.py:280",
+    "detail": "wire: required=true, default='front row for medical needs' | code: optional, default='front row for medical needs' \u2014 the schema the model receives for seat_request contradicts itself: it must always be supplied, yet has "
+   },
+   {
+    "rule": "AS-608",
+    "sev": "info",
+    "conf": "proven",
+    "title": "assign_special_service_seat: 3/4 schema fields reach the model verbatim",
+    "where": "airline/tools.py:280",
+    "detail": "1 field(s) lost or altered between code and wire (openai-agents 0.24.0 (runtime)); framework schema rewriting is version-dependent"
+   },
+   {
+    "rule": "AS-603",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "book_new_flight: optional parameter sent as required (flight_number)",
+    "where": "airline/tools.py:208",
+    "detail": "code says flight_number is optional (default None) with no description; the model is told it is required with no description"
+   },
+   {
+    "rule": "AS-605",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "book_new_flight: default dropped on the wire (flight_number)",
+    "where": "airline/tools.py:208",
+    "detail": "code says flight_number is optional (default None) with no description; the model is told it is required with no description"
+   },
+   {
+    "rule": "AS-608",
+    "sev": "info",
+    "conf": "proven",
+    "title": "book_new_flight: 2/4 schema fields reach the model verbatim",
+    "where": "airline/tools.py:208",
+    "detail": "2 field(s) lost or altered between code and wire (openai-agents 0.24.0 (runtime)); framework schema rewriting is version-dependent"
+   },
+   {
+    "rule": "AS-603",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "get_matching_flights: optional parameter sent as required (origin)",
+    "where": "airline/tools.py:168",
+    "detail": "code says origin is optional (default None) with no description; the model is told it is required with no description"
+   },
+   {
+    "rule": "AS-605",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "get_matching_flights: default dropped on the wire (origin)",
+    "where": "airline/tools.py:168",
+    "detail": "code says origin is optional (default None) with no description; the model is told it is required with no description"
+   },
+   {
+    "rule": "AS-603",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "get_matching_flights: optional parameter sent as required (destination)",
+    "where": "airline/tools.py:168",
+    "detail": "code says destination is optional (default None) with no description; the model is told it is required with no description"
+   },
+   {
+    "rule": "AS-605",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "get_matching_flights: default dropped on the wire (destination)",
+    "where": "airline/tools.py:168",
+    "detail": "code says destination is optional (default None) with no description; the model is told it is required with no description"
+   },
+   {
+    "rule": "AS-608",
+    "sev": "info",
+    "conf": "proven",
+    "title": "get_matching_flights: 3/7 schema fields reach the model verbatim",
+    "where": "airline/tools.py:168",
+    "detail": "4 field(s) lost or altered between code and wire (openai-agents 0.24.0 (runtime)); framework schema rewriting is version-dependent"
+   },
+   {
+    "rule": "AS-604",
+    "sev": "blocker",
+    "conf": "proven",
+    "title": "issue_compensation: contradictory field contract (reason)",
+    "where": "airline/tools.py:303",
+    "detail": "wire: required=true, default='Delay causing missed connection' | code: optional, default='Delay causing missed connection' \u2014 the schema the model receives for reason contradicts itself: it must always be supplied, yet ha"
+   },
+   {
+    "rule": "AS-608",
+    "sev": "info",
+    "conf": "proven",
+    "title": "issue_compensation: 3/4 schema fields reach the model verbatim",
+    "where": "airline/tools.py:303",
+    "detail": "1 field(s) lost or altered between code and wire (openai-agents 0.24.0 (runtime)); framework schema rewriting is version-dependent"
+   },
+   {
+    "rule": "AS-302",
+    "sev": "blocker",
+    "conf": "proven",
+    "title": "Delegation depth exceeds max_delegation_depth",
+    "where": "None",
+    "detail": "Triage Agent \u2192 Flight Information Agent \u2192 Booking and Cancellation Agent \u2192 Seat and Special Services Agent \u2192 Refunds and Compensation Agent \u2192 FAQ Agent is 5 hops deep; max_delegation_depth=3"
+   },
+   {
+    "rule": "AS-303",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "Delegation cycle among 6 agents",
+    "where": "None",
+    "detail": "19 cycle(s) among ['Booking and Cancellation Agent', 'FAQ Agent', 'Flight Information Agent', 'Refunds and Compensation Agent', 'Seat and Special Services Agent', 'Triage Agent'], e.g. Triage Agent \u2192 Refunds and Compensa"
+   }
+  ],
+  "files": 10,
+  "errors": []
+ },
+ "openai-agents/financial_research_agent": {
+  "framework": "openai-agents 0.24.0 (runtime)",
+  "frameworks": [
+   "openai-agents"
+  ],
+  "exec": "schema-based",
+  "declared": [
+   "fundamentals_analysis",
+   "risk_analysis",
+   "web_search"
+  ],
+  "bound": [
+   "fundamentals_analysis",
+   "risk_analysis",
+   "web_search"
+  ],
+  "observed": [
+   "fundamentals_analysis",
+   "risk_analysis"
+  ],
+  "proven": 3,
+  "heuristic": 0,
+  "unknown": 1,
+  "observed_conf": 0,
+  "blockers": 0,
+  "warnings": 3,
+  "unknowns": 1,
+  "passed": 3,
+  "coverage": [
+   9,
+   10
+  ],
+  "rules": {
+   "AS-201": 1,
+   "AS-210": 3
+  },
+  "findings": [
+   {
+    "rule": "AS-201",
+    "sev": "info",
+    "conf": "unknown",
+    "title": "web_search never reached the model boundary",
+    "where": "agents/search_agent.py:24",
+    "detail": "web_search is declared in code but was not offered to the model in 1 run(s): bound on a branch / phase the run did not reach. Unknown, not PASS."
+   },
+   {
+    "rule": "AS-210",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "Model 'o3-mini' is not pinned",
+    "where": "agents/planner_agent.py:32",
+    "detail": "o3-mini is an alias; the provider can change the model behind it"
+   },
+   {
+    "rule": "AS-210",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "Model 'gpt-5.6-sol' is not pinned",
+    "where": "agents/search_agent.py:20",
+    "detail": "gpt-5.6-sol is an alias; the provider can change the model behind it (3 call sites)"
+   },
+   {
+    "rule": "AS-210",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "Model 'gpt-5.6-luna' is not pinned",
+    "where": "None",
+    "detail": "gpt-5.6-luna is an alias; the provider can change the model behind it"
+   }
+  ],
+  "files": 13,
+  "errors": []
+ },
+ "crewAI-examples/stock_analysis": {
+  "framework": "crewai (version unresolved)",
+  "frameworks": [
+   "crewai",
+   "langchain"
+  ],
+  "exec": "schema-based",
+  "declared": [
+   "Calculator tool",
+   "Search in the specified 10-K form",
+   "Search in the specified 10-Q form",
+   "scrape_website",
+   "website_search"
+  ],
+  "bound": [
+   "Calculator tool",
+   "Search in the specified 10-K form",
+   "Search in the specified 10-Q form",
+   "scrape_website",
+   "website_search"
+  ],
+  "observed": null,
+  "proven": 1,
+  "heuristic": 2,
+  "unknown": 1,
+  "observed_conf": 0,
+  "blockers": 0,
+  "warnings": 3,
+  "unknowns": 1,
+  "passed": 1,
+  "coverage": [
+   2,
+   2
+  ],
+  "rules": {
+   "AS-210": 1,
+   "AS-213": 2,
+   "AS-903": 1
+  },
+  "findings": [
+   {
+    "rule": "AS-210",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "Model 'llama3.1' is not pinned",
+    "where": "src/stock_analysis/crew.py:14",
+    "detail": "llama3.1 is an alias; the provider can change the model behind it"
+   },
+   {
+    "rule": "AS-213",
+    "sev": "warning",
+    "conf": "heuristic",
+    "title": "Search in the specified 10-K form can return unbounded output",
+    "where": "src/stock_analysis/tools/sec_tools.py:24",
+    "detail": "Search in the specified 10-K form reads a collection but has no limit/max_results/top_k param"
+   },
+   {
+    "rule": "AS-213",
+    "sev": "warning",
+    "conf": "heuristic",
+    "title": "Search in the specified 10-Q form can return unbounded output",
+    "where": "src/stock_analysis/tools/sec_tools.py:105",
+    "detail": "Search in the specified 10-Q form reads a collection but has no limit/max_results/top_k param"
+   },
+   {
+    "rule": "AS-903",
+    "sev": "info",
+    "conf": "unknown",
+    "title": "No runtime capture or trace supplied",
+    "where": "None",
+    "detail": "only static (AST) evidence: never_reached, undeclared-tool and schema-fidelity checks did not run"
+   }
+  ],
+  "files": 6,
+  "errors": []
+ },
+ "pydantic-ai/bank_support": {
+  "framework": "pydantic-ai 2.56.0 (runtime)",
+  "frameworks": [
+   "pydantic-ai"
+  ],
+  "exec": "schema-based",
+  "declared": [
+   "customer_balance"
+  ],
+  "bound": [],
+  "observed": [
+   "customer_balance",
+   "final_result"
+  ],
+  "proven": 1,
+  "heuristic": 0,
+  "unknown": 0,
+  "observed_conf": 0,
+  "blockers": 0,
+  "warnings": 1,
+  "unknowns": 0,
+  "passed": 3,
+  "coverage": [
+   4,
+   4
+  ],
+  "rules": {
+   "AS-210": 1
+  },
+  "findings": [
+   {
+    "rule": "AS-210",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "Model 'openai:gpt-5.2' is not pinned",
+    "where": "bank_support.py:54",
+    "detail": "openai:gpt-5.2 is an alias; the provider can change the model behind it"
+   }
+  ],
+  "files": 1,
+  "errors": []
+ },
+ "smolagents/open_deep_research": {
+  "framework": "smolagents 1.26.0 (installed)",
+  "frameworks": [
+   "smolagents"
+  ],
+  "exec": "schema-based",
+  "declared": [
+   "download_file",
+   "find_archived_url",
+   "find_next",
+   "find_on_page_ctrl_f",
+   "google_search",
+   "inspect_file_as_text",
+   "page_down",
+   "page_up",
+   "visit_page",
+   "visualizer",
+   "web_search"
+  ],
+  "bound": [
+   "find_archived_url",
+   "find_next",
+   "find_on_page_ctrl_f",
+   "google_search",
+   "inspect_file_as_text",
+   "page_down",
+   "page_up",
+   "visit_page",
+   "visualizer"
+  ],
+  "observed": null,
+  "proven": 0,
+  "heuristic": 2,
+  "unknown": 2,
+  "observed_conf": 0,
+  "blockers": 0,
+  "warnings": 2,
+  "unknowns": 2,
+  "passed": 4,
+  "coverage": [
+   2,
+   2
+  ],
+  "rules": {
+   "AS-213": 2,
+   "AS-901": 1,
+   "AS-903": 1
+  },
+  "findings": [
+   {
+    "rule": "AS-213",
+    "sev": "warning",
+    "conf": "heuristic",
+    "title": "find_on_page_ctrl_f can return unbounded output",
+    "where": "scripts/text_web_browser.py:522",
+    "detail": "find_on_page_ctrl_f reads a collection but has no limit/max_results/top_k param"
+   },
+   {
+    "rule": "AS-213",
+    "sev": "warning",
+    "conf": "heuristic",
+    "title": "find_archived_url can return unbounded output",
+    "where": "scripts/text_web_browser.py:445",
+    "detail": "find_archived_url reads a collection but has no limit/max_results/top_k param"
+   },
+   {
+    "rule": "AS-901",
+    "sev": "warning",
+    "conf": "unknown",
+    "title": "Execution model cannot be verified (prompt-only / code agent)",
+    "where": "run.py:101",
+    "detail": "tools ['inspect_file_as_text', 'visualizer'] are used by a code agent; their invocation cannot be verified at the boundary"
+   },
+   {
+    "rule": "AS-903",
+    "sev": "info",
+    "conf": "unknown",
+    "title": "No runtime capture or trace supplied",
+    "where": "None",
+    "detail": "only static (AST) evidence: never_reached, undeclared-tool and schema-fidelity checks did not run"
+   }
+  ],
+  "files": 11,
+  "errors": []
+ }
+}

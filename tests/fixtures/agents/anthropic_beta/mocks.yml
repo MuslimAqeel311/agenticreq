@@ -1,0 +1,2 @@
+tools:
+  pay_invoice: {args: {invoice_id: INV-1, amount: 10}}

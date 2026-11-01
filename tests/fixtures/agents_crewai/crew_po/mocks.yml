@@ -1,0 +1,8 @@
+order: [get_inventory, submit_order, delegate_work_to_coworker, lookup_clause]
+tools:
+  get_inventory: {args: {sku: A-100}}
+  submit_order: {args: {sku: A-100, quantity: 5}}
+  delegate_work_to_coworker: {args: {task: check policy, context: restock, coworker: Policy Analyst}}
+  ask_question_to_coworker: {call: false}
+  lookup_clause: {args: {clause_id: C-1, section: approvals}}
+final_text: "Thought: I now know the final answer\nFinal Answer: PO-1"

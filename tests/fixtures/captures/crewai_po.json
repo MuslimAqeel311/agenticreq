@@ -1,0 +1,1519 @@
+{
+ "entry": "tests/fixtures/agents_crewai/crew_po/agent.py",
+ "runs": 1,
+ "coverage": "6/6",
+ "zero_touch": true,
+ "changed_files": [],
+ "libs_hooked": [
+  "httpx"
+ ],
+ "versions": {
+  "httpx": "0.28.1",
+  "openai": "1.83.0",
+  "crewai": "1.9.3"
+ },
+ "llm_misses": [],
+ "egress_blocked": [
+  "dns:api.scarf.sh"
+ ],
+ "scrubbed_env": [
+  "CLAUDE_CODE_MESSAGING_TOKEN",
+  "SSH_AUTH_SOCK"
+ ],
+ "run_errors": {},
+ "sandbox": "mock-tools:tests/fixtures/agents_crewai/crew_po/mocks.yml",
+ "calls": [
+  {
+   "index": 0,
+   "run_id": "run-0",
+   "provider": "openai_chat",
+   "url": "http://127.0.0.1:9/v1/chat/completions",
+   "client_lib": "httpx",
+   "model": "gpt-4o",
+   "system_prompt": "You are Procurement Manager. You run procurement.\nYour personal goal is: Restock low inventory",
+   "system_prompt_sha256": "2992938da36267fc781b37ff6d226019a954ecb01b7102c4c33f7c06ce6296ea",
+   "tools": [
+    {
+     "name": "get_inventory",
+     "description": "Look up stock for a SKU.\n\n    Args:\n        sku: Stock keeping unit, e.g. A-100.\n        warehouse: Warehouse code.\n        max_results: Maximum rows to return.",
+     "params": [
+      {
+       "name": "sku",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "warehouse",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": true,
+       "default": "KHI",
+       "constraints": {}
+      },
+      {
+       "name": "max_results",
+       "type": "integer",
+       "description": null,
+       "required": true,
+       "has_default": true,
+       "default": 50,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_chat",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "get_inventory",
+      "description": "Look up stock for a SKU.\n\n    Args:\n        sku: Stock keeping unit, e.g. A-100.\n        warehouse: Warehouse code.\n        max_results: Maximum rows to return.",
+      "parameters": {
+       "properties": {
+        "sku": {
+         "title": "Sku",
+         "type": "string"
+        },
+        "warehouse": {
+         "default": "KHI",
+         "title": "Warehouse",
+         "type": "string"
+        },
+        "max_results": {
+         "default": 50,
+         "title": "Max Results",
+         "type": "integer"
+        }
+       },
+       "required": [
+        "sku",
+        "warehouse",
+        "max_results"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    },
+    {
+     "name": "submit_order",
+     "description": "Submit a purchase order.\n\n    Args:\n        sku: Stock keeping unit.\n        quantity: Units to order.\n        notes: Free-text notes for the supplier.",
+     "params": [
+      {
+       "name": "sku",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "quantity",
+       "type": "integer",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "notes",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": true,
+       "default": "",
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_chat",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "submit_order",
+      "description": "Submit a purchase order.\n\n    Args:\n        sku: Stock keeping unit.\n        quantity: Units to order.\n        notes: Free-text notes for the supplier.",
+      "parameters": {
+       "properties": {
+        "sku": {
+         "title": "Sku",
+         "type": "string"
+        },
+        "quantity": {
+         "title": "Quantity",
+         "type": "integer"
+        },
+        "notes": {
+         "default": "",
+         "title": "Notes",
+         "type": "string"
+        }
+       },
+       "required": [
+        "sku",
+        "quantity",
+        "notes"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    },
+    {
+     "name": "delegate_work_to_coworker",
+     "description": "Delegate a specific task to one of the following coworkers: Policy Analyst\nThe input to this tool should be the coworker, the task you want them to do, and ALL necessary context to execute the task, they know nothing about the task, so share absolutely everything you know, don't reference things but instead explain them.",
+     "params": [
+      {
+       "name": "task",
+       "type": "string",
+       "description": "The task to delegate",
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "context",
+       "type": "string",
+       "description": "The context for the task",
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "coworker",
+       "type": "string",
+       "description": "The role/name of the coworker to delegate to",
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_chat",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "delegate_work_to_coworker",
+      "description": "Delegate a specific task to one of the following coworkers: Policy Analyst\nThe input to this tool should be the coworker, the task you want them to do, and ALL necessary context to execute the task, they know nothing about the task, so share absolutely everything you know, don't reference things but instead explain them.",
+      "parameters": {
+       "properties": {
+        "task": {
+         "description": "The task to delegate",
+         "title": "Task",
+         "type": "string"
+        },
+        "context": {
+         "description": "The context for the task",
+         "title": "Context",
+         "type": "string"
+        },
+        "coworker": {
+         "description": "The role/name of the coworker to delegate to",
+         "title": "Coworker",
+         "type": "string"
+        }
+       },
+       "required": [
+        "task",
+        "context",
+        "coworker"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    },
+    {
+     "name": "ask_question_to_coworker",
+     "description": "Ask a specific question to one of the following coworkers: Policy Analyst\nThe input to this tool should be the coworker, the question you have for them, and ALL necessary context to ask the question properly, they know nothing about the question, so share absolutely everything you know, don't reference things but instead explain them.",
+     "params": [
+      {
+       "name": "question",
+       "type": "string",
+       "description": "The question to ask",
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "context",
+       "type": "string",
+       "description": "The context for the question",
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "coworker",
+       "type": "string",
+       "description": "The role/name of the coworker to ask",
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_chat",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "ask_question_to_coworker",
+      "description": "Ask a specific question to one of the following coworkers: Policy Analyst\nThe input to this tool should be the coworker, the question you have for them, and ALL necessary context to ask the question properly, they know nothing about the question, so share absolutely everything you know, don't reference things but instead explain them.",
+      "parameters": {
+       "properties": {
+        "question": {
+         "description": "The question to ask",
+         "title": "Question",
+         "type": "string"
+        },
+        "context": {
+         "description": "The context for the question",
+         "title": "Context",
+         "type": "string"
+        },
+        "coworker": {
+         "description": "The role/name of the coworker to ask",
+         "title": "Coworker",
+         "type": "string"
+        }
+       },
+       "required": [
+        "question",
+        "context",
+        "coworker"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    }
+   ],
+   "tool_calls": [
+    {
+     "name": "get_inventory",
+     "arguments": {
+      "sku": "A-100",
+      "warehouse": "KHI",
+      "max_results": 50
+     },
+     "id": "call_ac_1_get_inventory"
+    }
+   ],
+   "tool_results": [],
+   "prior_tool_calls": [],
+   "message_count": 2,
+   "trace_id": null,
+   "parent_id": null,
+   "overhead_ms": 0.34403199970256537,
+   "synthetic": true
+  },
+  {
+   "index": 1,
+   "run_id": "run-0",
+   "provider": "openai_chat",
+   "url": "http://127.0.0.1:9/v1/chat/completions",
+   "client_lib": "httpx",
+   "model": "gpt-4o",
+   "system_prompt": "You are Procurement Manager. You run procurement.\nYour personal goal is: Restock low inventory",
+   "system_prompt_sha256": "2992938da36267fc781b37ff6d226019a954ecb01b7102c4c33f7c06ce6296ea",
+   "tools": [
+    {
+     "name": "get_inventory",
+     "description": "Look up stock for a SKU.\n\n    Args:\n        sku: Stock keeping unit, e.g. A-100.\n        warehouse: Warehouse code.\n        max_results: Maximum rows to return.",
+     "params": [
+      {
+       "name": "sku",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "warehouse",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": true,
+       "default": "KHI",
+       "constraints": {}
+      },
+      {
+       "name": "max_results",
+       "type": "integer",
+       "description": null,
+       "required": true,
+       "has_default": true,
+       "default": 50,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_chat",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "get_inventory",
+      "description": "Look up stock for a SKU.\n\n    Args:\n        sku: Stock keeping unit, e.g. A-100.\n        warehouse: Warehouse code.\n        max_results: Maximum rows to return.",
+      "parameters": {
+       "properties": {
+        "sku": {
+         "title": "Sku",
+         "type": "string"
+        },
+        "warehouse": {
+         "default": "KHI",
+         "title": "Warehouse",
+         "type": "string"
+        },
+        "max_results": {
+         "default": 50,
+         "title": "Max Results",
+         "type": "integer"
+        }
+       },
+       "required": [
+        "sku",
+        "warehouse",
+        "max_results"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    },
+    {
+     "name": "submit_order",
+     "description": "Submit a purchase order.\n\n    Args:\n        sku: Stock keeping unit.\n        quantity: Units to order.\n        notes: Free-text notes for the supplier.",
+     "params": [
+      {
+       "name": "sku",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "quantity",
+       "type": "integer",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "notes",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": true,
+       "default": "",
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_chat",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "submit_order",
+      "description": "Submit a purchase order.\n\n    Args:\n        sku: Stock keeping unit.\n        quantity: Units to order.\n        notes: Free-text notes for the supplier.",
+      "parameters": {
+       "properties": {
+        "sku": {
+         "title": "Sku",
+         "type": "string"
+        },
+        "quantity": {
+         "title": "Quantity",
+         "type": "integer"
+        },
+        "notes": {
+         "default": "",
+         "title": "Notes",
+         "type": "string"
+        }
+       },
+       "required": [
+        "sku",
+        "quantity",
+        "notes"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    },
+    {
+     "name": "delegate_work_to_coworker",
+     "description": "Delegate a specific task to one of the following coworkers: Policy Analyst\nThe input to this tool should be the coworker, the task you want them to do, and ALL necessary context to execute the task, they know nothing about the task, so share absolutely everything you know, don't reference things but instead explain them.",
+     "params": [
+      {
+       "name": "task",
+       "type": "string",
+       "description": "The task to delegate",
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "context",
+       "type": "string",
+       "description": "The context for the task",
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "coworker",
+       "type": "string",
+       "description": "The role/name of the coworker to delegate to",
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_chat",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "delegate_work_to_coworker",
+      "description": "Delegate a specific task to one of the following coworkers: Policy Analyst\nThe input to this tool should be the coworker, the task you want them to do, and ALL necessary context to execute the task, they know nothing about the task, so share absolutely everything you know, don't reference things but instead explain them.",
+      "parameters": {
+       "properties": {
+        "task": {
+         "description": "The task to delegate",
+         "title": "Task",
+         "type": "string"
+        },
+        "context": {
+         "description": "The context for the task",
+         "title": "Context",
+         "type": "string"
+        },
+        "coworker": {
+         "description": "The role/name of the coworker to delegate to",
+         "title": "Coworker",
+         "type": "string"
+        }
+       },
+       "required": [
+        "task",
+        "context",
+        "coworker"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    },
+    {
+     "name": "ask_question_to_coworker",
+     "description": "Ask a specific question to one of the following coworkers: Policy Analyst\nThe input to this tool should be the coworker, the question you have for them, and ALL necessary context to ask the question properly, they know nothing about the question, so share absolutely everything you know, don't reference things but instead explain them.",
+     "params": [
+      {
+       "name": "question",
+       "type": "string",
+       "description": "The question to ask",
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "context",
+       "type": "string",
+       "description": "The context for the question",
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "coworker",
+       "type": "string",
+       "description": "The role/name of the coworker to ask",
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_chat",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "ask_question_to_coworker",
+      "description": "Ask a specific question to one of the following coworkers: Policy Analyst\nThe input to this tool should be the coworker, the question you have for them, and ALL necessary context to ask the question properly, they know nothing about the question, so share absolutely everything you know, don't reference things but instead explain them.",
+      "parameters": {
+       "properties": {
+        "question": {
+         "description": "The question to ask",
+         "title": "Question",
+         "type": "string"
+        },
+        "context": {
+         "description": "The context for the question",
+         "title": "Context",
+         "type": "string"
+        },
+        "coworker": {
+         "description": "The role/name of the coworker to ask",
+         "title": "Coworker",
+         "type": "string"
+        }
+       },
+       "required": [
+        "question",
+        "context",
+        "coworker"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    }
+   ],
+   "tool_calls": [
+    {
+     "name": "submit_order",
+     "arguments": {
+      "sku": "A-100",
+      "quantity": 5,
+      "notes": ""
+     },
+     "id": "call_ac_2_submit_order"
+    }
+   ],
+   "tool_results": [
+    {
+     "call_id": "call_ac_1_get_inventory",
+     "name": "get_inventory",
+     "content": "3 units"
+    }
+   ],
+   "prior_tool_calls": [
+    {
+     "name": "get_inventory",
+     "arguments": {
+      "sku": "A-100",
+      "warehouse": "KHI",
+      "max_results": 50
+     },
+     "id": "call_ac_1_get_inventory"
+    }
+   ],
+   "message_count": 5,
+   "trace_id": null,
+   "parent_id": null,
+   "overhead_ms": 0.16263299949059729,
+   "synthetic": true
+  },
+  {
+   "index": 2,
+   "run_id": "run-0",
+   "provider": "openai_chat",
+   "url": "http://127.0.0.1:9/v1/chat/completions",
+   "client_lib": "httpx",
+   "model": "gpt-4o",
+   "system_prompt": "You are Procurement Manager. You run procurement.\nYour personal goal is: Restock low inventory",
+   "system_prompt_sha256": "2992938da36267fc781b37ff6d226019a954ecb01b7102c4c33f7c06ce6296ea",
+   "tools": [
+    {
+     "name": "get_inventory",
+     "description": "Look up stock for a SKU.\n\n    Args:\n        sku: Stock keeping unit, e.g. A-100.\n        warehouse: Warehouse code.\n        max_results: Maximum rows to return.",
+     "params": [
+      {
+       "name": "sku",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "warehouse",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": true,
+       "default": "KHI",
+       "constraints": {}
+      },
+      {
+       "name": "max_results",
+       "type": "integer",
+       "description": null,
+       "required": true,
+       "has_default": true,
+       "default": 50,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_chat",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "get_inventory",
+      "description": "Look up stock for a SKU.\n\n    Args:\n        sku: Stock keeping unit, e.g. A-100.\n        warehouse: Warehouse code.\n        max_results: Maximum rows to return.",
+      "parameters": {
+       "properties": {
+        "sku": {
+         "title": "Sku",
+         "type": "string"
+        },
+        "warehouse": {
+         "default": "KHI",
+         "title": "Warehouse",
+         "type": "string"
+        },
+        "max_results": {
+         "default": 50,
+         "title": "Max Results",
+         "type": "integer"
+        }
+       },
+       "required": [
+        "sku",
+        "warehouse",
+        "max_results"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    },
+    {
+     "name": "submit_order",
+     "description": "Submit a purchase order.\n\n    Args:\n        sku: Stock keeping unit.\n        quantity: Units to order.\n        notes: Free-text notes for the supplier.",
+     "params": [
+      {
+       "name": "sku",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "quantity",
+       "type": "integer",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "notes",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": true,
+       "default": "",
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_chat",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "submit_order",
+      "description": "Submit a purchase order.\n\n    Args:\n        sku: Stock keeping unit.\n        quantity: Units to order.\n        notes: Free-text notes for the supplier.",
+      "parameters": {
+       "properties": {
+        "sku": {
+         "title": "Sku",
+         "type": "string"
+        },
+        "quantity": {
+         "title": "Quantity",
+         "type": "integer"
+        },
+        "notes": {
+         "default": "",
+         "title": "Notes",
+         "type": "string"
+        }
+       },
+       "required": [
+        "sku",
+        "quantity",
+        "notes"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    },
+    {
+     "name": "delegate_work_to_coworker",
+     "description": "Delegate a specific task to one of the following coworkers: Policy Analyst\nThe input to this tool should be the coworker, the task you want them to do, and ALL necessary context to execute the task, they know nothing about the task, so share absolutely everything you know, don't reference things but instead explain them.",
+     "params": [
+      {
+       "name": "task",
+       "type": "string",
+       "description": "The task to delegate",
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "context",
+       "type": "string",
+       "description": "The context for the task",
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "coworker",
+       "type": "string",
+       "description": "The role/name of the coworker to delegate to",
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_chat",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "delegate_work_to_coworker",
+      "description": "Delegate a specific task to one of the following coworkers: Policy Analyst\nThe input to this tool should be the coworker, the task you want them to do, and ALL necessary context to execute the task, they know nothing about the task, so share absolutely everything you know, don't reference things but instead explain them.",
+      "parameters": {
+       "properties": {
+        "task": {
+         "description": "The task to delegate",
+         "title": "Task",
+         "type": "string"
+        },
+        "context": {
+         "description": "The context for the task",
+         "title": "Context",
+         "type": "string"
+        },
+        "coworker": {
+         "description": "The role/name of the coworker to delegate to",
+         "title": "Coworker",
+         "type": "string"
+        }
+       },
+       "required": [
+        "task",
+        "context",
+        "coworker"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    },
+    {
+     "name": "ask_question_to_coworker",
+     "description": "Ask a specific question to one of the following coworkers: Policy Analyst\nThe input to this tool should be the coworker, the question you have for them, and ALL necessary context to ask the question properly, they know nothing about the question, so share absolutely everything you know, don't reference things but instead explain them.",
+     "params": [
+      {
+       "name": "question",
+       "type": "string",
+       "description": "The question to ask",
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "context",
+       "type": "string",
+       "description": "The context for the question",
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "coworker",
+       "type": "string",
+       "description": "The role/name of the coworker to ask",
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_chat",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "ask_question_to_coworker",
+      "description": "Ask a specific question to one of the following coworkers: Policy Analyst\nThe input to this tool should be the coworker, the question you have for them, and ALL necessary context to ask the question properly, they know nothing about the question, so share absolutely everything you know, don't reference things but instead explain them.",
+      "parameters": {
+       "properties": {
+        "question": {
+         "description": "The question to ask",
+         "title": "Question",
+         "type": "string"
+        },
+        "context": {
+         "description": "The context for the question",
+         "title": "Context",
+         "type": "string"
+        },
+        "coworker": {
+         "description": "The role/name of the coworker to ask",
+         "title": "Coworker",
+         "type": "string"
+        }
+       },
+       "required": [
+        "question",
+        "context",
+        "coworker"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    }
+   ],
+   "tool_calls": [
+    {
+     "name": "delegate_work_to_coworker",
+     "arguments": {
+      "task": "check policy",
+      "context": "restock",
+      "coworker": "Policy Analyst"
+     },
+     "id": "call_ac_3_delegate_work_to_coworker"
+    }
+   ],
+   "tool_results": [
+    {
+     "call_id": "call_ac_1_get_inventory",
+     "name": "get_inventory",
+     "content": "3 units"
+    },
+    {
+     "call_id": "call_ac_2_submit_order",
+     "name": "submit_order",
+     "content": "PO-1"
+    }
+   ],
+   "prior_tool_calls": [
+    {
+     "name": "get_inventory",
+     "arguments": {
+      "sku": "A-100",
+      "warehouse": "KHI",
+      "max_results": 50
+     },
+     "id": "call_ac_1_get_inventory"
+    },
+    {
+     "name": "submit_order",
+     "arguments": {
+      "sku": "A-100",
+      "quantity": 5,
+      "notes": ""
+     },
+     "id": "call_ac_2_submit_order"
+    }
+   ],
+   "message_count": 8,
+   "trace_id": null,
+   "parent_id": null,
+   "overhead_ms": 0.1410490003763698,
+   "synthetic": true
+  },
+  {
+   "index": 3,
+   "run_id": "run-0",
+   "provider": "openai_chat",
+   "url": "http://127.0.0.1:9/v1/chat/completions",
+   "client_lib": "httpx",
+   "model": "gpt-4o",
+   "system_prompt": "You are Policy Analyst. You know the policy.\nYour personal goal is: Answer policy questions",
+   "system_prompt_sha256": "b0a9775cb434e57193ed358920669f6ac08240ca4c5f71b74aa9645ad93c13c9",
+   "tools": [
+    {
+     "name": "lookup_clause",
+     "description": "Fetch a policy clause.\n\n    Args:\n        clause_id: Clause identifier.\n        section: Policy section name.\n        max_results: Maximum clauses to return.",
+     "params": [
+      {
+       "name": "clause_id",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "section",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "max_results",
+       "type": "integer",
+       "description": null,
+       "required": true,
+       "has_default": true,
+       "default": 5,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_chat",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "lookup_clause",
+      "description": "Fetch a policy clause.\n\n    Args:\n        clause_id: Clause identifier.\n        section: Policy section name.\n        max_results: Maximum clauses to return.",
+      "parameters": {
+       "properties": {
+        "clause_id": {
+         "title": "Clause Id",
+         "type": "string"
+        },
+        "section": {
+         "title": "Section",
+         "type": "string"
+        },
+        "max_results": {
+         "default": 5,
+         "title": "Max Results",
+         "type": "integer"
+        }
+       },
+       "required": [
+        "clause_id",
+        "section",
+        "max_results"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    }
+   ],
+   "tool_calls": [
+    {
+     "name": "lookup_clause",
+     "arguments": {
+      "clause_id": "C-1",
+      "section": "approvals",
+      "max_results": 5
+     },
+     "id": "call_ac_4_lookup_clause"
+    }
+   ],
+   "tool_results": [],
+   "prior_tool_calls": [],
+   "message_count": 2,
+   "trace_id": null,
+   "parent_id": null,
+   "overhead_ms": 0.07147800079110311,
+   "synthetic": true
+  },
+  {
+   "index": 4,
+   "run_id": "run-0",
+   "provider": "openai_chat",
+   "url": "http://127.0.0.1:9/v1/chat/completions",
+   "client_lib": "httpx",
+   "model": "gpt-4o",
+   "system_prompt": "You are Policy Analyst. You know the policy.\nYour personal goal is: Answer policy questions",
+   "system_prompt_sha256": "b0a9775cb434e57193ed358920669f6ac08240ca4c5f71b74aa9645ad93c13c9",
+   "tools": [
+    {
+     "name": "lookup_clause",
+     "description": "Fetch a policy clause.\n\n    Args:\n        clause_id: Clause identifier.\n        section: Policy section name.\n        max_results: Maximum clauses to return.",
+     "params": [
+      {
+       "name": "clause_id",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "section",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "max_results",
+       "type": "integer",
+       "description": null,
+       "required": true,
+       "has_default": true,
+       "default": 5,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_chat",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "lookup_clause",
+      "description": "Fetch a policy clause.\n\n    Args:\n        clause_id: Clause identifier.\n        section: Policy section name.\n        max_results: Maximum clauses to return.",
+      "parameters": {
+       "properties": {
+        "clause_id": {
+         "title": "Clause Id",
+         "type": "string"
+        },
+        "section": {
+         "title": "Section",
+         "type": "string"
+        },
+        "max_results": {
+         "default": 5,
+         "title": "Max Results",
+         "type": "integer"
+        }
+       },
+       "required": [
+        "clause_id",
+        "section",
+        "max_results"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    }
+   ],
+   "tool_calls": [],
+   "tool_results": [
+    {
+     "call_id": "call_ac_4_lookup_clause",
+     "name": "lookup_clause",
+     "content": "clause"
+    }
+   ],
+   "prior_tool_calls": [
+    {
+     "name": "lookup_clause",
+     "arguments": {
+      "clause_id": "C-1",
+      "section": "approvals",
+      "max_results": 5
+     },
+     "id": "call_ac_4_lookup_clause"
+    }
+   ],
+   "message_count": 5,
+   "trace_id": null,
+   "parent_id": null,
+   "overhead_ms": 0.09124899952439591,
+   "synthetic": true
+  },
+  {
+   "index": 5,
+   "run_id": "run-0",
+   "provider": "openai_chat",
+   "url": "http://127.0.0.1:9/v1/chat/completions",
+   "client_lib": "httpx",
+   "model": "gpt-4o",
+   "system_prompt": "You are Procurement Manager. You run procurement.\nYour personal goal is: Restock low inventory",
+   "system_prompt_sha256": "2992938da36267fc781b37ff6d226019a954ecb01b7102c4c33f7c06ce6296ea",
+   "tools": [
+    {
+     "name": "get_inventory",
+     "description": "Look up stock for a SKU.\n\n    Args:\n        sku: Stock keeping unit, e.g. A-100.\n        warehouse: Warehouse code.\n        max_results: Maximum rows to return.",
+     "params": [
+      {
+       "name": "sku",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "warehouse",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": true,
+       "default": "KHI",
+       "constraints": {}
+      },
+      {
+       "name": "max_results",
+       "type": "integer",
+       "description": null,
+       "required": true,
+       "has_default": true,
+       "default": 50,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_chat",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "get_inventory",
+      "description": "Look up stock for a SKU.\n\n    Args:\n        sku: Stock keeping unit, e.g. A-100.\n        warehouse: Warehouse code.\n        max_results: Maximum rows to return.",
+      "parameters": {
+       "properties": {
+        "sku": {
+         "title": "Sku",
+         "type": "string"
+        },
+        "warehouse": {
+         "default": "KHI",
+         "title": "Warehouse",
+         "type": "string"
+        },
+        "max_results": {
+         "default": 50,
+         "title": "Max Results",
+         "type": "integer"
+        }
+       },
+       "required": [
+        "sku",
+        "warehouse",
+        "max_results"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    },
+    {
+     "name": "submit_order",
+     "description": "Submit a purchase order.\n\n    Args:\n        sku: Stock keeping unit.\n        quantity: Units to order.\n        notes: Free-text notes for the supplier.",
+     "params": [
+      {
+       "name": "sku",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "quantity",
+       "type": "integer",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "notes",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": true,
+       "default": "",
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_chat",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "submit_order",
+      "description": "Submit a purchase order.\n\n    Args:\n        sku: Stock keeping unit.\n        quantity: Units to order.\n        notes: Free-text notes for the supplier.",
+      "parameters": {
+       "properties": {
+        "sku": {
+         "title": "Sku",
+         "type": "string"
+        },
+        "quantity": {
+         "title": "Quantity",
+         "type": "integer"
+        },
+        "notes": {
+         "default": "",
+         "title": "Notes",
+         "type": "string"
+        }
+       },
+       "required": [
+        "sku",
+        "quantity",
+        "notes"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    },
+    {
+     "name": "delegate_work_to_coworker",
+     "description": "Delegate a specific task to one of the following coworkers: Policy Analyst\nThe input to this tool should be the coworker, the task you want them to do, and ALL necessary context to execute the task, they know nothing about the task, so share absolutely everything you know, don't reference things but instead explain them.",
+     "params": [
+      {
+       "name": "task",
+       "type": "string",
+       "description": "The task to delegate",
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "context",
+       "type": "string",
+       "description": "The context for the task",
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "coworker",
+       "type": "string",
+       "description": "The role/name of the coworker to delegate to",
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_chat",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "delegate_work_to_coworker",
+      "description": "Delegate a specific task to one of the following coworkers: Policy Analyst\nThe input to this tool should be the coworker, the task you want them to do, and ALL necessary context to execute the task, they know nothing about the task, so share absolutely everything you know, don't reference things but instead explain them.",
+      "parameters": {
+       "properties": {
+        "task": {
+         "description": "The task to delegate",
+         "title": "Task",
+         "type": "string"
+        },
+        "context": {
+         "description": "The context for the task",
+         "title": "Context",
+         "type": "string"
+        },
+        "coworker": {
+         "description": "The role/name of the coworker to delegate to",
+         "title": "Coworker",
+         "type": "string"
+        }
+       },
+       "required": [
+        "task",
+        "context",
+        "coworker"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    },
+    {
+     "name": "ask_question_to_coworker",
+     "description": "Ask a specific question to one of the following coworkers: Policy Analyst\nThe input to this tool should be the coworker, the question you have for them, and ALL necessary context to ask the question properly, they know nothing about the question, so share absolutely everything you know, don't reference things but instead explain them.",
+     "params": [
+      {
+       "name": "question",
+       "type": "string",
+       "description": "The question to ask",
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "context",
+       "type": "string",
+       "description": "The context for the question",
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "coworker",
+       "type": "string",
+       "description": "The role/name of the coworker to ask",
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_chat",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "ask_question_to_coworker",
+      "description": "Ask a specific question to one of the following coworkers: Policy Analyst\nThe input to this tool should be the coworker, the question you have for them, and ALL necessary context to ask the question properly, they know nothing about the question, so share absolutely everything you know, don't reference things but instead explain them.",
+      "parameters": {
+       "properties": {
+        "question": {
+         "description": "The question to ask",
+         "title": "Question",
+         "type": "string"
+        },
+        "context": {
+         "description": "The context for the question",
+         "title": "Context",
+         "type": "string"
+        },
+        "coworker": {
+         "description": "The role/name of the coworker to ask",
+         "title": "Coworker",
+         "type": "string"
+        }
+       },
+       "required": [
+        "question",
+        "context",
+        "coworker"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    }
+   ],
+   "tool_calls": [],
+   "tool_results": [
+    {
+     "call_id": "call_ac_1_get_inventory",
+     "name": "get_inventory",
+     "content": "3 units"
+    },
+    {
+     "call_id": "call_ac_2_submit_order",
+     "name": "submit_order",
+     "content": "PO-1"
+    },
+    {
+     "call_id": "call_ac_3_delegate_work_to_coworker",
+     "name": "delegate_work_to_coworker",
+     "content": "Thought: I now know the final answer\nFinal Answer: PO-1"
+    }
+   ],
+   "prior_tool_calls": [
+    {
+     "name": "get_inventory",
+     "arguments": {
+      "sku": "A-100",
+      "warehouse": "KHI",
+      "max_results": 50
+     },
+     "id": "call_ac_1_get_inventory"
+    },
+    {
+     "name": "submit_order",
+     "arguments": {
+      "sku": "A-100",
+      "quantity": 5,
+      "notes": ""
+     },
+     "id": "call_ac_2_submit_order"
+    },
+    {
+     "name": "delegate_work_to_coworker",
+     "arguments": {
+      "task": "check policy",
+      "context": "restock",
+      "coworker": "Policy Analyst"
+     },
+     "id": "call_ac_3_delegate_work_to_coworker"
+    }
+   ],
+   "message_count": 11,
+   "trace_id": null,
+   "parent_id": null,
+   "overhead_ms": 0.28938100058439886,
+   "synthetic": true
+  }
+ ]
+}

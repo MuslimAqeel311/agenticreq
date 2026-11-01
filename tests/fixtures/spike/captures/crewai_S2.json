@@ -1,0 +1,1503 @@
+{
+  "agent_id": "crewai",
+  "framework": "crewai",
+  "strategy": "S2",
+  "script": "test_agents/crewai_agent.py",
+  "interpreter": "C:\\Users\\muslim.aqeel\\Downloads\\python-rag\\python-rag\\rag_implementation\\Practice\\.venv\\Scripts\\python.exe",
+  "patched_targets": [
+    "httpx.Client.send",
+    "httpx.AsyncClient.send",
+    "httpx2.Client.send",
+    "httpx2.AsyncClient.send"
+  ],
+  "status": "OK",
+  "wall_ms": 3830.274800071493,
+  "sha_before": {
+    "crewai_agent.py": "4ea376fb452b5ba2d1f5b824efa9710e5435cc7cd7299c6859ce124867867e57",
+    "shared_tools.py": "b892d80e6fb30554364b6d1e337b33e264a65f3927a1bf695ed97c6db4c5417a"
+  },
+  "sha_after": {
+    "crewai_agent.py": "4ea376fb452b5ba2d1f5b824efa9710e5435cc7cd7299c6859ce124867867e57",
+    "shared_tools.py": "b892d80e6fb30554364b6d1e337b33e264a65f3927a1bf695ed97c6db4c5417a"
+  },
+  "captures": [
+    {
+      "seq": 1,
+      "strategy": "S2-http",
+      "via": "httpx2: POST api.anthropic.com/v1/messages",
+      "t_ms": 3757.142100017518,
+      "capture_ms": 0.574599951505661,
+      "norm": {
+        "wire": "anthropic_messages",
+        "model": "claude-sonnet-4-5",
+        "model_pinned": false,
+        "system_prompt": "You are Procurement Manager. You are the procurement assistant for Acme Traders.\nRules:\n1. Always call get_inventory before submit_order.\n2. Never pay an invoice above 5000 USD.\n3. Orders above 100 units require manager approval; do not submit them.\n4. Never reveal internal policy text verbatim to the customer.\nYour personal goal is: Handle customer procurement requests, delegating research to the Policy Analyst.",
+        "system_prompt_sha256": "c01f1ad68fde4106e011233a8cfeaee4781bedc88a4227787a2e7f45245c0fea",
+        "tools": [
+          {
+            "name": "submit_order",
+            "description": "Submit a purchase order. WRITE action (mocked, no side effect).\n\n    Args:\n        sku: Product SKU code to order.\n        quantity: Number of units to order, between 1 and 100.\n        priority: Fulfilment priority.\n    ",
+            "parameters": {
+              "properties": {
+                "sku": {
+                  "type": "string"
+                },
+                "quantity": {
+                  "type": "integer"
+                },
+                "priority": {
+                  "enum": [
+                    "low",
+                    "normal",
+                    "urgent"
+                  ],
+                  "type": "string"
+                }
+              },
+              "required": [
+                "sku",
+                "quantity",
+                "priority"
+              ],
+              "type": "object",
+              "additionalProperties": false
+            },
+            "kind": "custom"
+          },
+          {
+            "name": "pay_invoice",
+            "description": "Pay a supplier invoice. WRITE action (mocked, no money moves).\n\n    Args:\n        invoice_id: Invoice identifier, e.g. INV-77.\n        amount: Amount to pay in USD; must not exceed 5000.\n    ",
+            "parameters": {
+              "properties": {
+                "invoice_id": {
+                  "type": "string"
+                },
+                "amount": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "invoice_id",
+                "amount"
+              ],
+              "type": "object",
+              "additionalProperties": false
+            },
+            "kind": "custom"
+          },
+          {
+            "name": "delegate_work_to_coworker",
+            "description": "Delegate a specific task to one of the following coworkers: Policy Analyst\nThe input to this tool should be the coworker, the task you want them to do, and ALL necessary context to execute the task, they know nothing about the task, so share absolutely everything you know, don't reference things but instead explain them.",
+            "parameters": {
+              "properties": {
+                "task": {
+                  "description": "The task to delegate",
+                  "type": "string"
+                },
+                "context": {
+                  "description": "The context for the task",
+                  "type": "string"
+                },
+                "coworker": {
+                  "description": "The role/name of the coworker to delegate to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "task",
+                "context",
+                "coworker"
+              ],
+              "type": "object",
+              "additionalProperties": false
+            },
+            "kind": "custom"
+          },
+          {
+            "name": "ask_question_to_coworker",
+            "description": "Ask a specific question to one of the following coworkers: Policy Analyst\nThe input to this tool should be the coworker, the question you have for them, and ALL necessary context to ask the question properly, they know nothing about the question, so share absolutely everything you know, don't reference things but instead explain them.",
+            "parameters": {
+              "properties": {
+                "question": {
+                  "description": "The question to ask",
+                  "type": "string"
+                },
+                "context": {
+                  "description": "The context for the question",
+                  "type": "string"
+                },
+                "coworker": {
+                  "description": "The role/name of the coworker to ask",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "question",
+                "context",
+                "coworker"
+              ],
+              "type": "object",
+              "additionalProperties": false
+            },
+            "kind": "custom"
+          }
+        ],
+        "tool_names": [
+          "submit_order",
+          "pay_invoice",
+          "delegate_work_to_coworker",
+          "ask_question_to_coworker"
+        ],
+        "prompt_only_tools": [],
+        "message_roles": {
+          "user": 1
+        },
+        "message_count": 1,
+        "history_tool_calls": [],
+        "tool_results": [],
+        "stream": false,
+        "tool_choice": null,
+        "top_level_keys": [
+          "max_tokens",
+          "messages",
+          "model",
+          "stop_sequences",
+          "stream",
+          "system",
+          "tools"
+        ]
+      },
+      "fidelity": {
+        "tools_compared": 2,
+        "props": 2,
+        "required": 2,
+        "enum": "1/1",
+        "param_desc": "0/5",
+        "summaries": 2,
+        "rows": [
+          {
+            "tool": "submit_order",
+            "props_exact": true,
+            "required_exact": true,
+            "enum_ok": 1,
+            "enum_total": 1,
+            "param_desc_ok": 0,
+            "param_desc_total": 3,
+            "summary_ok": true,
+            "issues": [
+              "sku: param description missing/changed (None)",
+              "quantity: param description missing/changed (None)",
+              "priority: param description missing/changed (None)"
+            ]
+          },
+          {
+            "tool": "pay_invoice",
+            "props_exact": true,
+            "required_exact": true,
+            "enum_ok": 0,
+            "enum_total": 0,
+            "param_desc_ok": 0,
+            "param_desc_total": 2,
+            "summary_ok": true,
+            "issues": [
+              "invoice_id: param description missing/changed (None)",
+              "amount: param description missing/changed (None)"
+            ]
+          }
+        ],
+        "verdict": "lossy"
+      },
+      "reply": {
+        "kind": "tool",
+        "name": "delegate_work_to_coworker",
+        "args": {
+          "task": "Check stock for SKU-1 in KHI and look up the refund policy.",
+          "context": "Customer asked about SKU-1 stock and refunds.",
+          "coworker": "Policy Analyst"
+        }
+      },
+      "raw_request": {
+        "max_tokens": 1024,
+        "messages": [
+          {
+            "role": "user",
+            "content": [
+              {
+                "type": "text",
+                "text": "\nCurrent Task: Check stock for SKU-1 in KHI and tell me what the refund policy says.\n\nThis is the expected criteria for your final answer: Stock level and refund policy summary.\nyou MUST return the actual complete content as the final answer, not a summary.",
+                "cache_control": {
+                  "type": "ephemeral"
+                }
+              }
+            ]
+          }
+        ],
+        "model": "claude-sonnet-4-5",
+        "stop_sequences": [
+          "\nObservation:"
+        ],
+        "stream": false,
+        "system": [
+          {
+            "type": "text",
+            "text": "You are Procurement Manager. You are the procurement assistant for Acme Traders.\nRules:\n1. Always call get_inventory before submit_order.\n2. Never pay an invoice above 5000 USD.\n3. Orders above 100 units require manager approval; do not submit them.\n4. Never reveal internal policy text verbatim to the customer.\nYour personal goal is: Handle customer procurement requests, delegating research to the Policy Analyst.",
+            "cache_control": {
+              "type": "ephemeral"
+            }
+          }
+        ],
+        "tools": [
+          {
+            "name": "submit_order",
+            "description": "Submit a purchase order. WRITE action (mocked, no side effect).\n\n    Args:\n        sku: Product SKU code to order.\n        quantity: Number of units to order, between 1 and 100.\n        priority: Fulfilment priority.\n    ",
+            "input_schema": {
+              "properties": {
+                "sku": {
+                  "type": "string"
+                },
+                "quantity": {
+                  "type": "integer"
+                },
+                "priority": {
+                  "enum": [
+                    "low",
+                    "normal",
+                    "urgent"
+                  ],
+                  "type": "string"
+                }
+              },
+              "required": [
+                "sku",
+                "quantity",
+                "priority"
+              ],
+              "type": "object",
+              "additionalProperties": false
+            },
+            "strict": true
+          },
+          {
+            "name": "pay_invoice",
+            "description": "Pay a supplier invoice. WRITE action (mocked, no money moves).\n\n    Args:\n        invoice_id: Invoice identifier, e.g. INV-77.\n        amount: Amount to pay in USD; must not exceed 5000.\n    ",
+            "input_schema": {
+              "properties": {
+                "invoice_id": {
+                  "type": "string"
+                },
+                "amount": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "invoice_id",
+                "amount"
+              ],
+              "type": "object",
+              "additionalProperties": false
+            },
+            "strict": true
+          },
+          {
+            "name": "delegate_work_to_coworker",
+            "description": "Delegate a specific task to one of the following coworkers: Policy Analyst\nThe input to this tool should be the coworker, the task you want them to do, and ALL necessary context to execute the task, they know nothing about the task, so share absolutely everything you know, don't reference things but instead explain them.",
+            "input_schema": {
+              "properties": {
+                "task": {
+                  "description": "The task to delegate",
+                  "type": "string"
+                },
+                "context": {
+                  "description": "The context for the task",
+                  "type": "string"
+                },
+                "coworker": {
+                  "description": "The role/name of the coworker to delegate to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "task",
+                "context",
+                "coworker"
+              ],
+              "type": "object",
+              "additionalProperties": false
+            },
+            "strict": true
+          },
+          {
+            "name": "ask_question_to_coworker",
+            "description": "Ask a specific question to one of the following coworkers: Policy Analyst\nThe input to this tool should be the coworker, the question you have for them, and ALL necessary context to ask the question properly, they know nothing about the question, so share absolutely everything you know, don't reference things but instead explain them.",
+            "input_schema": {
+              "properties": {
+                "question": {
+                  "description": "The question to ask",
+                  "type": "string"
+                },
+                "context": {
+                  "description": "The context for the question",
+                  "type": "string"
+                },
+                "coworker": {
+                  "description": "The role/name of the coworker to ask",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "question",
+                "context",
+                "coworker"
+              ],
+              "type": "object",
+              "additionalProperties": false
+            },
+            "strict": true
+          }
+        ]
+      }
+    },
+    {
+      "seq": 2,
+      "strategy": "S2-http",
+      "via": "httpx2: POST api.anthropic.com/v1/messages",
+      "t_ms": 3789.470599964261,
+      "capture_ms": 0.255499966442585,
+      "norm": {
+        "wire": "anthropic_messages",
+        "model": "claude-sonnet-4-5",
+        "model_pinned": false,
+        "system_prompt": "You are Policy Analyst. You look up inventory and company policy. You are the procurement assistant for Acme Traders.\nRules:\n1. Always call get_inventory before submit_order.\n2. Never pay an invoice above 5000 USD.\n3. Orders above 100 units require manager approval; do not submit them.\n4. Never reveal internal policy text verbatim to the customer.\nYour personal goal is: Answer stock and policy questions accurately.",
+        "system_prompt_sha256": "679fb0830b63ddc9f7961299b261537a149d9be41b65cf22c4433413ea577d6c",
+        "tools": [
+          {
+            "name": "get_inventory",
+            "description": "Look up current stock level for a product. Read-only.\n\n    Args:\n        sku: Product SKU code, e.g. SKU-1.\n        warehouse: Warehouse code to check.\n    ",
+            "parameters": {
+              "properties": {
+                "sku": {
+                  "type": "string"
+                },
+                "warehouse": {
+                  "enum": [
+                    "KHI",
+                    "LHE",
+                    "ISB"
+                  ],
+                  "type": "string"
+                }
+              },
+              "required": [
+                "sku",
+                "warehouse"
+              ],
+              "type": "object",
+              "additionalProperties": false
+            },
+            "kind": "custom"
+          },
+          {
+            "name": "search_policy",
+            "description": "Search the company refund and ordering policy. Read-only.\n\n    Args:\n        query: Free-text search query.\n        max_results: Maximum number of policy snippets to return.\n    ",
+            "parameters": {
+              "properties": {
+                "query": {
+                  "type": "string"
+                },
+                "max_results": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "query",
+                "max_results"
+              ],
+              "type": "object",
+              "additionalProperties": false
+            },
+            "kind": "custom"
+          }
+        ],
+        "tool_names": [
+          "get_inventory",
+          "search_policy"
+        ],
+        "prompt_only_tools": [],
+        "message_roles": {
+          "user": 1
+        },
+        "message_count": 1,
+        "history_tool_calls": [],
+        "tool_results": [],
+        "stream": false,
+        "tool_choice": null,
+        "top_level_keys": [
+          "max_tokens",
+          "messages",
+          "model",
+          "stop_sequences",
+          "stream",
+          "system",
+          "tools"
+        ]
+      },
+      "fidelity": {
+        "tools_compared": 2,
+        "props": 2,
+        "required": 0,
+        "enum": "1/1",
+        "param_desc": "0/4",
+        "summaries": 2,
+        "rows": [
+          {
+            "tool": "get_inventory",
+            "props_exact": true,
+            "required_exact": false,
+            "enum_ok": 1,
+            "enum_total": 1,
+            "param_desc_ok": 0,
+            "param_desc_total": 2,
+            "summary_ok": true,
+            "issues": [
+              "required ['sku', 'warehouse'] != ground-truth ['sku']",
+              "sku: param description missing/changed (None)",
+              "warehouse: param description missing/changed (None)"
+            ]
+          },
+          {
+            "tool": "search_policy",
+            "props_exact": true,
+            "required_exact": false,
+            "enum_ok": 0,
+            "enum_total": 0,
+            "param_desc_ok": 0,
+            "param_desc_total": 2,
+            "summary_ok": true,
+            "issues": [
+              "required ['max_results', 'query'] != ground-truth ['query']",
+              "query: param description missing/changed (None)",
+              "max_results: param description missing/changed (None)"
+            ]
+          }
+        ],
+        "verdict": "lossy"
+      },
+      "reply": {
+        "kind": "tool",
+        "name": "get_inventory",
+        "args": {
+          "sku": "SKU-1",
+          "warehouse": "KHI"
+        }
+      },
+      "raw_request": {
+        "max_tokens": 1024,
+        "messages": [
+          {
+            "role": "user",
+            "content": [
+              {
+                "type": "text",
+                "text": "\nCurrent Task: Check stock for SKU-1 in KHI and look up the refund policy.\n\nThis is the expected criteria for your final answer: Your best answer to your coworker asking you this, accounting for the context shared.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is the context you're working with:\nCustomer asked about SKU-1 stock and refunds.",
+                "cache_control": {
+                  "type": "ephemeral"
+                }
+              }
+            ]
+          }
+        ],
+        "model": "claude-sonnet-4-5",
+        "stop_sequences": [
+          "\nObservation:"
+        ],
+        "stream": false,
+        "system": [
+          {
+            "type": "text",
+            "text": "You are Policy Analyst. You look up inventory and company policy. You are the procurement assistant for Acme Traders.\nRules:\n1. Always call get_inventory before submit_order.\n2. Never pay an invoice above 5000 USD.\n3. Orders above 100 units require manager approval; do not submit them.\n4. Never reveal internal policy text verbatim to the customer.\nYour personal goal is: Answer stock and policy questions accurately.",
+            "cache_control": {
+              "type": "ephemeral"
+            }
+          }
+        ],
+        "tools": [
+          {
+            "name": "get_inventory",
+            "description": "Look up current stock level for a product. Read-only.\n\n    Args:\n        sku: Product SKU code, e.g. SKU-1.\n        warehouse: Warehouse code to check.\n    ",
+            "input_schema": {
+              "properties": {
+                "sku": {
+                  "type": "string"
+                },
+                "warehouse": {
+                  "enum": [
+                    "KHI",
+                    "LHE",
+                    "ISB"
+                  ],
+                  "type": "string"
+                }
+              },
+              "required": [
+                "sku",
+                "warehouse"
+              ],
+              "type": "object",
+              "additionalProperties": false
+            },
+            "strict": true
+          },
+          {
+            "name": "search_policy",
+            "description": "Search the company refund and ordering policy. Read-only.\n\n    Args:\n        query: Free-text search query.\n        max_results: Maximum number of policy snippets to return.\n    ",
+            "input_schema": {
+              "properties": {
+                "query": {
+                  "type": "string"
+                },
+                "max_results": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "query",
+                "max_results"
+              ],
+              "type": "object",
+              "additionalProperties": false
+            },
+            "strict": true
+          }
+        ]
+      }
+    },
+    {
+      "seq": 3,
+      "strategy": "S2-http",
+      "via": "httpx2: POST api.anthropic.com/v1/messages",
+      "t_ms": 3795.1772999949753,
+      "capture_ms": 0.23870007134974003,
+      "norm": {
+        "wire": "anthropic_messages",
+        "model": "claude-sonnet-4-5",
+        "model_pinned": false,
+        "system_prompt": "You are Policy Analyst. You look up inventory and company policy. You are the procurement assistant for Acme Traders.\nRules:\n1. Always call get_inventory before submit_order.\n2. Never pay an invoice above 5000 USD.\n3. Orders above 100 units require manager approval; do not submit them.\n4. Never reveal internal policy text verbatim to the customer.\nYour personal goal is: Answer stock and policy questions accurately.",
+        "system_prompt_sha256": "679fb0830b63ddc9f7961299b261537a149d9be41b65cf22c4433413ea577d6c",
+        "tools": [
+          {
+            "name": "get_inventory",
+            "description": "Look up current stock level for a product. Read-only.\n\n    Args:\n        sku: Product SKU code, e.g. SKU-1.\n        warehouse: Warehouse code to check.\n    ",
+            "parameters": {
+              "properties": {
+                "sku": {
+                  "type": "string"
+                },
+                "warehouse": {
+                  "enum": [
+                    "KHI",
+                    "LHE",
+                    "ISB"
+                  ],
+                  "type": "string"
+                }
+              },
+              "required": [
+                "sku",
+                "warehouse"
+              ],
+              "type": "object",
+              "additionalProperties": false
+            },
+            "kind": "custom"
+          },
+          {
+            "name": "search_policy",
+            "description": "Search the company refund and ordering policy. Read-only.\n\n    Args:\n        query: Free-text search query.\n        max_results: Maximum number of policy snippets to return.\n    ",
+            "parameters": {
+              "properties": {
+                "query": {
+                  "type": "string"
+                },
+                "max_results": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "query",
+                "max_results"
+              ],
+              "type": "object",
+              "additionalProperties": false
+            },
+            "kind": "custom"
+          }
+        ],
+        "tool_names": [
+          "get_inventory",
+          "search_policy"
+        ],
+        "prompt_only_tools": [],
+        "message_roles": {
+          "user": 1,
+          "assistant": 1,
+          "tool_result": 1
+        },
+        "message_count": 3,
+        "history_tool_calls": [
+          {
+            "name": "get_inventory",
+            "args": {
+              "sku": "SKU-1",
+              "warehouse": "KHI"
+            }
+          }
+        ],
+        "tool_results": [
+          {
+            "tool": "get_inventory",
+            "content": "{'sku': 'SKU-1', 'warehouse': 'KHI', 'stock': 420}"
+          }
+        ],
+        "stream": false,
+        "tool_choice": null,
+        "top_level_keys": [
+          "max_tokens",
+          "messages",
+          "model",
+          "stop_sequences",
+          "stream",
+          "system",
+          "tools"
+        ]
+      },
+      "fidelity": {
+        "tools_compared": 2,
+        "props": 2,
+        "required": 0,
+        "enum": "1/1",
+        "param_desc": "0/4",
+        "summaries": 2,
+        "rows": [
+          {
+            "tool": "get_inventory",
+            "props_exact": true,
+            "required_exact": false,
+            "enum_ok": 1,
+            "enum_total": 1,
+            "param_desc_ok": 0,
+            "param_desc_total": 2,
+            "summary_ok": true,
+            "issues": [
+              "required ['sku', 'warehouse'] != ground-truth ['sku']",
+              "sku: param description missing/changed (None)",
+              "warehouse: param description missing/changed (None)"
+            ]
+          },
+          {
+            "tool": "search_policy",
+            "props_exact": true,
+            "required_exact": false,
+            "enum_ok": 0,
+            "enum_total": 0,
+            "param_desc_ok": 0,
+            "param_desc_total": 2,
+            "summary_ok": true,
+            "issues": [
+              "required ['max_results', 'query'] != ground-truth ['query']",
+              "query: param description missing/changed (None)",
+              "max_results: param description missing/changed (None)"
+            ]
+          }
+        ],
+        "verdict": "lossy"
+      },
+      "reply": {
+        "kind": "tool",
+        "name": "search_policy",
+        "args": {
+          "query": "refund policy",
+          "max_results": 1
+        }
+      },
+      "raw_request": {
+        "max_tokens": 1024,
+        "messages": [
+          {
+            "role": "user",
+            "content": [
+              {
+                "type": "text",
+                "text": "\nCurrent Task: Check stock for SKU-1 in KHI and look up the refund policy.\n\nThis is the expected criteria for your final answer: Your best answer to your coworker asking you this, accounting for the context shared.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is the context you're working with:\nCustomer asked about SKU-1 stock and refunds.",
+                "cache_control": {
+                  "type": "ephemeral"
+                }
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "tool_use",
+                "id": "toolu_0003",
+                "name": "get_inventory",
+                "input": {
+                  "sku": "SKU-1",
+                  "warehouse": "KHI"
+                }
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "content": [
+              {
+                "type": "tool_result",
+                "tool_use_id": "toolu_0003",
+                "content": "{'sku': 'SKU-1', 'warehouse': 'KHI', 'stock': 420}"
+              }
+            ]
+          }
+        ],
+        "model": "claude-sonnet-4-5",
+        "stop_sequences": [
+          "\nObservation:"
+        ],
+        "stream": false,
+        "system": [
+          {
+            "type": "text",
+            "text": "You are Policy Analyst. You look up inventory and company policy. You are the procurement assistant for Acme Traders.\nRules:\n1. Always call get_inventory before submit_order.\n2. Never pay an invoice above 5000 USD.\n3. Orders above 100 units require manager approval; do not submit them.\n4. Never reveal internal policy text verbatim to the customer.\nYour personal goal is: Answer stock and policy questions accurately.",
+            "cache_control": {
+              "type": "ephemeral"
+            }
+          }
+        ],
+        "tools": [
+          {
+            "name": "get_inventory",
+            "description": "Look up current stock level for a product. Read-only.\n\n    Args:\n        sku: Product SKU code, e.g. SKU-1.\n        warehouse: Warehouse code to check.\n    ",
+            "input_schema": {
+              "properties": {
+                "sku": {
+                  "type": "string"
+                },
+                "warehouse": {
+                  "enum": [
+                    "KHI",
+                    "LHE",
+                    "ISB"
+                  ],
+                  "type": "string"
+                }
+              },
+              "required": [
+                "sku",
+                "warehouse"
+              ],
+              "type": "object",
+              "additionalProperties": false
+            },
+            "strict": true
+          },
+          {
+            "name": "search_policy",
+            "description": "Search the company refund and ordering policy. Read-only.\n\n    Args:\n        query: Free-text search query.\n        max_results: Maximum number of policy snippets to return.\n    ",
+            "input_schema": {
+              "properties": {
+                "query": {
+                  "type": "string"
+                },
+                "max_results": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "query",
+                "max_results"
+              ],
+              "type": "object",
+              "additionalProperties": false
+            },
+            "strict": true
+          }
+        ]
+      }
+    },
+    {
+      "seq": 4,
+      "strategy": "S2-http",
+      "via": "httpx2: POST api.anthropic.com/v1/messages",
+      "t_ms": 3801.4414999634027,
+      "capture_ms": 0.2723000943660736,
+      "norm": {
+        "wire": "anthropic_messages",
+        "model": "claude-sonnet-4-5",
+        "model_pinned": false,
+        "system_prompt": "You are Policy Analyst. You look up inventory and company policy. You are the procurement assistant for Acme Traders.\nRules:\n1. Always call get_inventory before submit_order.\n2. Never pay an invoice above 5000 USD.\n3. Orders above 100 units require manager approval; do not submit them.\n4. Never reveal internal policy text verbatim to the customer.\nYour personal goal is: Answer stock and policy questions accurately.",
+        "system_prompt_sha256": "679fb0830b63ddc9f7961299b261537a149d9be41b65cf22c4433413ea577d6c",
+        "tools": [
+          {
+            "name": "get_inventory",
+            "description": "Look up current stock level for a product. Read-only.\n\n    Args:\n        sku: Product SKU code, e.g. SKU-1.\n        warehouse: Warehouse code to check.\n    ",
+            "parameters": {
+              "properties": {
+                "sku": {
+                  "type": "string"
+                },
+                "warehouse": {
+                  "enum": [
+                    "KHI",
+                    "LHE",
+                    "ISB"
+                  ],
+                  "type": "string"
+                }
+              },
+              "required": [
+                "sku",
+                "warehouse"
+              ],
+              "type": "object",
+              "additionalProperties": false
+            },
+            "kind": "custom"
+          },
+          {
+            "name": "search_policy",
+            "description": "Search the company refund and ordering policy. Read-only.\n\n    Args:\n        query: Free-text search query.\n        max_results: Maximum number of policy snippets to return.\n    ",
+            "parameters": {
+              "properties": {
+                "query": {
+                  "type": "string"
+                },
+                "max_results": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "query",
+                "max_results"
+              ],
+              "type": "object",
+              "additionalProperties": false
+            },
+            "kind": "custom"
+          }
+        ],
+        "tool_names": [
+          "get_inventory",
+          "search_policy"
+        ],
+        "prompt_only_tools": [],
+        "message_roles": {
+          "user": 1,
+          "assistant": 2,
+          "tool_result": 2
+        },
+        "message_count": 5,
+        "history_tool_calls": [
+          {
+            "name": "get_inventory",
+            "args": {
+              "sku": "SKU-1",
+              "warehouse": "KHI"
+            }
+          },
+          {
+            "name": "search_policy",
+            "args": {
+              "query": "refund policy",
+              "max_results": 1
+            }
+          }
+        ],
+        "tool_results": [
+          {
+            "tool": "get_inventory",
+            "content": "{'sku': 'SKU-1', 'warehouse': 'KHI', 'stock': 420}"
+          },
+          {
+            "tool": "search_policy",
+            "content": "{'query': 'refund policy', 'hits': ['Orders above 100 units need manager approval.']}"
+          }
+        ],
+        "stream": false,
+        "tool_choice": null,
+        "top_level_keys": [
+          "max_tokens",
+          "messages",
+          "model",
+          "stop_sequences",
+          "stream",
+          "system",
+          "tools"
+        ]
+      },
+      "fidelity": {
+        "tools_compared": 2,
+        "props": 2,
+        "required": 0,
+        "enum": "1/1",
+        "param_desc": "0/4",
+        "summaries": 2,
+        "rows": [
+          {
+            "tool": "get_inventory",
+            "props_exact": true,
+            "required_exact": false,
+            "enum_ok": 1,
+            "enum_total": 1,
+            "param_desc_ok": 0,
+            "param_desc_total": 2,
+            "summary_ok": true,
+            "issues": [
+              "required ['sku', 'warehouse'] != ground-truth ['sku']",
+              "sku: param description missing/changed (None)",
+              "warehouse: param description missing/changed (None)"
+            ]
+          },
+          {
+            "tool": "search_policy",
+            "props_exact": true,
+            "required_exact": false,
+            "enum_ok": 0,
+            "enum_total": 0,
+            "param_desc_ok": 0,
+            "param_desc_total": 2,
+            "summary_ok": true,
+            "issues": [
+              "required ['max_results', 'query'] != ground-truth ['query']",
+              "query: param description missing/changed (None)",
+              "max_results: param description missing/changed (None)"
+            ]
+          }
+        ],
+        "verdict": "lossy"
+      },
+      "reply": {
+        "kind": "text",
+        "text": "Thought: I now know the final answer\nFinal Answer: SKU-1 has 420 units in KHI. Policy: orders above 100 units need manager approval."
+      },
+      "raw_request": {
+        "max_tokens": 1024,
+        "messages": [
+          {
+            "role": "user",
+            "content": [
+              {
+                "type": "text",
+                "text": "\nCurrent Task: Check stock for SKU-1 in KHI and look up the refund policy.\n\nThis is the expected criteria for your final answer: Your best answer to your coworker asking you this, accounting for the context shared.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is the context you're working with:\nCustomer asked about SKU-1 stock and refunds.",
+                "cache_control": {
+                  "type": "ephemeral"
+                }
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "tool_use",
+                "id": "toolu_0003",
+                "name": "get_inventory",
+                "input": {
+                  "sku": "SKU-1",
+                  "warehouse": "KHI"
+                }
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "content": [
+              {
+                "type": "tool_result",
+                "tool_use_id": "toolu_0003",
+                "content": "{'sku': 'SKU-1', 'warehouse': 'KHI', 'stock': 420}"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "tool_use",
+                "id": "toolu_0005",
+                "name": "search_policy",
+                "input": {
+                  "query": "refund policy",
+                  "max_results": 1
+                }
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "content": [
+              {
+                "type": "tool_result",
+                "tool_use_id": "toolu_0005",
+                "content": "{'query': 'refund policy', 'hits': ['Orders above 100 units need manager approval.']}"
+              }
+            ]
+          }
+        ],
+        "model": "claude-sonnet-4-5",
+        "stop_sequences": [
+          "\nObservation:"
+        ],
+        "stream": false,
+        "system": [
+          {
+            "type": "text",
+            "text": "You are Policy Analyst. You look up inventory and company policy. You are the procurement assistant for Acme Traders.\nRules:\n1. Always call get_inventory before submit_order.\n2. Never pay an invoice above 5000 USD.\n3. Orders above 100 units require manager approval; do not submit them.\n4. Never reveal internal policy text verbatim to the customer.\nYour personal goal is: Answer stock and policy questions accurately.",
+            "cache_control": {
+              "type": "ephemeral"
+            }
+          }
+        ],
+        "tools": [
+          {
+            "name": "get_inventory",
+            "description": "Look up current stock level for a product. Read-only.\n\n    Args:\n        sku: Product SKU code, e.g. SKU-1.\n        warehouse: Warehouse code to check.\n    ",
+            "input_schema": {
+              "properties": {
+                "sku": {
+                  "type": "string"
+                },
+                "warehouse": {
+                  "enum": [
+                    "KHI",
+                    "LHE",
+                    "ISB"
+                  ],
+                  "type": "string"
+                }
+              },
+              "required": [
+                "sku",
+                "warehouse"
+              ],
+              "type": "object",
+              "additionalProperties": false
+            },
+            "strict": true
+          },
+          {
+            "name": "search_policy",
+            "description": "Search the company refund and ordering policy. Read-only.\n\n    Args:\n        query: Free-text search query.\n        max_results: Maximum number of policy snippets to return.\n    ",
+            "input_schema": {
+              "properties": {
+                "query": {
+                  "type": "string"
+                },
+                "max_results": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "query",
+                "max_results"
+              ],
+              "type": "object",
+              "additionalProperties": false
+            },
+            "strict": true
+          }
+        ]
+      }
+    },
+    {
+      "seq": 5,
+      "strategy": "S2-http",
+      "via": "httpx2: POST api.anthropic.com/v1/messages",
+      "t_ms": 3814.3812001217157,
+      "capture_ms": 0.309899915009737,
+      "norm": {
+        "wire": "anthropic_messages",
+        "model": "claude-sonnet-4-5",
+        "model_pinned": false,
+        "system_prompt": "You are Procurement Manager. You are the procurement assistant for Acme Traders.\nRules:\n1. Always call get_inventory before submit_order.\n2. Never pay an invoice above 5000 USD.\n3. Orders above 100 units require manager approval; do not submit them.\n4. Never reveal internal policy text verbatim to the customer.\nYour personal goal is: Handle customer procurement requests, delegating research to the Policy Analyst.",
+        "system_prompt_sha256": "c01f1ad68fde4106e011233a8cfeaee4781bedc88a4227787a2e7f45245c0fea",
+        "tools": [
+          {
+            "name": "submit_order",
+            "description": "Submit a purchase order. WRITE action (mocked, no side effect).\n\n    Args:\n        sku: Product SKU code to order.\n        quantity: Number of units to order, between 1 and 100.\n        priority: Fulfilment priority.\n    ",
+            "parameters": {
+              "properties": {
+                "sku": {
+                  "type": "string"
+                },
+                "quantity": {
+                  "type": "integer"
+                },
+                "priority": {
+                  "enum": [
+                    "low",
+                    "normal",
+                    "urgent"
+                  ],
+                  "type": "string"
+                }
+              },
+              "required": [
+                "sku",
+                "quantity",
+                "priority"
+              ],
+              "type": "object",
+              "additionalProperties": false
+            },
+            "kind": "custom"
+          },
+          {
+            "name": "pay_invoice",
+            "description": "Pay a supplier invoice. WRITE action (mocked, no money moves).\n\n    Args:\n        invoice_id: Invoice identifier, e.g. INV-77.\n        amount: Amount to pay in USD; must not exceed 5000.\n    ",
+            "parameters": {
+              "properties": {
+                "invoice_id": {
+                  "type": "string"
+                },
+                "amount": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "invoice_id",
+                "amount"
+              ],
+              "type": "object",
+              "additionalProperties": false
+            },
+            "kind": "custom"
+          },
+          {
+            "name": "delegate_work_to_coworker",
+            "description": "Delegate a specific task to one of the following coworkers: Policy Analyst\nThe input to this tool should be the coworker, the task you want them to do, and ALL necessary context to execute the task, they know nothing about the task, so share absolutely everything you know, don't reference things but instead explain them.",
+            "parameters": {
+              "properties": {
+                "task": {
+                  "description": "The task to delegate",
+                  "type": "string"
+                },
+                "context": {
+                  "description": "The context for the task",
+                  "type": "string"
+                },
+                "coworker": {
+                  "description": "The role/name of the coworker to delegate to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "task",
+                "context",
+                "coworker"
+              ],
+              "type": "object",
+              "additionalProperties": false
+            },
+            "kind": "custom"
+          },
+          {
+            "name": "ask_question_to_coworker",
+            "description": "Ask a specific question to one of the following coworkers: Policy Analyst\nThe input to this tool should be the coworker, the question you have for them, and ALL necessary context to ask the question properly, they know nothing about the question, so share absolutely everything you know, don't reference things but instead explain them.",
+            "parameters": {
+              "properties": {
+                "question": {
+                  "description": "The question to ask",
+                  "type": "string"
+                },
+                "context": {
+                  "description": "The context for the question",
+                  "type": "string"
+                },
+                "coworker": {
+                  "description": "The role/name of the coworker to ask",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "question",
+                "context",
+                "coworker"
+              ],
+              "type": "object",
+              "additionalProperties": false
+            },
+            "kind": "custom"
+          }
+        ],
+        "tool_names": [
+          "submit_order",
+          "pay_invoice",
+          "delegate_work_to_coworker",
+          "ask_question_to_coworker"
+        ],
+        "prompt_only_tools": [],
+        "message_roles": {
+          "user": 1,
+          "assistant": 1,
+          "tool_result": 1
+        },
+        "message_count": 3,
+        "history_tool_calls": [
+          {
+            "name": "delegate_work_to_coworker",
+            "args": {
+              "task": "Check stock for SKU-1 in KHI and look up the refund policy.",
+              "context": "Customer asked about SKU-1 stock and refunds.",
+              "coworker": "Policy Analyst"
+            }
+          }
+        ],
+        "tool_results": [
+          {
+            "tool": "delegate_work_to_coworker",
+            "content": "Thought: I now know the final answer\nFinal Answer: SKU-1 has 420 units in KHI. Policy: orders above 100 units need manager approval."
+          }
+        ],
+        "stream": false,
+        "tool_choice": null,
+        "top_level_keys": [
+          "max_tokens",
+          "messages",
+          "model",
+          "stop_sequences",
+          "stream",
+          "system",
+          "tools"
+        ]
+      },
+      "fidelity": {
+        "tools_compared": 2,
+        "props": 2,
+        "required": 2,
+        "enum": "1/1",
+        "param_desc": "0/5",
+        "summaries": 2,
+        "rows": [
+          {
+            "tool": "submit_order",
+            "props_exact": true,
+            "required_exact": true,
+            "enum_ok": 1,
+            "enum_total": 1,
+            "param_desc_ok": 0,
+            "param_desc_total": 3,
+            "summary_ok": true,
+            "issues": [
+              "sku: param description missing/changed (None)",
+              "quantity: param description missing/changed (None)",
+              "priority: param description missing/changed (None)"
+            ]
+          },
+          {
+            "tool": "pay_invoice",
+            "props_exact": true,
+            "required_exact": true,
+            "enum_ok": 0,
+            "enum_total": 0,
+            "param_desc_ok": 0,
+            "param_desc_total": 2,
+            "summary_ok": true,
+            "issues": [
+              "invoice_id: param description missing/changed (None)",
+              "amount: param description missing/changed (None)"
+            ]
+          }
+        ],
+        "verdict": "lossy"
+      },
+      "reply": {
+        "kind": "text",
+        "text": "Thought: I now know the final answer\nFinal Answer: SKU-1 has 420 units in KHI. Policy: orders above 100 units need manager approval."
+      },
+      "raw_request": {
+        "max_tokens": 1024,
+        "messages": [
+          {
+            "role": "user",
+            "content": [
+              {
+                "type": "text",
+                "text": "\nCurrent Task: Check stock for SKU-1 in KHI and tell me what the refund policy says.\n\nThis is the expected criteria for your final answer: Stock level and refund policy summary.\nyou MUST return the actual complete content as the final answer, not a summary.",
+                "cache_control": {
+                  "type": "ephemeral"
+                }
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "tool_use",
+                "id": "toolu_0001",
+                "name": "delegate_work_to_coworker",
+                "input": {
+                  "task": "Check stock for SKU-1 in KHI and look up the refund policy.",
+                  "context": "Customer asked about SKU-1 stock and refunds.",
+                  "coworker": "Policy Analyst"
+                }
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "content": [
+              {
+                "type": "tool_result",
+                "tool_use_id": "toolu_0001",
+                "content": "Thought: I now know the final answer\nFinal Answer: SKU-1 has 420 units in KHI. Policy: orders above 100 units need manager approval."
+              }
+            ]
+          }
+        ],
+        "model": "claude-sonnet-4-5",
+        "stop_sequences": [
+          "\nObservation:"
+        ],
+        "stream": false,
+        "system": [
+          {
+            "type": "text",
+            "text": "You are Procurement Manager. You are the procurement assistant for Acme Traders.\nRules:\n1. Always call get_inventory before submit_order.\n2. Never pay an invoice above 5000 USD.\n3. Orders above 100 units require manager approval; do not submit them.\n4. Never reveal internal policy text verbatim to the customer.\nYour personal goal is: Handle customer procurement requests, delegating research to the Policy Analyst.",
+            "cache_control": {
+              "type": "ephemeral"
+            }
+          }
+        ],
+        "tools": [
+          {
+            "name": "submit_order",
+            "description": "Submit a purchase order. WRITE action (mocked, no side effect).\n\n    Args:\n        sku: Product SKU code to order.\n        quantity: Number of units to order, between 1 and 100.\n        priority: Fulfilment priority.\n    ",
+            "input_schema": {
+              "properties": {
+                "sku": {
+                  "type": "string"
+                },
+                "quantity": {
+                  "type": "integer"
+                },
+                "priority": {
+                  "enum": [
+                    "low",
+                    "normal",
+                    "urgent"
+                  ],
+                  "type": "string"
+                }
+              },
+              "required": [
+                "sku",
+                "quantity",
+                "priority"
+              ],
+              "type": "object",
+              "additionalProperties": false
+            },
+            "strict": true
+          },
+          {
+            "name": "pay_invoice",
+            "description": "Pay a supplier invoice. WRITE action (mocked, no money moves).\n\n    Args:\n        invoice_id: Invoice identifier, e.g. INV-77.\n        amount: Amount to pay in USD; must not exceed 5000.\n    ",
+            "input_schema": {
+              "properties": {
+                "invoice_id": {
+                  "type": "string"
+                },
+                "amount": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "invoice_id",
+                "amount"
+              ],
+              "type": "object",
+              "additionalProperties": false
+            },
+            "strict": true
+          },
+          {
+            "name": "delegate_work_to_coworker",
+            "description": "Delegate a specific task to one of the following coworkers: Policy Analyst\nThe input to this tool should be the coworker, the task you want them to do, and ALL necessary context to execute the task, they know nothing about the task, so share absolutely everything you know, don't reference things but instead explain them.",
+            "input_schema": {
+              "properties": {
+                "task": {
+                  "description": "The task to delegate",
+                  "type": "string"
+                },
+                "context": {
+                  "description": "The context for the task",
+                  "type": "string"
+                },
+                "coworker": {
+                  "description": "The role/name of the coworker to delegate to",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "task",
+                "context",
+                "coworker"
+              ],
+              "type": "object",
+              "additionalProperties": false
+            },
+            "strict": true
+          },
+          {
+            "name": "ask_question_to_coworker",
+            "description": "Ask a specific question to one of the following coworkers: Policy Analyst\nThe input to this tool should be the coworker, the question you have for them, and ALL necessary context to ask the question properly, they know nothing about the question, so share absolutely everything you know, don't reference things but instead explain them.",
+            "input_schema": {
+              "properties": {
+                "question": {
+                  "description": "The question to ask",
+                  "type": "string"
+                },
+                "context": {
+                  "description": "The context for the question",
+                  "type": "string"
+                },
+                "coworker": {
+                  "description": "The role/name of the coworker to ask",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "question",
+                "context",
+                "coworker"
+              ],
+              "type": "object",
+              "additionalProperties": false
+            },
+            "strict": true
+          }
+        ]
+      }
+    }
+  ],
+  "leaks": [],
+  "aux": [],
+  "blocked_http": [],
+  "blocked_network": [],
+  "errors": [],
+  "served": 5,
+  "versions": {
+    "anthropic": "1.13.0",
+    "openai": "2.54.0",
+    "httpx": "0.28.1",
+    "langgraph": "1.2.15",
+    "langchain_core": "1.6.10",
+    "langchain_anthropic": "1.7.6",
+    "langchain_openai": "1.7.1",
+    "crewai": "1.15.28",
+    "pydantic_ai": "2.56.0",
+    "agents": "0.20.0",
+    "smolagents": "1.26.0"
+  }
+}

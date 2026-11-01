@@ -1,0 +1,19 @@
+# Which model providers offer dated / immutable model snapshots (used by AS-210).
+#
+# snapshots: false  -> the provider serves model ids that can change behind the same name and offers no
+#                      dated version to pin to. AS-210 then reports an UNKNOWN (behaviour can change without
+#                      a code change) instead of the impossible advice "pin a dated snapshot".
+# Only list a provider when its own documentation supports the entry; cite it in `source`.
+# Unknown providers keep the normal AS-210 behaviour.
+#
+# Recognised by: client classes, base_url hosts, model-id prefixes (LiteLLM "groq/...", init_chat_model
+# "groq:..."), and env-var NAME hints in base_url (os.environ["GROQ_BASE_URL"], GROQ_BASE_URL constant).
+version: 1
+providers:
+  groq:
+    snapshots: false
+    classes: [ChatGroq, Groq, AsyncGroq, GroqModel, GroqProvider]
+    hosts: [api.groq.com]
+    prefixes: ["groq/", "groq:"]
+    env_hints: [GROQ]
+    source: https://console.groq.com/docs/models (ids carry no date; retired models listed at /docs/deprecations)

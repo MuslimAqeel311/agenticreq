@@ -1,0 +1,16 @@
+agenticreq check · support-agent · spec: spec.yml · mock run: <time> (2/2 calls)
+
+Result: PASS    0 gaps · 0 sign-offs left (14 signed) · 0 to check · 6 passed
+
+HUMAN SIGN-OFF (0 left · 14 signed)
+  14 signed, use --verbose to list
+
+PASSED (6)
+  ✓ role_boundary                         Found in code: lookup_order.
+  ✓ stop_conditions                       Held in 1 of 1 runs: stop_conditions (every real run ended
+                                          with an answer or at its declared budget).
+  ✓ progress_guard.max_no_progress_steps  Held in 1 of 1 runs: progress_guard (no run repeated an
+                                          identical tool call more than 5 times).
+  ✓ bounds.max_steps                      Found in code: 10.
+  ✓ tool_schema_strictness                Found in code: lookup_order (3/3 fields verbatim).
+  ✓ version_pinning                       Found in code: gpt-4o-2024-08-06.

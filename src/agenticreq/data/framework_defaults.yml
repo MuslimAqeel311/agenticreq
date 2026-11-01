@@ -1,0 +1,19 @@
+# Loop bounds a framework applies when the user sets none (AS-208).
+# A default here turns "no bound found" into a heuristic pass: the bound exists, but it is
+# version-dependent and not visible in the user's code. Re-check on framework upgrades.
+# Leave a framework out when its default is effectively unbounded (LangGraph 1.x: recursion_limit 10007).
+version: 1
+step_bounds:
+  openai-agents: {kind: max_turns, value: 10, source: "agents.run.DEFAULT_MAX_TURNS"}
+  pydantic-ai: {kind: request_limit, value: 50, source: "UsageLimits.request_limit"}
+  crewai: {kind: max_iter, value: 25, source: "crewai.Agent.max_iter"}
+  smolagents: {kind: max_steps, value: 20, source: "MultiStepAgent.max_steps"}
+  needle: {kind: max_steps, value: 8, source: "needle.Needle.run(max_steps=8)"}
+  google-adk: {kind: max_steps, value: 500, source: "google.adk.agents.run_config.RunConfig.max_llm_calls"}
+
+# Frameworks whose loop bound counts across every agent of one run (handoffs / subgraphs included),
+# so it is an aggregate budget for AS-306. CrewAI's max_iter is per agent and is not listed.
+run_level_bound: [openai-agents, langgraph]
+# Frameworks that create one trace per run spanning all agents by default (AS-307).
+builtin_tracing:
+  openai-agents: "agents.tracing: one trace per Runner.run, handoffs included (unless tracing is disabled)"

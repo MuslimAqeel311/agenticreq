@@ -1,0 +1,23 @@
+# Customer-support agent — template. Replace every TODO; `check` fails while one is left.
+agent_id: support-agent
+risk_level: high
+goal:
+  statement: Resolve customer questions; change accounts only within policy
+  done_criteria: [customer answered or ticket escalated to a human]
+out_of_scope: [moving money, closing accounts]
+role_boundary:
+  allowed_tools: [TODO_lookup_account_tool, TODO_kb_search_tool, TODO_update_ticket_tool]
+prohibited:
+  - {tool: TODO_transfer_or_refund_tool, reason: support never moves money}
+approval_required:
+  - {tool: TODO_account_change_tool, approver: support-lead, timeout: 1h, on_timeout: safe_stop}
+limits: []
+escalation:
+  - {metric: risk_score, op: ">=", threshold: 8, to: fraud-team}
+untrusted_inputs:
+  - {source: TODO_customer_message_or_email_tool, kind: user_content}
+  - {source: TODO_kb_search_tool, kind: retrieved_document}
+owner: TODO@your-company.com
+technical_owner: TODO@your-company.com
+data_rules:
+  never_store: [card_number, password]

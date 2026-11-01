@@ -1,0 +1,92 @@
+name: agenticreq
+description: Check that an AI agent's code enforces its spec, and annotate the pull request (SARIF code scanning).
+branding:
+  icon: shield
+  color: blue
+
+inputs:
+  path:
+    description: Folder (or file) holding the agent code, relative to the repository root.
+    default: "."
+  spec:
+    description: spec.yml to check against. Empty runs the zero-config `audit` (Level 2 only).
+    default: ""
+  captures:
+    description: Optional mock run file (.agenticreq/captures.json from `agenticreq mock-run`) for wire-level checks.
+    default: ""
+  traces:
+    description: Optional OTel GenAI spans (file or folder) for runtime checks.
+    default: ""
+  fail-on:
+    description: "Fail the job on: gaps (default: a spec vs code gap) | all (also an open sign-off or a check waiting for a mock run) | never (report only)."
+    default: gaps
+  python-version:
+    description: Python used to run agenticreq (the agent's own dependencies are never installed).
+    default: "3.12"
+  sarif-file:
+    description: Where to write the SARIF report.
+    default: agenticreq.sarif
+  upload-sarif:
+    description: Upload the SARIF to GitHub code scanning so findings appear on the PR's changed lines.
+    default: "true"
+
+outputs:
+  sarif-file:
+    description: Path of the SARIF report.
+    value: ${{ inputs.sarif-file }}
+  exit-code:
+    description: "agenticreq's exit code under `fail-on`: 0 = PASS, 1 = the fail-on condition failed, 2 = invalid spec, 3 = nothing checked."
+    value: ${{ steps.run.outputs.exit-code }}
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install agenticreq
+      shell: bash
+      run: python -m pip install --disable-pip-version-check --quiet "$GITHUB_ACTION_PATH"
+
+    - name: Run agenticreq
+      id: run
+      shell: bash
+      # inputs reach the script only as environment variables, never spliced into the command text
+      env:
+        AC_PATH: ${{ inputs.path }}
+        AC_SPEC: ${{ inputs.spec }}
+        AC_CAPTURES: ${{ inputs.captures }}
+        AC_TRACES: ${{ inputs.traces }}
+        AC_FAIL_ON: ${{ inputs.fail-on }}
+        AC_SARIF: ${{ inputs.sarif-file }}
+      run: |
+        set +e
+        args=()
+        if [ -n "$AC_SPEC" ]; then cmd=check; args+=(--spec "$AC_SPEC"); else cmd=audit; fi
+        if [ -n "$AC_CAPTURES" ]; then args+=(--captures "$AC_CAPTURES"); fi
+        if [ -n "$AC_TRACES" ]; then args+=(--traces "$AC_TRACES"); fi
+        agenticreq "$cmd" "$AC_PATH" "${args[@]}" --format sarif --output "$AC_SARIF" --fail-on "$AC_FAIL_ON"
+        code=$?
+        # human-readable summary in the job log
+        COLUMNS=140 agenticreq "$cmd" "$AC_PATH" "${args[@]}" --fail-on never
+        echo "exit-code=$code" >> "$GITHUB_OUTPUT"
+
+    - name: Upload SARIF (PR annotations)
+      if: always() && inputs.upload-sarif == 'true' && hashFiles(inputs.sarif-file) != ''
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: ${{ inputs.sarif-file }}
+        category: agenticreq
+
+    # SARIF levels: a spec vs code gap -> error, an open sign-off or a mock-run check -> note. The annotations never
+    # fail the job; this exit code (fail-on) does.
+    - name: Fail on the fail-on condition
+      if: steps.run.outputs.exit-code != '0'
+      shell: bash
+      env:
+        AC_CODE: ${{ steps.run.outputs.exit-code }}
+        AC_FAIL_ON: ${{ inputs.fail-on }}
+      run: |
+        echo "agenticreq exited with $AC_CODE (fail-on: $AC_FAIL_ON)"
+        exit 1

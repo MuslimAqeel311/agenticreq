@@ -1,0 +1,45 @@
+# openai/openai-cs-agents-demo @bd7bfca — python-backend/airline
+# The repo ships no spec. These rules are an ASSUMED operator policy, written from the agents'
+# own instructions before running `check`; nothing was tuned to the result.
+agent_id: triage
+risk_level: high
+goal:
+  statement: Route airline customer requests to the specialist agent that can resolve them
+  done_criteria: [request resolved by a specialist or answered from the FAQ]
+out_of_scope: [cash refunds, loyalty point changes]
+role_boundary:
+  allowed_tools: [get_trip_details]
+prohibited:
+  - tool: issue_cash_refund
+    reason: cash refunds go through finance, never through the chat agents
+approval_required:
+  - {tool: issue_compensation, approver: cs-supervisor, timeout: 1h, on_timeout: safe_stop}
+  - {tool: cancel_flight, approver: customer-confirmation, timeout: 15m, on_timeout: safe_stop}
+limits: []
+escalation:
+  - {metric: compensation_cases_per_hour, op: ">", threshold: 20, to: cs-supervisor}
+untrusted_inputs: []
+owner: cs-ops@example.com
+technical_owner: platform@example.com
+topology: supervisor
+agent_registry:
+  - {id: triage, match: "Triage Agent", tools: [get_trip_details]}
+  - {id: seat, match: "Seat and Special Services Agent", tools: [update_seat, assign_special_service_seat, display_seat_map]}
+  - {id: flight-info, match: "Flight Information Agent", tools: [flight_status_tool, get_matching_flights]}
+  - {id: booking, match: "Booking and Cancellation Agent", tools: [cancel_flight, get_matching_flights, book_new_flight]}
+  - {id: refunds, match: "Refunds and Compensation Agent", tools: [issue_compensation, faq_lookup_tool]}
+  - {id: faq, match: "FAQ Agent", tools: [faq_lookup_tool]}
+declared_delegation:
+  - triage -> flight-info
+  - triage -> booking
+  - triage -> seat
+  - triage -> faq
+  - triage -> refunds
+  - seat -> triage
+  - flight-info -> triage
+  - booking -> triage
+  - refunds -> triage
+  - faq -> triage
+max_delegation_depth: 2
+no_cycles: false          # hub-and-spoke: specialists hand back to triage by design
+aggregate_budget: {max_steps: 20}

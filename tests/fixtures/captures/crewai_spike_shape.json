@@ -1,0 +1,1424 @@
+{
+ "entry": "tests/fixtures/agents_crewai/crew_spike_shape/agent.py",
+ "runs": 1,
+ "coverage": "5/5",
+ "zero_touch": true,
+ "changed_files": [],
+ "libs_hooked": [
+  "httpx"
+ ],
+ "versions": {
+  "httpx": "0.28.1",
+  "openai": "1.83.0",
+  "crewai": "1.9.3"
+ },
+ "llm_misses": [],
+ "egress_blocked": [
+  "dns:api.scarf.sh"
+ ],
+ "scrubbed_env": [
+  "CLAUDE_CODE_MESSAGING_TOKEN",
+  "SSH_AUTH_SOCK"
+ ],
+ "run_errors": {},
+ "sandbox": "mock-tools:tests/fixtures/agents_crewai/crew_spike_shape/mocks.yml",
+ "calls": [
+  {
+   "index": 0,
+   "run_id": "run-0",
+   "provider": "openai_chat",
+   "url": "http://127.0.0.1:9/v1/chat/completions",
+   "client_lib": "httpx",
+   "model": "gpt-4o",
+   "system_prompt": "You are Procurement Agent. You run procurement.\nYour personal goal is: Restock low inventory",
+   "system_prompt_sha256": "62d52915ecaf672e2c67a9913adb2cc8fe889ad653872689a95c7aab43a56a4f",
+   "tools": [
+    {
+     "name": "submit_order",
+     "description": "Submit a purchase order.\n\n    Args:\n        sku: Stock keeping unit.\n        quantity: Units to order.\n        priority: Order priority (normal or urgent).",
+     "params": [
+      {
+       "name": "sku",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "quantity",
+       "type": "integer",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "priority",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_chat",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "submit_order",
+      "description": "Submit a purchase order.\n\n    Args:\n        sku: Stock keeping unit.\n        quantity: Units to order.\n        priority: Order priority (normal or urgent).",
+      "parameters": {
+       "properties": {
+        "sku": {
+         "title": "Sku",
+         "type": "string"
+        },
+        "quantity": {
+         "title": "Quantity",
+         "type": "integer"
+        },
+        "priority": {
+         "title": "Priority",
+         "type": "string"
+        }
+       },
+       "required": [
+        "sku",
+        "quantity",
+        "priority"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    },
+    {
+     "name": "pay_invoice",
+     "description": "Pay a supplier invoice.\n\n    Args:\n        invoice_id: Supplier invoice identifier.\n        amount: Amount to pay.",
+     "params": [
+      {
+       "name": "invoice_id",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "amount",
+       "type": "number",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_chat",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "pay_invoice",
+      "description": "Pay a supplier invoice.\n\n    Args:\n        invoice_id: Supplier invoice identifier.\n        amount: Amount to pay.",
+      "parameters": {
+       "properties": {
+        "invoice_id": {
+         "title": "Invoice Id",
+         "type": "string"
+        },
+        "amount": {
+         "title": "Amount",
+         "type": "number"
+        }
+       },
+       "required": [
+        "invoice_id",
+        "amount"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    },
+    {
+     "name": "get_inventory",
+     "description": "Look up stock for a SKU.\n\n    Args:\n        sku: Stock keeping unit.\n        warehouse: Warehouse code.",
+     "params": [
+      {
+       "name": "sku",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "warehouse",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": true,
+       "default": "KHI",
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_chat",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "get_inventory",
+      "description": "Look up stock for a SKU.\n\n    Args:\n        sku: Stock keeping unit.\n        warehouse: Warehouse code.",
+      "parameters": {
+       "properties": {
+        "sku": {
+         "title": "Sku",
+         "type": "string"
+        },
+        "warehouse": {
+         "default": "KHI",
+         "title": "Warehouse",
+         "type": "string"
+        }
+       },
+       "required": [
+        "sku",
+        "warehouse"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    },
+    {
+     "name": "search_policy",
+     "description": "Search the procurement policy.\n\n    Args:\n        query: Search text.\n        max_results: Maximum passages to return.",
+     "params": [
+      {
+       "name": "query",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "max_results",
+       "type": "integer",
+       "description": null,
+       "required": true,
+       "has_default": true,
+       "default": 3,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_chat",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "search_policy",
+      "description": "Search the procurement policy.\n\n    Args:\n        query: Search text.\n        max_results: Maximum passages to return.",
+      "parameters": {
+       "properties": {
+        "query": {
+         "title": "Query",
+         "type": "string"
+        },
+        "max_results": {
+         "default": 3,
+         "title": "Max Results",
+         "type": "integer"
+        }
+       },
+       "required": [
+        "query",
+        "max_results"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    }
+   ],
+   "tool_calls": [
+    {
+     "name": "get_inventory",
+     "arguments": {
+      "sku": "A-100",
+      "warehouse": "KHI"
+     },
+     "id": "call_ac_1_get_inventory"
+    }
+   ],
+   "tool_results": [],
+   "prior_tool_calls": [],
+   "message_count": 2,
+   "trace_id": null,
+   "parent_id": null,
+   "overhead_ms": 0.31954600035533076,
+   "synthetic": true
+  },
+  {
+   "index": 1,
+   "run_id": "run-0",
+   "provider": "openai_chat",
+   "url": "http://127.0.0.1:9/v1/chat/completions",
+   "client_lib": "httpx",
+   "model": "gpt-4o",
+   "system_prompt": "You are Procurement Agent. You run procurement.\nYour personal goal is: Restock low inventory",
+   "system_prompt_sha256": "62d52915ecaf672e2c67a9913adb2cc8fe889ad653872689a95c7aab43a56a4f",
+   "tools": [
+    {
+     "name": "submit_order",
+     "description": "Submit a purchase order.\n\n    Args:\n        sku: Stock keeping unit.\n        quantity: Units to order.\n        priority: Order priority (normal or urgent).",
+     "params": [
+      {
+       "name": "sku",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "quantity",
+       "type": "integer",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "priority",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_chat",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "submit_order",
+      "description": "Submit a purchase order.\n\n    Args:\n        sku: Stock keeping unit.\n        quantity: Units to order.\n        priority: Order priority (normal or urgent).",
+      "parameters": {
+       "properties": {
+        "sku": {
+         "title": "Sku",
+         "type": "string"
+        },
+        "quantity": {
+         "title": "Quantity",
+         "type": "integer"
+        },
+        "priority": {
+         "title": "Priority",
+         "type": "string"
+        }
+       },
+       "required": [
+        "sku",
+        "quantity",
+        "priority"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    },
+    {
+     "name": "pay_invoice",
+     "description": "Pay a supplier invoice.\n\n    Args:\n        invoice_id: Supplier invoice identifier.\n        amount: Amount to pay.",
+     "params": [
+      {
+       "name": "invoice_id",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "amount",
+       "type": "number",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_chat",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "pay_invoice",
+      "description": "Pay a supplier invoice.\n\n    Args:\n        invoice_id: Supplier invoice identifier.\n        amount: Amount to pay.",
+      "parameters": {
+       "properties": {
+        "invoice_id": {
+         "title": "Invoice Id",
+         "type": "string"
+        },
+        "amount": {
+         "title": "Amount",
+         "type": "number"
+        }
+       },
+       "required": [
+        "invoice_id",
+        "amount"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    },
+    {
+     "name": "get_inventory",
+     "description": "Look up stock for a SKU.\n\n    Args:\n        sku: Stock keeping unit.\n        warehouse: Warehouse code.",
+     "params": [
+      {
+       "name": "sku",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "warehouse",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": true,
+       "default": "KHI",
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_chat",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "get_inventory",
+      "description": "Look up stock for a SKU.\n\n    Args:\n        sku: Stock keeping unit.\n        warehouse: Warehouse code.",
+      "parameters": {
+       "properties": {
+        "sku": {
+         "title": "Sku",
+         "type": "string"
+        },
+        "warehouse": {
+         "default": "KHI",
+         "title": "Warehouse",
+         "type": "string"
+        }
+       },
+       "required": [
+        "sku",
+        "warehouse"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    },
+    {
+     "name": "search_policy",
+     "description": "Search the procurement policy.\n\n    Args:\n        query: Search text.\n        max_results: Maximum passages to return.",
+     "params": [
+      {
+       "name": "query",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "max_results",
+       "type": "integer",
+       "description": null,
+       "required": true,
+       "has_default": true,
+       "default": 3,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_chat",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "search_policy",
+      "description": "Search the procurement policy.\n\n    Args:\n        query: Search text.\n        max_results: Maximum passages to return.",
+      "parameters": {
+       "properties": {
+        "query": {
+         "title": "Query",
+         "type": "string"
+        },
+        "max_results": {
+         "default": 3,
+         "title": "Max Results",
+         "type": "integer"
+        }
+       },
+       "required": [
+        "query",
+        "max_results"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    }
+   ],
+   "tool_calls": [
+    {
+     "name": "search_policy",
+     "arguments": {
+      "query": "approval thresholds",
+      "max_results": 3
+     },
+     "id": "call_ac_2_search_policy"
+    }
+   ],
+   "tool_results": [
+    {
+     "call_id": "call_ac_1_get_inventory",
+     "name": "get_inventory",
+     "content": "3 units"
+    }
+   ],
+   "prior_tool_calls": [
+    {
+     "name": "get_inventory",
+     "arguments": {
+      "sku": "A-100",
+      "warehouse": "KHI"
+     },
+     "id": "call_ac_1_get_inventory"
+    }
+   ],
+   "message_count": 5,
+   "trace_id": null,
+   "parent_id": null,
+   "overhead_ms": 0.20678799955931026,
+   "synthetic": true
+  },
+  {
+   "index": 2,
+   "run_id": "run-0",
+   "provider": "openai_chat",
+   "url": "http://127.0.0.1:9/v1/chat/completions",
+   "client_lib": "httpx",
+   "model": "gpt-4o",
+   "system_prompt": "You are Procurement Agent. You run procurement.\nYour personal goal is: Restock low inventory",
+   "system_prompt_sha256": "62d52915ecaf672e2c67a9913adb2cc8fe889ad653872689a95c7aab43a56a4f",
+   "tools": [
+    {
+     "name": "submit_order",
+     "description": "Submit a purchase order.\n\n    Args:\n        sku: Stock keeping unit.\n        quantity: Units to order.\n        priority: Order priority (normal or urgent).",
+     "params": [
+      {
+       "name": "sku",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "quantity",
+       "type": "integer",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "priority",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_chat",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "submit_order",
+      "description": "Submit a purchase order.\n\n    Args:\n        sku: Stock keeping unit.\n        quantity: Units to order.\n        priority: Order priority (normal or urgent).",
+      "parameters": {
+       "properties": {
+        "sku": {
+         "title": "Sku",
+         "type": "string"
+        },
+        "quantity": {
+         "title": "Quantity",
+         "type": "integer"
+        },
+        "priority": {
+         "title": "Priority",
+         "type": "string"
+        }
+       },
+       "required": [
+        "sku",
+        "quantity",
+        "priority"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    },
+    {
+     "name": "pay_invoice",
+     "description": "Pay a supplier invoice.\n\n    Args:\n        invoice_id: Supplier invoice identifier.\n        amount: Amount to pay.",
+     "params": [
+      {
+       "name": "invoice_id",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "amount",
+       "type": "number",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_chat",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "pay_invoice",
+      "description": "Pay a supplier invoice.\n\n    Args:\n        invoice_id: Supplier invoice identifier.\n        amount: Amount to pay.",
+      "parameters": {
+       "properties": {
+        "invoice_id": {
+         "title": "Invoice Id",
+         "type": "string"
+        },
+        "amount": {
+         "title": "Amount",
+         "type": "number"
+        }
+       },
+       "required": [
+        "invoice_id",
+        "amount"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    },
+    {
+     "name": "get_inventory",
+     "description": "Look up stock for a SKU.\n\n    Args:\n        sku: Stock keeping unit.\n        warehouse: Warehouse code.",
+     "params": [
+      {
+       "name": "sku",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "warehouse",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": true,
+       "default": "KHI",
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_chat",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "get_inventory",
+      "description": "Look up stock for a SKU.\n\n    Args:\n        sku: Stock keeping unit.\n        warehouse: Warehouse code.",
+      "parameters": {
+       "properties": {
+        "sku": {
+         "title": "Sku",
+         "type": "string"
+        },
+        "warehouse": {
+         "default": "KHI",
+         "title": "Warehouse",
+         "type": "string"
+        }
+       },
+       "required": [
+        "sku",
+        "warehouse"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    },
+    {
+     "name": "search_policy",
+     "description": "Search the procurement policy.\n\n    Args:\n        query: Search text.\n        max_results: Maximum passages to return.",
+     "params": [
+      {
+       "name": "query",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "max_results",
+       "type": "integer",
+       "description": null,
+       "required": true,
+       "has_default": true,
+       "default": 3,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_chat",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "search_policy",
+      "description": "Search the procurement policy.\n\n    Args:\n        query: Search text.\n        max_results: Maximum passages to return.",
+      "parameters": {
+       "properties": {
+        "query": {
+         "title": "Query",
+         "type": "string"
+        },
+        "max_results": {
+         "default": 3,
+         "title": "Max Results",
+         "type": "integer"
+        }
+       },
+       "required": [
+        "query",
+        "max_results"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    }
+   ],
+   "tool_calls": [
+    {
+     "name": "submit_order",
+     "arguments": {
+      "sku": "A-100",
+      "quantity": 5,
+      "priority": "normal"
+     },
+     "id": "call_ac_3_submit_order"
+    }
+   ],
+   "tool_results": [
+    {
+     "call_id": "call_ac_1_get_inventory",
+     "name": "get_inventory",
+     "content": "3 units"
+    },
+    {
+     "call_id": "call_ac_2_search_policy",
+     "name": "search_policy",
+     "content": "policy text"
+    }
+   ],
+   "prior_tool_calls": [
+    {
+     "name": "get_inventory",
+     "arguments": {
+      "sku": "A-100",
+      "warehouse": "KHI"
+     },
+     "id": "call_ac_1_get_inventory"
+    },
+    {
+     "name": "search_policy",
+     "arguments": {
+      "query": "approval thresholds",
+      "max_results": 3
+     },
+     "id": "call_ac_2_search_policy"
+    }
+   ],
+   "message_count": 8,
+   "trace_id": null,
+   "parent_id": null,
+   "overhead_ms": 0.13203999969846336,
+   "synthetic": true
+  },
+  {
+   "index": 3,
+   "run_id": "run-0",
+   "provider": "openai_chat",
+   "url": "http://127.0.0.1:9/v1/chat/completions",
+   "client_lib": "httpx",
+   "model": "gpt-4o",
+   "system_prompt": "You are Procurement Agent. You run procurement.\nYour personal goal is: Restock low inventory",
+   "system_prompt_sha256": "62d52915ecaf672e2c67a9913adb2cc8fe889ad653872689a95c7aab43a56a4f",
+   "tools": [
+    {
+     "name": "submit_order",
+     "description": "Submit a purchase order.\n\n    Args:\n        sku: Stock keeping unit.\n        quantity: Units to order.\n        priority: Order priority (normal or urgent).",
+     "params": [
+      {
+       "name": "sku",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "quantity",
+       "type": "integer",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "priority",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_chat",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "submit_order",
+      "description": "Submit a purchase order.\n\n    Args:\n        sku: Stock keeping unit.\n        quantity: Units to order.\n        priority: Order priority (normal or urgent).",
+      "parameters": {
+       "properties": {
+        "sku": {
+         "title": "Sku",
+         "type": "string"
+        },
+        "quantity": {
+         "title": "Quantity",
+         "type": "integer"
+        },
+        "priority": {
+         "title": "Priority",
+         "type": "string"
+        }
+       },
+       "required": [
+        "sku",
+        "quantity",
+        "priority"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    },
+    {
+     "name": "pay_invoice",
+     "description": "Pay a supplier invoice.\n\n    Args:\n        invoice_id: Supplier invoice identifier.\n        amount: Amount to pay.",
+     "params": [
+      {
+       "name": "invoice_id",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "amount",
+       "type": "number",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_chat",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "pay_invoice",
+      "description": "Pay a supplier invoice.\n\n    Args:\n        invoice_id: Supplier invoice identifier.\n        amount: Amount to pay.",
+      "parameters": {
+       "properties": {
+        "invoice_id": {
+         "title": "Invoice Id",
+         "type": "string"
+        },
+        "amount": {
+         "title": "Amount",
+         "type": "number"
+        }
+       },
+       "required": [
+        "invoice_id",
+        "amount"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    },
+    {
+     "name": "get_inventory",
+     "description": "Look up stock for a SKU.\n\n    Args:\n        sku: Stock keeping unit.\n        warehouse: Warehouse code.",
+     "params": [
+      {
+       "name": "sku",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "warehouse",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": true,
+       "default": "KHI",
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_chat",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "get_inventory",
+      "description": "Look up stock for a SKU.\n\n    Args:\n        sku: Stock keeping unit.\n        warehouse: Warehouse code.",
+      "parameters": {
+       "properties": {
+        "sku": {
+         "title": "Sku",
+         "type": "string"
+        },
+        "warehouse": {
+         "default": "KHI",
+         "title": "Warehouse",
+         "type": "string"
+        }
+       },
+       "required": [
+        "sku",
+        "warehouse"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    },
+    {
+     "name": "search_policy",
+     "description": "Search the procurement policy.\n\n    Args:\n        query: Search text.\n        max_results: Maximum passages to return.",
+     "params": [
+      {
+       "name": "query",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "max_results",
+       "type": "integer",
+       "description": null,
+       "required": true,
+       "has_default": true,
+       "default": 3,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_chat",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "search_policy",
+      "description": "Search the procurement policy.\n\n    Args:\n        query: Search text.\n        max_results: Maximum passages to return.",
+      "parameters": {
+       "properties": {
+        "query": {
+         "title": "Query",
+         "type": "string"
+        },
+        "max_results": {
+         "default": 3,
+         "title": "Max Results",
+         "type": "integer"
+        }
+       },
+       "required": [
+        "query",
+        "max_results"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    }
+   ],
+   "tool_calls": [
+    {
+     "name": "pay_invoice",
+     "arguments": {
+      "invoice_id": "INV-1",
+      "amount": 10
+     },
+     "id": "call_ac_4_pay_invoice"
+    }
+   ],
+   "tool_results": [
+    {
+     "call_id": "call_ac_1_get_inventory",
+     "name": "get_inventory",
+     "content": "3 units"
+    },
+    {
+     "call_id": "call_ac_2_search_policy",
+     "name": "search_policy",
+     "content": "policy text"
+    },
+    {
+     "call_id": "call_ac_3_submit_order",
+     "name": "submit_order",
+     "content": "PO-1"
+    }
+   ],
+   "prior_tool_calls": [
+    {
+     "name": "get_inventory",
+     "arguments": {
+      "sku": "A-100",
+      "warehouse": "KHI"
+     },
+     "id": "call_ac_1_get_inventory"
+    },
+    {
+     "name": "search_policy",
+     "arguments": {
+      "query": "approval thresholds",
+      "max_results": 3
+     },
+     "id": "call_ac_2_search_policy"
+    },
+    {
+     "name": "submit_order",
+     "arguments": {
+      "sku": "A-100",
+      "quantity": 5,
+      "priority": "normal"
+     },
+     "id": "call_ac_3_submit_order"
+    }
+   ],
+   "message_count": 11,
+   "trace_id": null,
+   "parent_id": null,
+   "overhead_ms": 0.14345499948831275,
+   "synthetic": true
+  },
+  {
+   "index": 4,
+   "run_id": "run-0",
+   "provider": "openai_chat",
+   "url": "http://127.0.0.1:9/v1/chat/completions",
+   "client_lib": "httpx",
+   "model": "gpt-4o",
+   "system_prompt": "You are Procurement Agent. You run procurement.\nYour personal goal is: Restock low inventory",
+   "system_prompt_sha256": "62d52915ecaf672e2c67a9913adb2cc8fe889ad653872689a95c7aab43a56a4f",
+   "tools": [
+    {
+     "name": "submit_order",
+     "description": "Submit a purchase order.\n\n    Args:\n        sku: Stock keeping unit.\n        quantity: Units to order.\n        priority: Order priority (normal or urgent).",
+     "params": [
+      {
+       "name": "sku",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "quantity",
+       "type": "integer",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "priority",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_chat",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "submit_order",
+      "description": "Submit a purchase order.\n\n    Args:\n        sku: Stock keeping unit.\n        quantity: Units to order.\n        priority: Order priority (normal or urgent).",
+      "parameters": {
+       "properties": {
+        "sku": {
+         "title": "Sku",
+         "type": "string"
+        },
+        "quantity": {
+         "title": "Quantity",
+         "type": "integer"
+        },
+        "priority": {
+         "title": "Priority",
+         "type": "string"
+        }
+       },
+       "required": [
+        "sku",
+        "quantity",
+        "priority"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    },
+    {
+     "name": "pay_invoice",
+     "description": "Pay a supplier invoice.\n\n    Args:\n        invoice_id: Supplier invoice identifier.\n        amount: Amount to pay.",
+     "params": [
+      {
+       "name": "invoice_id",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "amount",
+       "type": "number",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_chat",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "pay_invoice",
+      "description": "Pay a supplier invoice.\n\n    Args:\n        invoice_id: Supplier invoice identifier.\n        amount: Amount to pay.",
+      "parameters": {
+       "properties": {
+        "invoice_id": {
+         "title": "Invoice Id",
+         "type": "string"
+        },
+        "amount": {
+         "title": "Amount",
+         "type": "number"
+        }
+       },
+       "required": [
+        "invoice_id",
+        "amount"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    },
+    {
+     "name": "get_inventory",
+     "description": "Look up stock for a SKU.\n\n    Args:\n        sku: Stock keeping unit.\n        warehouse: Warehouse code.",
+     "params": [
+      {
+       "name": "sku",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "warehouse",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": true,
+       "default": "KHI",
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_chat",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "get_inventory",
+      "description": "Look up stock for a SKU.\n\n    Args:\n        sku: Stock keeping unit.\n        warehouse: Warehouse code.",
+      "parameters": {
+       "properties": {
+        "sku": {
+         "title": "Sku",
+         "type": "string"
+        },
+        "warehouse": {
+         "default": "KHI",
+         "title": "Warehouse",
+         "type": "string"
+        }
+       },
+       "required": [
+        "sku",
+        "warehouse"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    },
+    {
+     "name": "search_policy",
+     "description": "Search the procurement policy.\n\n    Args:\n        query: Search text.\n        max_results: Maximum passages to return.",
+     "params": [
+      {
+       "name": "query",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "max_results",
+       "type": "integer",
+       "description": null,
+       "required": true,
+       "has_default": true,
+       "default": 3,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_chat",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "search_policy",
+      "description": "Search the procurement policy.\n\n    Args:\n        query: Search text.\n        max_results: Maximum passages to return.",
+      "parameters": {
+       "properties": {
+        "query": {
+         "title": "Query",
+         "type": "string"
+        },
+        "max_results": {
+         "default": 3,
+         "title": "Max Results",
+         "type": "integer"
+        }
+       },
+       "required": [
+        "query",
+        "max_results"
+       ],
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    }
+   ],
+   "tool_calls": [],
+   "tool_results": [
+    {
+     "call_id": "call_ac_1_get_inventory",
+     "name": "get_inventory",
+     "content": "3 units"
+    },
+    {
+     "call_id": "call_ac_2_search_policy",
+     "name": "search_policy",
+     "content": "policy text"
+    },
+    {
+     "call_id": "call_ac_3_submit_order",
+     "name": "submit_order",
+     "content": "PO-1"
+    },
+    {
+     "call_id": "call_ac_4_pay_invoice",
+     "name": "pay_invoice",
+     "content": "paid"
+    }
+   ],
+   "prior_tool_calls": [
+    {
+     "name": "get_inventory",
+     "arguments": {
+      "sku": "A-100",
+      "warehouse": "KHI"
+     },
+     "id": "call_ac_1_get_inventory"
+    },
+    {
+     "name": "search_policy",
+     "arguments": {
+      "query": "approval thresholds",
+      "max_results": 3
+     },
+     "id": "call_ac_2_search_policy"
+    },
+    {
+     "name": "submit_order",
+     "arguments": {
+      "sku": "A-100",
+      "quantity": 5,
+      "priority": "normal"
+     },
+     "id": "call_ac_3_submit_order"
+    },
+    {
+     "name": "pay_invoice",
+     "arguments": {
+      "invoice_id": "INV-1",
+      "amount": 10
+     },
+     "id": "call_ac_4_pay_invoice"
+    }
+   ],
+   "message_count": 14,
+   "trace_id": null,
+   "parent_id": null,
+   "overhead_ms": 0.21836899941263255,
+   "synthetic": true
+  }
+ ]
+}

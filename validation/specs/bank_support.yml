@@ -1,0 +1,22 @@
+# pydantic/pydantic-ai @541ba02 — examples/pydantic_ai_examples/bank_support.py
+# ASSUMED operator policy (the example ships none), written before running `check`.
+agent_id: bank-support
+risk_level: high
+goal:
+  statement: Answer a customer's account questions and judge the risk of their request
+  done_criteria: [customer gets an answer addressed by name, with a risk score]
+out_of_scope: [moving money, opening or closing accounts]
+role_boundary:
+  allowed_tools: [customer_balance]
+prohibited:
+  - tool: transfer_funds
+    reason: a support agent never moves money
+approval_required: []
+limits: []
+escalation:
+  - {metric: risk, op: ">=", threshold: 8, to: fraud-team}
+untrusted_inputs: []
+owner: support-ops@example.com
+technical_owner: platform@example.com
+data_rules:
+  never_store: [card_number]

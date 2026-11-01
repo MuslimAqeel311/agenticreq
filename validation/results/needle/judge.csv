@@ -1,0 +1,4 @@
+mode,bucket,rule_id,severity,confidence,title,where,detail,verdict,note
+audit,WARNINGS,AS-210,warning,proven,Model 'deepseek/deepseek-flash-latest' is not pinned,needle/model/finetune.py:36,deepseek/deepseek-flash-latest is an alias; the provider can change the model behind it,sahi,"weak: training-data generator, not agent runtime; -latest makes finetune data irreproducible"
+audit,WARNINGS,AS-212,warning,heuristic,Write tool reply_to_notification runs without approval,needle/environments/wearable.py:18,"reply_to_notification looks like a high-impact write and nothing gates it (no approval_required entry, no interrupt/HITL in code)",sahi,sends a message as the user with no confirmation
+audit,UNKNOWNS,AS-903,info,unknown,No runtime capture or trace supplied,,"only static (AST) evidence: never_reached, undeclared-tool and schema-fidelity checks did not run",sahi,"correct: local model, no HTTP boundary to capture"

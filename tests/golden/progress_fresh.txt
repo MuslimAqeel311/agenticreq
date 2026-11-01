@@ -1,0 +1,10 @@
+Your progress
+  ✗ 1. audit      quick scan, no setup
+    2. spec       spec.yml not written yet
+    3. check      spec vs project
+    4. mock-run   test run with mock tools
+    5. sign-off   owner confirms what the scan cannot see
+
+Next: run a quick scan of this folder: agenticreq audit
+
+Help: agenticreq guide

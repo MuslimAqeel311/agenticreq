@@ -1,0 +1,13 @@
+{
+  "_note": "Hand-built from reading each repo at the listed commit. Tools the agent's own code defines and exposes to a model. Library/hosted tools listed separately.",
+  "react-agent": {"tools": ["search"], "how": "plain async def passed to bind_tools(TOOLS) / ToolNode(TOOLS)"},
+  "memory-agent": {"tools": ["upsert_memory"], "how": "plain async def, bind_tools([tools.upsert_memory])"},
+  "data-enrichment": {"tools": ["search", "scrape_website", "Info"], "how": "plain async defs + dict schema built at runtime from state.extraction_schema"},
+  "open_deep_research": {"tools": ["ConductResearch", "ResearchComplete", "think_tool", "tavily_search"], "how": "Pydantic models + @tool; MCP tools loaded dynamically (not counted); azureaisearch_search/duckduckgo_search exist only under src/legacy"},
+  "gpt-researcher/multi_agents": {"tools": [], "how": "plain LLM calls, no tool binding"},
+  "openai-cs-agents-demo": {"tools": ["assign_special_service_seat", "baggage_tool", "book_new_flight", "cancel_flight", "display_seat_map", "faq_lookup_tool", "flight_status_tool", "get_matching_flights", "get_trip_details", "issue_compensation", "update_seat"], "how": "@function_tool; handoffs assigned after construction"},
+  "openai-agents/financial_research_agent": {"tools": ["fundamentals_analysis", "risk_analysis"], "hosted": ["WebSearchTool"], "how": "agent.as_tool(...)"},
+  "crewAI-examples/stock_analysis": {"tools": ["Calculator tool", "SEC10KTool", "SEC10QTool"], "library": ["WebsiteSearchTool", "ScrapeWebsiteTool", "TXTSearchTool"], "how": "BaseTool / RagTool subclasses + crewai_tools instances"},
+  "pydantic-ai/bank_support": {"tools": ["customer_balance"], "injected": ["final_result"], "how": "@agent.tool"},
+  "smolagents/open_deep_research": {"tools": ["web_search", "visit_page", "download_file", "find_archived_url", "page_up", "page_down", "find_on_page_ctrl_f", "find_next", "inspect_file_as_text", "visualizer"], "how": "smolagents Tool subclasses; manager is a CodeAgent"}
+}

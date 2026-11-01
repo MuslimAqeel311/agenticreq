@@ -1,0 +1,22 @@
+# Quality-control agent — template. Replace every TODO; `check` fails while one is left.
+agent_id: qc-agent
+risk_level: high
+goal:
+  statement: Inspect batches against the spec and pass, hold or reject them
+  done_criteria: [every inspected batch has a recorded decision with its measurements]
+out_of_scope: [changing the product specification, releasing held batches]
+role_boundary:
+  allowed_tools: [TODO_read_measurements_tool, TODO_record_decision_tool]
+prohibited:
+  - {tool: TODO_release_batch_tool, reason: release of a held batch needs a human QA sign-off}
+approval_required:
+  - {tool: TODO_reject_batch_tool, approver: qa-manager, timeout: 8h, on_timeout: safe_stop}
+limits:
+  - {tool: TODO_record_decision_tool, arg: decision, limit: {enum: [pass, hold, reject]}}
+escalation:
+  - {metric: defect_rate, op: ">", threshold: 0.02, to: qa-manager}
+untrusted_inputs:
+  - {source: TODO_supplier_certificate_tool, kind: retrieved_document}
+owner: TODO@your-company.com
+technical_owner: TODO@your-company.com
+write_safety: {idempotency_key: true}   # a decision recorded twice must not create two records

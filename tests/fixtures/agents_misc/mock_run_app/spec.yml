@@ -1,0 +1,19 @@
+agent_id: helpdesk
+risk_level: medium
+goal:
+  statement: Answer order and plan questions
+  done_criteria: [the customer has an answer]
+out_of_scope: [legal advice]
+role_boundary:
+  allowed_tools: [lookup_order, lookup_customer]
+prohibited:
+  - {tool: send_refund, reason: refunds go through finance}
+approval_required: []
+limits: []
+escalation:
+  - {metric: risk_score, op: ">=", threshold: 8, to: support-lead}
+untrusted_inputs: []
+owner: owner@example.com
+technical_owner: eng@example.com
+data_rules: {}
+bounds: {max_steps: 10}

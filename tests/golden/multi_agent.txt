@@ -1,0 +1,40 @@
+agenticreq audit · no spec · no mock run yet
+
+Result: FAIL    5 gaps · 0 sign-offs left · 4 to check · 2 passed
+audit without a spec (framework: openai-agents): built-in defaults, not rules you wrote.
+To check YOUR rules: `agenticreq init`, fill spec.yml, then `agenticreq check`.
+checked: bounds, fail_closed, tool_inventory_report, unbounded_tool_policy, structured_output,
+    write_safety, output_size_limits, trust_boundary, egress_policy, secrets_policy,
+    self_modification, sandbox_policy, trace_policy, audit_log, version_pinning,
+    environment_separation
+not read from code: sign-off items (kill switch, log immutability and the rest a person
+    confirms)
+needs a spec (Level 1): prohibited, limits, approval_required, escalation, untrusted_inputs,
+    declared_delegation, role_boundary
+
+GAPS FOUND IN CODE (5)
+  ✗ write_safety [reporter]  Write tool save_report runs without approval.
+  ✗ bounds.max_cost_usd      No max_cost_usd set: write a value, or not_needed with a reason.
+  ✗ bounds.max_duration_s    No max_duration_s set: write a value, or not_needed with a reason.
+  ✗ structured_output        Agent output is free text, not a validated structure: no typed /
+                             schema-validated output found (response_format, output_type,
+                             with_structured_output, output_pydantic and the like); not required at
+                             the medium default, required at high / critical.
+  ✗ environment_separation   Configuration is not separated by environment: no configuration is read
+                             from the environment (os.environ / getenv / dotenv / a Settings class);
+                             endpoints, keys and models are fixed in code.
+
+CHECK WITH A MOCK RUN (4)
+  ? fail_closed       Code pattern only (no swallowed exception in 2 tool bodies). Add a mock that
+                      returns an error, then run: agenticreq mock-run
+  ? audit_log         Code pattern only: audit hook (OpenAI Agents SDK traces every run by default
+                      and nothing disables it (set_tracing_disabled /
+                      RunConfig(tracing_disabled=True))). Add a mock that exercises it, then run:
+                      agenticreq mock-run
+  ? business_rules    No spec given, so the Level 1 rules did not run. Run: agenticreq init
+  ? runtime_evidence  The agent has not run yet, so nothing was seen at run time. Run: agenticreq
+                      mock-run
+
+PASSED (2)
+  ✓ bounds.max_steps  Found in code: 5. Also: Found in code: 10.
+  ✓ version_pinning   Found in code: gpt-4o-2024-08-06.

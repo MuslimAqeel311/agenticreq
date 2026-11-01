@@ -1,0 +1,6 @@
+tools: {}
+final_text: |
+  Thought: I will answer.
+  <code>
+  final_answer(get_inventory(sku="A-100"))
+  </code>

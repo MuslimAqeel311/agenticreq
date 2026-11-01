@@ -1,0 +1,797 @@
+{
+ "entry": "tests/fixtures/agents/oai_agents_po/agent.py",
+ "runs": 1,
+ "coverage": "5/5",
+ "zero_touch": true,
+ "changed_files": [],
+ "libs_hooked": [
+  "httpx",
+  "httpx2"
+ ],
+ "versions": {
+  "httpx": "0.28.1",
+  "httpx2": "2.13.1",
+  "openai": "3.31.0",
+  "langgraph": "1.2.15",
+  "openai-agents": "0.23.1",
+  "smolagents": "1.26.0",
+  "langchain-core": "1.6.10"
+ },
+ "llm_misses": [],
+ "egress_blocked": [],
+ "scrubbed_env": [
+  "CLAUDE_CODE_MESSAGING_TOKEN",
+  "SSH_AUTH_SOCK"
+ ],
+ "run_errors": {},
+ "sandbox": "mock-tools:tests/fixtures/agents/oai_agents_po/mocks.yml",
+ "calls": [
+  {
+   "index": 0,
+   "run_id": "run-0",
+   "provider": "openai_responses",
+   "url": "http://127.0.0.1:9/v1/responses",
+   "client_lib": "httpx2",
+   "model": "gpt-4.1",
+   "system_prompt": "You handle procurement requests. Hand policy questions off.",
+   "system_prompt_sha256": "ec12c9ad4318728f87bba3d8ecbe097d088e3f9035d94930926731e5536cfb21",
+   "tools": [
+    {
+     "name": "get_inventory",
+     "description": "Look up stock for a SKU.",
+     "params": [
+      {
+       "name": "sku",
+       "type": "string",
+       "description": "Stock keeping unit.",
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "warehouse",
+       "type": "string",
+       "description": "Warehouse code.",
+       "required": true,
+       "has_default": true,
+       "default": "KHI",
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_responses",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "get_inventory",
+      "description": "Look up stock for a SKU.",
+      "parameters": {
+       "properties": {
+        "sku": {
+         "description": "Stock keeping unit.",
+         "title": "Sku",
+         "type": "string"
+        },
+        "warehouse": {
+         "default": "KHI",
+         "description": "Warehouse code.",
+         "title": "Warehouse",
+         "type": "string"
+        }
+       },
+       "required": [
+        "sku",
+        "warehouse"
+       ],
+       "title": "get_inventory_args",
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    },
+    {
+     "name": "submit_order",
+     "description": "Submit a purchase order.",
+     "params": [
+      {
+       "name": "sku",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "quantity",
+       "type": "integer",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_responses",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "submit_order",
+      "description": "Submit a purchase order.",
+      "parameters": {
+       "properties": {
+        "sku": {
+         "title": "Sku",
+         "type": "string"
+        },
+        "quantity": {
+         "title": "Quantity",
+         "type": "integer"
+        }
+       },
+       "required": [
+        "sku",
+        "quantity"
+       ],
+       "title": "submit_order_args",
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    },
+    {
+     "name": "transfer_to_policy_analyst",
+     "description": "Handoff to the Policy Analyst agent to handle the request. ",
+     "params": [],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_responses",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "transfer_to_policy_analyst",
+      "description": "Handoff to the Policy Analyst agent to handle the request. ",
+      "parameters": {
+       "additionalProperties": false,
+       "type": "object",
+       "properties": {},
+       "required": []
+      }
+     }
+    }
+   ],
+   "tool_calls": [
+    {
+     "name": "get_inventory",
+     "arguments": {
+      "sku": "A-100",
+      "warehouse": "KHI"
+     },
+     "id": "call_ac_1_get_inventory"
+    }
+   ],
+   "tool_results": [],
+   "prior_tool_calls": [],
+   "message_count": 1,
+   "trace_id": null,
+   "parent_id": null,
+   "overhead_ms": 0.2512759992896463,
+   "synthetic": true
+  },
+  {
+   "index": 1,
+   "run_id": "run-0",
+   "provider": "openai_responses",
+   "url": "http://127.0.0.1:9/v1/responses",
+   "client_lib": "httpx2",
+   "model": "gpt-4.1",
+   "system_prompt": "You handle procurement requests. Hand policy questions off.",
+   "system_prompt_sha256": "ec12c9ad4318728f87bba3d8ecbe097d088e3f9035d94930926731e5536cfb21",
+   "tools": [
+    {
+     "name": "get_inventory",
+     "description": "Look up stock for a SKU.",
+     "params": [
+      {
+       "name": "sku",
+       "type": "string",
+       "description": "Stock keeping unit.",
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "warehouse",
+       "type": "string",
+       "description": "Warehouse code.",
+       "required": true,
+       "has_default": true,
+       "default": "KHI",
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_responses",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "get_inventory",
+      "description": "Look up stock for a SKU.",
+      "parameters": {
+       "properties": {
+        "sku": {
+         "description": "Stock keeping unit.",
+         "title": "Sku",
+         "type": "string"
+        },
+        "warehouse": {
+         "default": "KHI",
+         "description": "Warehouse code.",
+         "title": "Warehouse",
+         "type": "string"
+        }
+       },
+       "required": [
+        "sku",
+        "warehouse"
+       ],
+       "title": "get_inventory_args",
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    },
+    {
+     "name": "submit_order",
+     "description": "Submit a purchase order.",
+     "params": [
+      {
+       "name": "sku",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "quantity",
+       "type": "integer",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_responses",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "submit_order",
+      "description": "Submit a purchase order.",
+      "parameters": {
+       "properties": {
+        "sku": {
+         "title": "Sku",
+         "type": "string"
+        },
+        "quantity": {
+         "title": "Quantity",
+         "type": "integer"
+        }
+       },
+       "required": [
+        "sku",
+        "quantity"
+       ],
+       "title": "submit_order_args",
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    },
+    {
+     "name": "transfer_to_policy_analyst",
+     "description": "Handoff to the Policy Analyst agent to handle the request. ",
+     "params": [],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_responses",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "transfer_to_policy_analyst",
+      "description": "Handoff to the Policy Analyst agent to handle the request. ",
+      "parameters": {
+       "additionalProperties": false,
+       "type": "object",
+       "properties": {},
+       "required": []
+      }
+     }
+    }
+   ],
+   "tool_calls": [
+    {
+     "name": "submit_order",
+     "arguments": {
+      "sku": "A-100",
+      "quantity": 5
+     },
+     "id": "call_ac_2_submit_order"
+    }
+   ],
+   "tool_results": [
+    {
+     "call_id": "call_ac_1_get_inventory",
+     "name": null,
+     "content": "3 units"
+    }
+   ],
+   "prior_tool_calls": [
+    {
+     "name": "get_inventory",
+     "arguments": {
+      "sku": "A-100",
+      "warehouse": "KHI"
+     },
+     "id": "call_ac_1_get_inventory"
+    }
+   ],
+   "message_count": 3,
+   "trace_id": null,
+   "parent_id": null,
+   "overhead_ms": 0.13338699955056654,
+   "synthetic": true
+  },
+  {
+   "index": 2,
+   "run_id": "run-0",
+   "provider": "openai_responses",
+   "url": "http://127.0.0.1:9/v1/responses",
+   "client_lib": "httpx2",
+   "model": "gpt-4.1",
+   "system_prompt": "You handle procurement requests. Hand policy questions off.",
+   "system_prompt_sha256": "ec12c9ad4318728f87bba3d8ecbe097d088e3f9035d94930926731e5536cfb21",
+   "tools": [
+    {
+     "name": "get_inventory",
+     "description": "Look up stock for a SKU.",
+     "params": [
+      {
+       "name": "sku",
+       "type": "string",
+       "description": "Stock keeping unit.",
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "warehouse",
+       "type": "string",
+       "description": "Warehouse code.",
+       "required": true,
+       "has_default": true,
+       "default": "KHI",
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_responses",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "get_inventory",
+      "description": "Look up stock for a SKU.",
+      "parameters": {
+       "properties": {
+        "sku": {
+         "description": "Stock keeping unit.",
+         "title": "Sku",
+         "type": "string"
+        },
+        "warehouse": {
+         "default": "KHI",
+         "description": "Warehouse code.",
+         "title": "Warehouse",
+         "type": "string"
+        }
+       },
+       "required": [
+        "sku",
+        "warehouse"
+       ],
+       "title": "get_inventory_args",
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    },
+    {
+     "name": "submit_order",
+     "description": "Submit a purchase order.",
+     "params": [
+      {
+       "name": "sku",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "quantity",
+       "type": "integer",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_responses",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "submit_order",
+      "description": "Submit a purchase order.",
+      "parameters": {
+       "properties": {
+        "sku": {
+         "title": "Sku",
+         "type": "string"
+        },
+        "quantity": {
+         "title": "Quantity",
+         "type": "integer"
+        }
+       },
+       "required": [
+        "sku",
+        "quantity"
+       ],
+       "title": "submit_order_args",
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    },
+    {
+     "name": "transfer_to_policy_analyst",
+     "description": "Handoff to the Policy Analyst agent to handle the request. ",
+     "params": [],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_responses",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "transfer_to_policy_analyst",
+      "description": "Handoff to the Policy Analyst agent to handle the request. ",
+      "parameters": {
+       "additionalProperties": false,
+       "type": "object",
+       "properties": {},
+       "required": []
+      }
+     }
+    }
+   ],
+   "tool_calls": [
+    {
+     "name": "transfer_to_policy_analyst",
+     "arguments": {},
+     "id": "call_ac_3_transfer_to_policy_analyst"
+    }
+   ],
+   "tool_results": [
+    {
+     "call_id": "call_ac_1_get_inventory",
+     "name": null,
+     "content": "3 units"
+    },
+    {
+     "call_id": "call_ac_2_submit_order",
+     "name": null,
+     "content": "PO-1"
+    }
+   ],
+   "prior_tool_calls": [
+    {
+     "name": "get_inventory",
+     "arguments": {
+      "sku": "A-100",
+      "warehouse": "KHI"
+     },
+     "id": "call_ac_1_get_inventory"
+    },
+    {
+     "name": "submit_order",
+     "arguments": {
+      "sku": "A-100",
+      "quantity": 5
+     },
+     "id": "call_ac_2_submit_order"
+    }
+   ],
+   "message_count": 5,
+   "trace_id": null,
+   "parent_id": null,
+   "overhead_ms": 0.10772099994937889,
+   "synthetic": true
+  },
+  {
+   "index": 3,
+   "run_id": "run-0",
+   "provider": "openai_responses",
+   "url": "http://127.0.0.1:9/v1/responses",
+   "client_lib": "httpx2",
+   "model": "gpt-4.1",
+   "system_prompt": "You analyse procurement policy clauses.",
+   "system_prompt_sha256": "fad2de39422a013b52650869d9e5da3dc7199926ac5c09dcd1b5cbf47001ce54",
+   "tools": [
+    {
+     "name": "lookup_clause",
+     "description": "Fetch a policy clause.",
+     "params": [
+      {
+       "name": "clause_id",
+       "type": "string",
+       "description": "Clause identifier.",
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "max_results",
+       "type": "integer",
+       "description": "Maximum clauses to return.",
+       "required": true,
+       "has_default": true,
+       "default": 5,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_responses",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "lookup_clause",
+      "description": "Fetch a policy clause.",
+      "parameters": {
+       "properties": {
+        "clause_id": {
+         "description": "Clause identifier.",
+         "title": "Clause Id",
+         "type": "string"
+        },
+        "max_results": {
+         "default": 5,
+         "description": "Maximum clauses to return.",
+         "title": "Max Results",
+         "type": "integer"
+        }
+       },
+       "required": [
+        "clause_id",
+        "max_results"
+       ],
+       "title": "lookup_clause_args",
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    }
+   ],
+   "tool_calls": [
+    {
+     "name": "lookup_clause",
+     "arguments": {
+      "clause_id": "test",
+      "max_results": 5
+     },
+     "id": "call_ac_4_lookup_clause"
+    }
+   ],
+   "tool_results": [
+    {
+     "call_id": "call_ac_1_get_inventory",
+     "name": null,
+     "content": "3 units"
+    },
+    {
+     "call_id": "call_ac_2_submit_order",
+     "name": null,
+     "content": "PO-1"
+    },
+    {
+     "call_id": "call_ac_3_transfer_to_policy_analyst",
+     "name": null,
+     "content": "{\"assistant\": \"Policy Analyst\"}"
+    }
+   ],
+   "prior_tool_calls": [
+    {
+     "name": "get_inventory",
+     "arguments": {
+      "sku": "A-100",
+      "warehouse": "KHI"
+     },
+     "id": "call_ac_1_get_inventory"
+    },
+    {
+     "name": "submit_order",
+     "arguments": {
+      "sku": "A-100",
+      "quantity": 5
+     },
+     "id": "call_ac_2_submit_order"
+    },
+    {
+     "name": "transfer_to_policy_analyst",
+     "arguments": {},
+     "id": "call_ac_3_transfer_to_policy_analyst"
+    }
+   ],
+   "message_count": 7,
+   "trace_id": null,
+   "parent_id": null,
+   "overhead_ms": 0.08847199933370575,
+   "synthetic": true
+  },
+  {
+   "index": 4,
+   "run_id": "run-0",
+   "provider": "openai_responses",
+   "url": "http://127.0.0.1:9/v1/responses",
+   "client_lib": "httpx2",
+   "model": "gpt-4.1",
+   "system_prompt": "You analyse procurement policy clauses.",
+   "system_prompt_sha256": "fad2de39422a013b52650869d9e5da3dc7199926ac5c09dcd1b5cbf47001ce54",
+   "tools": [
+    {
+     "name": "lookup_clause",
+     "description": "Fetch a policy clause.",
+     "params": [
+      {
+       "name": "clause_id",
+       "type": "string",
+       "description": "Clause identifier.",
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      },
+      {
+       "name": "max_results",
+       "type": "integer",
+       "description": "Maximum clauses to return.",
+       "required": true,
+       "has_default": true,
+       "default": 5,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_responses",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "lookup_clause",
+      "description": "Fetch a policy clause.",
+      "parameters": {
+       "properties": {
+        "clause_id": {
+         "description": "Clause identifier.",
+         "title": "Clause Id",
+         "type": "string"
+        },
+        "max_results": {
+         "default": 5,
+         "description": "Maximum clauses to return.",
+         "title": "Max Results",
+         "type": "integer"
+        }
+       },
+       "required": [
+        "clause_id",
+        "max_results"
+       ],
+       "title": "lookup_clause_args",
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    }
+   ],
+   "tool_calls": [],
+   "tool_results": [
+    {
+     "call_id": "call_ac_1_get_inventory",
+     "name": null,
+     "content": "3 units"
+    },
+    {
+     "call_id": "call_ac_2_submit_order",
+     "name": null,
+     "content": "PO-1"
+    },
+    {
+     "call_id": "call_ac_3_transfer_to_policy_analyst",
+     "name": null,
+     "content": "{\"assistant\": \"Policy Analyst\"}"
+    },
+    {
+     "call_id": "call_ac_4_lookup_clause",
+     "name": null,
+     "content": "clause text"
+    }
+   ],
+   "prior_tool_calls": [
+    {
+     "name": "get_inventory",
+     "arguments": {
+      "sku": "A-100",
+      "warehouse": "KHI"
+     },
+     "id": "call_ac_1_get_inventory"
+    },
+    {
+     "name": "submit_order",
+     "arguments": {
+      "sku": "A-100",
+      "quantity": 5
+     },
+     "id": "call_ac_2_submit_order"
+    },
+    {
+     "name": "transfer_to_policy_analyst",
+     "arguments": {},
+     "id": "call_ac_3_transfer_to_policy_analyst"
+    },
+    {
+     "name": "lookup_clause",
+     "arguments": {
+      "clause_id": "test",
+      "max_results": 5
+     },
+     "id": "call_ac_4_lookup_clause"
+    }
+   ],
+   "message_count": 9,
+   "trace_id": null,
+   "parent_id": null,
+   "overhead_ms": 0.09392799984198064,
+   "synthetic": true
+  }
+ ]
+}

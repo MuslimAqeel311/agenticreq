@@ -1,0 +1,3 @@
+order: [get_inventory, transfer_to_policy_analyst, lookup_clause, transfer_to_payments, pay_invoice]
+tools:
+  pay_invoice: {args: {invoice_id: INV-1, amount: 10}}

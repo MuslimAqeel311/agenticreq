@@ -1,0 +1,7 @@
+order: [get_inventory, search_policy, submit_order, pay_invoice]
+tools:
+  get_inventory: {args: {sku: A-100}}
+  search_policy: {args: {query: approval thresholds}}
+  submit_order: {args: {sku: A-100, quantity: 5, priority: normal}}
+  pay_invoice: {args: {invoice_id: INV-1, amount: 10}}
+final_text: "Thought: I now know the final answer\nFinal Answer: PO-1"

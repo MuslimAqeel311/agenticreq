@@ -1,0 +1,4 @@
+order: [get_inventory, submit_order, transfer_to_policy_analyst, lookup_clause]
+tools:
+  get_inventory: {args: {sku: A-100}}
+  submit_order: {args: {sku: A-100, quantity: 5}}

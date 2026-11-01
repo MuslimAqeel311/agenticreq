@@ -1,0 +1,20 @@
+name: Feature request
+description: A framework idiom, a spec field, a rule or a report improvement.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: What do you need to check or express
+      description: The requirement you want to write in spec.yml, or the code pattern agenticreq does not see yet.
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: Example
+      description: A short code sample or spec snippet.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you do today

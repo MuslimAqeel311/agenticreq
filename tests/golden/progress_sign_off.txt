@@ -1,0 +1,16 @@
+Your progress
+  ✓ 1. audit      done
+  ✓ 2. spec       done
+  ✓ 3. check      spec matches
+  ✓ 4. mock-run   test run with mock tools
+  ✗ 5. sign-off   owner confirms 1 item
+
+Next: add this under confirmed: in spec.yml, with your own details:
+  - clause: owner
+    answer: yes
+    by: you@company.com
+    date: 2026-10-28
+    expires: 2027-04-28
+    evidence: "Name of the person who owns this agent"
+
+Help: agenticreq guide

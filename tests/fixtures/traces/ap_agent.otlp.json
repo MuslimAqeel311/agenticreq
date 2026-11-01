@@ -1,0 +1,202 @@
+{
+ "resourceSpans": [
+  {
+   "resource": {
+    "attributes": []
+   },
+   "scopeSpans": [
+    {
+     "scope": {
+      "name": "test"
+     },
+     "spans": [
+      {
+       "traceId": "t1",
+       "spanId": "a1",
+       "parentSpanId": "",
+       "name": "invoke_agent ap-agent",
+       "attributes": [
+        {
+         "key": "gen_ai.operation.name",
+         "value": {
+          "stringValue": "invoke_agent"
+         }
+        },
+        {
+         "key": "gen_ai.agent.name",
+         "value": {
+          "stringValue": "ap-agent"
+         }
+        }
+       ],
+       "events": []
+      },
+      {
+       "traceId": "t1",
+       "spanId": "a2",
+       "parentSpanId": "a1",
+       "name": "execute_tool read_inbox",
+       "attributes": [
+        {
+         "key": "gen_ai.operation.name",
+         "value": {
+          "stringValue": "execute_tool"
+         }
+        },
+        {
+         "key": "gen_ai.tool.name",
+         "value": {
+          "stringValue": "read_inbox"
+         }
+        },
+        {
+         "key": "gen_ai.agent.name",
+         "value": {
+          "stringValue": "ap-agent"
+         }
+        }
+       ],
+       "events": []
+      },
+      {
+       "traceId": "t1",
+       "spanId": "a3",
+       "parentSpanId": "a1",
+       "name": "execute_tool pay_invoice",
+       "attributes": [
+        {
+         "key": "gen_ai.operation.name",
+         "value": {
+          "stringValue": "execute_tool"
+         }
+        },
+        {
+         "key": "gen_ai.tool.name",
+         "value": {
+          "stringValue": "pay_invoice"
+         }
+        },
+        {
+         "key": "gen_ai.agent.name",
+         "value": {
+          "stringValue": "ap-agent"
+         }
+        },
+        {
+         "key": "gen_ai.tool.call.arguments",
+         "value": {
+          "stringValue": "{\"invoice_id\": \"INV-9\", \"amount\": 9000}"
+         }
+        }
+       ],
+       "events": [
+        {
+         "name": "approval.requested"
+        },
+        {
+         "name": "approval.granted"
+        }
+       ]
+      },
+      {
+       "traceId": "t2",
+       "spanId": "b1",
+       "parentSpanId": "",
+       "name": "invoke_agent ap-agent",
+       "attributes": [
+        {
+         "key": "gen_ai.operation.name",
+         "value": {
+          "stringValue": "invoke_agent"
+         }
+        },
+        {
+         "key": "gen_ai.agent.name",
+         "value": {
+          "stringValue": "ap-agent"
+         }
+        }
+       ],
+       "events": []
+      },
+      {
+       "traceId": "t2",
+       "spanId": "b2",
+       "parentSpanId": "b1",
+       "name": "execute_tool search_vendors",
+       "attributes": [
+        {
+         "key": "gen_ai.operation.name",
+         "value": {
+          "stringValue": "execute_tool"
+         }
+        },
+        {
+         "key": "gen_ai.tool.name",
+         "value": {
+          "stringValue": "search_vendors"
+         }
+        },
+        {
+         "key": "gen_ai.agent.name",
+         "value": {
+          "stringValue": "ap-agent"
+         }
+        }
+       ],
+       "events": []
+      },
+      {
+       "traceId": "t3",
+       "spanId": "c1",
+       "parentSpanId": "",
+       "name": "invoke_agent ap-agent",
+       "attributes": [
+        {
+         "key": "gen_ai.operation.name",
+         "value": {
+          "stringValue": "invoke_agent"
+         }
+        },
+        {
+         "key": "gen_ai.agent.name",
+         "value": {
+          "stringValue": "ap-agent"
+         }
+        }
+       ],
+       "events": []
+      },
+      {
+       "traceId": "t3",
+       "spanId": "c2",
+       "parentSpanId": "c1",
+       "name": "execute_tool issue_refund",
+       "attributes": [
+        {
+         "key": "gen_ai.operation.name",
+         "value": {
+          "stringValue": "execute_tool"
+         }
+        },
+        {
+         "key": "gen_ai.tool.name",
+         "value": {
+          "stringValue": "issue_refund"
+         }
+        },
+        {
+         "key": "gen_ai.agent.name",
+         "value": {
+          "stringValue": "ap-agent"
+         }
+        }
+       ],
+       "events": []
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

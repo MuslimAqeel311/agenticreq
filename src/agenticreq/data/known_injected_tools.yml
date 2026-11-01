@@ -1,0 +1,30 @@
+# Tools frameworks put on the wire that do not appear in user code.
+# They are NOT reported as undeclared (AS-202). Add new frameworks here.
+# Names are compared after canonicalisation (lowercase, non-alnum -> "_"),
+# so "Delegate work to coworker" matches delegate_work_to_coworker.
+version: 1
+frameworks:
+  crewai:
+    exact: [delegate_work_to_coworker, ask_question_to_coworker]
+    note: CrewAI renames "Delegate work to coworker" -> snake_case on the wire when allow_delegation=True
+  openai-agents:
+    prefix: [transfer_to_]
+    note: handoff tools generated from Agent(handoffs=[...])
+  smolagents:
+    exact: [final_answer]
+  langgraph:
+    prefix: [transfer_to_, transfer_back_to_]
+    note: langgraph-supervisor / swarm handoff tools
+  google-adk:
+    exact: [transfer_to_agent]
+    note: LlmAgent(sub_agents=[...]) lets the model call transfer_to_agent(agent_name=...)
+  llamaindex:
+    exact: [handoff]
+    note: AgentWorkflow(agents=[...]) adds handoff(to_agent=..., reason=...) to every agent
+  autogen:
+    prefix: [transfer_to_]
+    note: Swarm handoffs=["x"] become transfer_to_x tools
+  pydantic-ai:
+    exact: [final_result]
+    prefix: [final_result_]
+    note: structured-output tool when output_type is set

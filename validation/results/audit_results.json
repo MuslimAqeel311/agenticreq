@@ -1,0 +1,795 @@
+{
+ "react-agent": {
+  "framework": "langgraph 1.2.15 (runtime)",
+  "frameworks": [
+   "langgraph",
+   "langchain"
+  ],
+  "exec": "schema-based",
+  "declared": [],
+  "bound": [],
+  "observed": [
+   "search"
+  ],
+  "proven": 3,
+  "heuristic": 0,
+  "unknown": 0,
+  "observed_conf": 0,
+  "blockers": 0,
+  "warnings": 3,
+  "unknowns": 0,
+  "passed": 1,
+  "coverage": [
+   4,
+   4
+  ],
+  "rules": {
+   "AS-202": 1,
+   "AS-210": 2
+  },
+  "findings": [
+   {
+    "rule": "AS-202",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "search offered to the model but not declared in code",
+    "where": "None",
+    "detail": "the wire carried tool 'search', which no tool declaration in the scanned code defines and which is not a known framework-injected tool"
+   },
+   {
+    "rule": "AS-210",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "Model 'openai/gpt-4o-mini' is not pinned",
+    "where": "tests/unit_tests/test_configuration.py:7",
+    "detail": "openai/gpt-4o-mini is an alias; the provider can change the model behind it"
+   },
+   {
+    "rule": "AS-210",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "Model 'openai/gpt-5o-mini' is not pinned",
+    "where": "tests/unit_tests/test_configuration.py:19",
+    "detail": "openai/gpt-5o-mini is an alias; the provider can change the model behind it"
+   }
+  ],
+  "files": 12,
+  "errors": []
+ },
+ "memory-agent": {
+  "framework": "langgraph 1.2.15 (runtime)",
+  "frameworks": [
+   "langgraph",
+   "langchain"
+  ],
+  "exec": "schema-based",
+  "declared": [],
+  "bound": [],
+  "observed": [
+   "upsert_memory"
+  ],
+  "proven": 1,
+  "heuristic": 0,
+  "unknown": 0,
+  "observed_conf": 0,
+  "blockers": 0,
+  "warnings": 1,
+  "unknowns": 0,
+  "passed": 1,
+  "coverage": [
+   2,
+   2
+  ],
+  "rules": {
+   "AS-202": 1
+  },
+  "findings": [
+   {
+    "rule": "AS-202",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "upsert_memory offered to the model but not declared in code",
+    "where": "None",
+    "detail": "the wire carried tool 'upsert_memory', which no tool declaration in the scanned code defines and which is not a known framework-injected tool"
+   }
+  ],
+  "files": 12,
+  "errors": []
+ },
+ "data-enrichment": {
+  "framework": "langgraph 1.2.15 (runtime)",
+  "frameworks": [
+   "langgraph",
+   "langchain"
+  ],
+  "exec": "schema-based",
+  "declared": [],
+  "bound": [],
+  "observed": [
+   "Info",
+   "scrape_website",
+   "search"
+  ],
+  "proven": 3,
+  "heuristic": 0,
+  "unknown": 0,
+  "observed_conf": 0,
+  "blockers": 0,
+  "warnings": 3,
+  "unknowns": 0,
+  "passed": 1,
+  "coverage": [
+   1,
+   1
+  ],
+  "rules": {
+   "AS-202": 3
+  },
+  "findings": [
+   {
+    "rule": "AS-202",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "Info offered to the model but not declared in code",
+    "where": "None",
+    "detail": "the wire carried tool 'Info', which no tool declaration in the scanned code defines and which is not a known framework-injected tool"
+   },
+   {
+    "rule": "AS-202",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "scrape_website offered to the model but not declared in code",
+    "where": "None",
+    "detail": "the wire carried tool 'scrape_website', which no tool declaration in the scanned code defines and which is not a known framework-injected tool"
+   },
+   {
+    "rule": "AS-202",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "search offered to the model but not declared in code",
+    "where": "None",
+    "detail": "the wire carried tool 'search', which no tool declaration in the scanned code defines and which is not a known framework-injected tool"
+   }
+  ],
+  "files": 12,
+  "errors": []
+ },
+ "open_deep_research": {
+  "framework": "langgraph 1.2.15 (installed)",
+  "frameworks": [
+   "langgraph",
+   "langchain"
+  ],
+  "exec": "schema-based",
+  "declared": [
+   "azureaisearch_search",
+   "duckduckgo_search",
+   "tavily_search",
+   "think_tool"
+  ],
+  "bound": [],
+  "observed": null,
+  "proven": 1,
+  "heuristic": 1,
+  "unknown": 1,
+  "observed_conf": 0,
+  "blockers": 0,
+  "warnings": 2,
+  "unknowns": 1,
+  "passed": 2,
+  "coverage": [
+   4,
+   4
+  ],
+  "rules": {
+   "AS-208": 1,
+   "AS-210": 1,
+   "AS-903": 1
+  },
+  "findings": [
+   {
+    "rule": "AS-208",
+    "sev": "warning",
+    "conf": "heuristic",
+    "title": "No step / iteration bound found",
+    "where": "None",
+    "detail": "no recursion_limit / max_iter / max_turns / max_steps found; the medium default is max_steps=50"
+   },
+   {
+    "rule": "AS-210",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "Model 'gpt-4.1' is not pinned",
+    "where": "tests/evaluators.py:8",
+    "detail": "gpt-4.1 is an alias; the provider can change the model behind it"
+   },
+   {
+    "rule": "AS-903",
+    "sev": "info",
+    "conf": "unknown",
+    "title": "No runtime capture or trace supplied",
+    "where": "None",
+    "detail": "only static (AST) evidence: never_reached, undeclared-tool and schema-fidelity checks did not run"
+   }
+  ],
+  "files": 22,
+  "errors": []
+ },
+ "gpt-researcher/multi_agents": {
+  "framework": "langgraph 1.2.15 (installed)",
+  "frameworks": [
+   "langgraph",
+   "openai-agents",
+   "autogen",
+   "langchain"
+  ],
+  "exec": "schema-based",
+  "declared": [],
+  "bound": [],
+  "observed": null,
+  "proven": 0,
+  "heuristic": 0,
+  "unknown": 1,
+  "observed_conf": 0,
+  "blockers": 0,
+  "warnings": 0,
+  "unknowns": 1,
+  "passed": 0,
+  "coverage": [
+   0,
+   0
+  ],
+  "rules": {
+   "AS-903": 1
+  },
+  "findings": [
+   {
+    "rule": "AS-903",
+    "sev": "info",
+    "conf": "unknown",
+    "title": "No runtime capture or trace supplied",
+    "where": "None",
+    "detail": "only static (AST) evidence: never_reached, undeclared-tool and schema-fidelity checks did not run"
+   }
+  ],
+  "files": 31,
+  "errors": []
+ },
+ "openai-cs-agents-demo": {
+  "framework": "openai-agents 0.23.1 (runtime)",
+  "frameworks": [
+   "openai-agents"
+  ],
+  "exec": "schema-based",
+  "declared": [
+   "assign_special_service_seat",
+   "baggage_tool",
+   "book_new_flight",
+   "cancel_flight",
+   "display_seat_map",
+   "faq_lookup_tool",
+   "flight_status_tool",
+   "get_matching_flights",
+   "get_trip_details",
+   "issue_compensation",
+   "update_seat"
+  ],
+  "bound": [
+   "assign_special_service_seat",
+   "book_new_flight",
+   "cancel_flight",
+   "display_seat_map",
+   "faq_lookup_tool",
+   "flight_status_tool",
+   "get_matching_flights",
+   "get_trip_details",
+   "issue_compensation",
+   "update_seat"
+  ],
+  "observed": [
+   "get_trip_details",
+   "transfer_to_booking_and_cancellation_agent",
+   "transfer_to_faq_agent",
+   "transfer_to_flight_information_agent",
+   "transfer_to_refunds_and_compensation_agent",
+   "transfer_to_seat_and_special_services_agent"
+  ],
+  "proven": 10,
+  "heuristic": 9,
+  "unknown": 10,
+  "observed_conf": 0,
+  "blockers": 0,
+  "warnings": 19,
+  "unknowns": 10,
+  "passed": 5,
+  "coverage": [
+   18,
+   28
+  ],
+  "rules": {
+   "AS-201": 10,
+   "AS-208": 1,
+   "AS-210": 8,
+   "AS-211": 4,
+   "AS-212": 4,
+   "AS-601": 1,
+   "AS-608": 1
+  },
+  "findings": [
+   {
+    "rule": "AS-201",
+    "sev": "info",
+    "conf": "unknown",
+    "title": "assign_special_service_seat never reached the model boundary",
+    "where": "airline/tools.py:280",
+    "detail": "assign_special_service_seat is declared in code but was not offered to the model in 1 run(s): bound on a branch / phase the run did not reach. Unknown, not PASS."
+   },
+   {
+    "rule": "AS-201",
+    "sev": "info",
+    "conf": "unknown",
+    "title": "baggage_tool never reached the model boundary",
+    "where": "airline/tools.py:152",
+    "detail": "baggage_tool is declared in code but was not offered to the model in 1 run(s): not bound to any agent in code. Unknown, not PASS."
+   },
+   {
+    "rule": "AS-201",
+    "sev": "info",
+    "conf": "unknown",
+    "title": "book_new_flight never reached the model boundary",
+    "where": "airline/tools.py:208",
+    "detail": "book_new_flight is declared in code but was not offered to the model in 1 run(s): bound on a branch / phase the run did not reach. Unknown, not PASS."
+   },
+   {
+    "rule": "AS-201",
+    "sev": "info",
+    "conf": "unknown",
+    "title": "cancel_flight never reached the model boundary",
+    "where": "airline/tools.py:342",
+    "detail": "cancel_flight is declared in code but was not offered to the model in 1 run(s): bound on a branch / phase the run did not reach. Unknown, not PASS."
+   },
+   {
+    "rule": "AS-201",
+    "sev": "info",
+    "conf": "unknown",
+    "title": "display_seat_map never reached the model boundary",
+    "where": "airline/tools.py:330",
+    "detail": "display_seat_map is declared in code but was not offered to the model in 1 run(s): bound on a branch / phase the run did not reach. Unknown, not PASS."
+   },
+   {
+    "rule": "AS-201",
+    "sev": "info",
+    "conf": "unknown",
+    "title": "faq_lookup_tool never reached the model boundary",
+    "where": "airline/tools.py:17",
+    "detail": "faq_lookup_tool is declared in code but was not offered to the model in 1 run(s): bound on a branch / phase the run did not reach. Unknown, not PASS."
+   },
+   {
+    "rule": "AS-201",
+    "sev": "info",
+    "conf": "unknown",
+    "title": "flight_status_tool never reached the model boundary",
+    "where": "airline/tools.py:93",
+    "detail": "flight_status_tool is declared in code but was not offered to the model in 1 run(s): bound on a branch / phase the run did not reach. Unknown, not PASS."
+   },
+   {
+    "rule": "AS-201",
+    "sev": "info",
+    "conf": "unknown",
+    "title": "get_matching_flights never reached the model boundary",
+    "where": "airline/tools.py:168",
+    "detail": "get_matching_flights is declared in code but was not offered to the model in 1 run(s): bound on a branch / phase the run did not reach. Unknown, not PASS."
+   },
+   {
+    "rule": "AS-201",
+    "sev": "info",
+    "conf": "unknown",
+    "title": "issue_compensation never reached the model boundary",
+    "where": "airline/tools.py:303",
+    "detail": "issue_compensation is declared in code but was not offered to the model in 1 run(s): bound on a branch / phase the run did not reach. Unknown, not PASS."
+   },
+   {
+    "rule": "AS-201",
+    "sev": "info",
+    "conf": "unknown",
+    "title": "update_seat never reached the model boundary",
+    "where": "airline/tools.py:78",
+    "detail": "update_seat is declared in code but was not offered to the model in 1 run(s): bound on a branch / phase the run did not reach. Unknown, not PASS."
+   },
+   {
+    "rule": "AS-208",
+    "sev": "warning",
+    "conf": "heuristic",
+    "title": "No step / iteration bound found",
+    "where": "None",
+    "detail": "no recursion_limit / max_iter / max_turns / max_steps found; the medium default is max_steps=50"
+   },
+   {
+    "rule": "AS-210",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "Model 'gpt-5.2' is not pinned",
+    "where": "airline/agents.py:49",
+    "detail": "gpt-5.2 is an alias; the provider can change the model behind it"
+   },
+   {
+    "rule": "AS-210",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "Model 'gpt-5.2' is not pinned",
+    "where": "airline/agents.py:77",
+    "detail": "gpt-5.2 is an alias; the provider can change the model behind it"
+   },
+   {
+    "rule": "AS-210",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "Model 'gpt-5.2' is not pinned",
+    "where": "airline/agents.py:106",
+    "detail": "gpt-5.2 is an alias; the provider can change the model behind it"
+   },
+   {
+    "rule": "AS-210",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "Model 'gpt-5.2' is not pinned",
+    "where": "airline/agents.py:133",
+    "detail": "gpt-5.2 is an alias; the provider can change the model behind it"
+   },
+   {
+    "rule": "AS-210",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "Model 'gpt-5.2' is not pinned",
+    "where": "airline/agents.py:143",
+    "detail": "gpt-5.2 is an alias; the provider can change the model behind it"
+   },
+   {
+    "rule": "AS-210",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "Model 'gpt-5.2' is not pinned",
+    "where": "airline/agents.py:158",
+    "detail": "gpt-5.2 is an alias; the provider can change the model behind it"
+   },
+   {
+    "rule": "AS-210",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "Model 'gpt-4.1-mini' is not pinned",
+    "where": "airline/guardrails.py:24",
+    "detail": "gpt-4.1-mini is an alias; the provider can change the model behind it"
+   },
+   {
+    "rule": "AS-210",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "Model 'gpt-4.1-mini' is not pinned",
+    "where": "airline/guardrails.py:60",
+    "detail": "gpt-4.1-mini is an alias; the provider can change the model behind it"
+   },
+   {
+    "rule": "AS-211",
+    "sev": "warning",
+    "conf": "heuristic",
+    "title": "Write tool update_seat has no idempotency key",
+    "where": "airline/tools.py:78",
+    "detail": "update_seat looks like a write (name) and takes no idempotency key; a retry can repeat the side effect"
+   },
+   {
+    "rule": "AS-212",
+    "sev": "warning",
+    "conf": "heuristic",
+    "title": "Write tool update_seat runs without approval",
+    "where": "airline/tools.py:78",
+    "detail": "update_seat looks like a write and nothing gates it (no approval_required entry, no interrupt/HITL in code)"
+   },
+   {
+    "rule": "AS-211",
+    "sev": "warning",
+    "conf": "heuristic",
+    "title": "Write tool book_new_flight has no idempotency key",
+    "where": "airline/tools.py:208",
+    "detail": "book_new_flight looks like a write (name) and takes no idempotency key; a retry can repeat the side effect"
+   },
+   {
+    "rule": "AS-212",
+    "sev": "warning",
+    "conf": "heuristic",
+    "title": "Write tool book_new_flight runs without approval",
+    "where": "airline/tools.py:208",
+    "detail": "book_new_flight looks like a write and nothing gates it (no approval_required entry, no interrupt/HITL in code)"
+   },
+   {
+    "rule": "AS-211",
+    "sev": "warning",
+    "conf": "heuristic",
+    "title": "Write tool issue_compensation has no idempotency key",
+    "where": "airline/tools.py:303",
+    "detail": "issue_compensation looks like a write (name) and takes no idempotency key; a retry can repeat the side effect"
+   },
+   {
+    "rule": "AS-212",
+    "sev": "warning",
+    "conf": "heuristic",
+    "title": "Write tool issue_compensation runs without approval",
+    "where": "airline/tools.py:303",
+    "detail": "issue_compensation looks like a write and nothing gates it (no approval_required entry, no interrupt/HITL in code)"
+   },
+   {
+    "rule": "AS-211",
+    "sev": "warning",
+    "conf": "heuristic",
+    "title": "Write tool cancel_flight has no idempotency key",
+    "where": "airline/tools.py:342",
+    "detail": "cancel_flight looks like a write (name) and takes no idempotency key; a retry can repeat the side effect"
+   },
+   {
+    "rule": "AS-212",
+    "sev": "warning",
+    "conf": "heuristic",
+    "title": "Write tool cancel_flight runs without approval",
+    "where": "airline/tools.py:342",
+    "detail": "cancel_flight looks like a write and nothing gates it (no approval_required entry, no interrupt/HITL in code)"
+   },
+   {
+    "rule": "AS-601",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "get_trip_details: tool description changed on the wire",
+    "where": "airline/tools.py:48",
+    "detail": "code describes get_trip_details as 'If the user mentions Paris, New York, or Austin, hydrate the context with the di'; the model is told 'Infer the disrupted Paris->New York->Austin trip from user text and hydrate cont'"
+   },
+   {
+    "rule": "AS-608",
+    "sev": "info",
+    "conf": "proven",
+    "title": "get_trip_details: 2/3 schema fields reach the model verbatim",
+    "where": "airline/tools.py:48",
+    "detail": "1 field(s) lost or altered between code and wire (openai-agents 0.23.1 (runtime)); framework schema rewriting is version-dependent"
+   }
+  ],
+  "files": 10,
+  "errors": []
+ },
+ "openai-agents/financial_research_agent": {
+  "framework": "openai-agents 0.23.1 (runtime)",
+  "frameworks": [
+   "openai-agents"
+  ],
+  "exec": "schema-based",
+  "declared": [],
+  "bound": [],
+  "observed": [],
+  "proven": 4,
+  "heuristic": 0,
+  "unknown": 0,
+  "observed_conf": 0,
+  "blockers": 0,
+  "warnings": 4,
+  "unknowns": 0,
+  "passed": 0,
+  "coverage": [
+   6,
+   6
+  ],
+  "rules": {
+   "AS-210": 4
+  },
+  "findings": [
+   {
+    "rule": "AS-210",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "Model 'o3-mini' is not pinned",
+    "where": "agents/planner_agent.py:32",
+    "detail": "o3-mini is an alias; the provider can change the model behind it"
+   },
+   {
+    "rule": "AS-210",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "Model 'gpt-5.6-sol' is not pinned",
+    "where": "agents/search_agent.py:20",
+    "detail": "gpt-5.6-sol is an alias; the provider can change the model behind it"
+   },
+   {
+    "rule": "AS-210",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "Model 'gpt-5.6-sol' is not pinned",
+    "where": "agents/verifier_agent.py:46",
+    "detail": "gpt-5.6-sol is an alias; the provider can change the model behind it"
+   },
+   {
+    "rule": "AS-210",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "Model 'gpt-5.6-sol' is not pinned",
+    "where": "agents/writer_agent.py:39",
+    "detail": "gpt-5.6-sol is an alias; the provider can change the model behind it"
+   }
+  ],
+  "files": 11,
+  "errors": []
+ },
+ "crewAI-examples/stock_analysis": {
+  "framework": "crewai 1.6.1 (runtime)",
+  "frameworks": [
+   "crewai",
+   "langchain"
+  ],
+  "exec": "schema-based",
+  "declared": [
+   "Calculator tool"
+  ],
+  "bound": [
+   "Calculator tool"
+  ],
+  "observed": null,
+  "proven": 1,
+  "heuristic": 1,
+  "unknown": 1,
+  "observed_conf": 0,
+  "blockers": 0,
+  "warnings": 2,
+  "unknowns": 1,
+  "passed": 0,
+  "coverage": [
+   2,
+   2
+  ],
+  "rules": {
+   "AS-208": 1,
+   "AS-210": 1,
+   "AS-903": 1
+  },
+  "findings": [
+   {
+    "rule": "AS-208",
+    "sev": "warning",
+    "conf": "heuristic",
+    "title": "No step / iteration bound found",
+    "where": "None",
+    "detail": "no recursion_limit / max_iter / max_turns / max_steps found; the medium default is max_steps=50"
+   },
+   {
+    "rule": "AS-210",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "Model 'llama3.1' is not pinned",
+    "where": "src/stock_analysis/crew.py:14",
+    "detail": "llama3.1 is an alias; the provider can change the model behind it"
+   },
+   {
+    "rule": "AS-903",
+    "sev": "info",
+    "conf": "unknown",
+    "title": "No runtime capture or trace supplied",
+    "where": "None",
+    "detail": "only static (AST) evidence: never_reached, undeclared-tool and schema-fidelity checks did not run"
+   }
+  ],
+  "files": 6,
+  "errors": []
+ },
+ "pydantic-ai/bank_support": {
+  "framework": "pydantic-ai 2.56.0 (runtime)",
+  "frameworks": [
+   "pydantic-ai"
+  ],
+  "exec": "schema-based",
+  "declared": [
+   "customer_balance"
+  ],
+  "bound": [],
+  "observed": [
+   "customer_balance",
+   "final_result"
+  ],
+  "proven": 2,
+  "heuristic": 1,
+  "unknown": 0,
+  "observed_conf": 0,
+  "blockers": 0,
+  "warnings": 3,
+  "unknowns": 0,
+  "passed": 2,
+  "coverage": [
+   5,
+   5
+  ],
+  "rules": {
+   "AS-208": 1,
+   "AS-210": 2
+  },
+  "findings": [
+   {
+    "rule": "AS-208",
+    "sev": "warning",
+    "conf": "heuristic",
+    "title": "No step / iteration bound found",
+    "where": "None",
+    "detail": "no recursion_limit / max_iter / max_turns / max_steps found; the medium default is max_steps=50"
+   },
+   {
+    "rule": "AS-210",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "Model 'openai:gpt-5.2' is not pinned",
+    "where": "bank_support.py:54",
+    "detail": "openai:gpt-5.2 is an alias; the provider can change the model behind it"
+   },
+   {
+    "rule": "AS-210",
+    "sev": "warning",
+    "conf": "proven",
+    "title": "Model 'gpt-5.2' is not pinned",
+    "where": "None",
+    "detail": "gpt-5.2 is an alias; the provider can change the model behind it"
+   }
+  ],
+  "files": 1,
+  "errors": []
+ },
+ "smolagents/open_deep_research": {
+  "framework": "smolagents 1.26.0 (installed)",
+  "frameworks": [
+   "smolagents"
+  ],
+  "exec": "schema-based",
+  "declared": [
+   "download_file",
+   "find_archived_url",
+   "find_next",
+   "find_on_page_ctrl_f",
+   "inspect_file_as_text",
+   "page_down",
+   "page_up",
+   "visit_page",
+   "visualizer",
+   "web_search"
+  ],
+  "bound": [
+   "inspect_file_as_text",
+   "visualizer"
+  ],
+  "observed": null,
+  "proven": 0,
+  "heuristic": 0,
+  "unknown": 2,
+  "observed_conf": 0,
+  "blockers": 0,
+  "warnings": 0,
+  "unknowns": 2,
+  "passed": 4,
+  "coverage": [
+   2,
+   2
+  ],
+  "rules": {
+   "AS-901": 1,
+   "AS-903": 1
+  },
+  "findings": [
+   {
+    "rule": "AS-901",
+    "sev": "warning",
+    "conf": "unknown",
+    "title": "Execution model cannot be verified (prompt-only / code agent)",
+    "where": "run.py:101",
+    "detail": "tools ['inspect_file_as_text', 'visualizer'] are used by a code agent; their invocation cannot be verified at the boundary"
+   },
+   {
+    "rule": "AS-903",
+    "sev": "info",
+    "conf": "unknown",
+    "title": "No runtime capture or trace supplied",
+    "where": "None",
+    "detail": "only static (AST) evidence: never_reached, undeclared-tool and schema-fidelity checks did not run"
+   }
+  ],
+  "files": 11,
+  "errors": []
+ }
+}

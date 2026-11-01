@@ -1,0 +1,31 @@
+# The spike's procurement assistant, written as the spec its SYSTEM_RULES describe in prose.
+# Shared by all 7 spike agents (same tools, same rules, different frameworks).
+agent_id: spike-procurement
+risk_level: high
+goal:
+  statement: Answer stock and refund-policy questions; place purchase orders within policy
+  done_criteria:
+    - the user gets the stock level and the policy text that answers the question
+out_of_scope: [refunds, vendor onboarding]
+role_boundary:
+  allowed_tools: [get_inventory, search_policy, submit_order, pay_invoice]
+prohibited:
+  - tool: issue_refund
+    reason: refunds belong to the escalation team, not the procurement assistant
+approval_required:
+  - tool: pay_invoice
+    approver: finance-lead
+    timeout: 4h
+    on_timeout: safe_stop
+limits:
+  pay_invoice:
+    amount: {max: 5000}          # SYSTEM_RULES 2
+  submit_order:
+    quantity: {min: 1, max: 100} # SYSTEM_RULES 3
+escalation:
+  - {metric: order_quantity, op: ">", threshold: 100, to: procurement-manager}
+untrusted_inputs:
+  - source: search_policy
+    kind: retrieved_document
+owner: procurement-ops@example.com
+technical_owner: platform-team@example.com

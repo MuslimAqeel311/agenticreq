@@ -1,0 +1,5 @@
+order: [get_inventory, submit_order, final_answer]
+tools:
+  get_inventory: {args: {sku: A-100}}
+  submit_order: {args: {sku: A-100, quantity: 5}}
+  final_answer: {args: {answer: done}}

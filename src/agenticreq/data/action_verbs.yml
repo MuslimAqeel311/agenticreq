@@ -1,0 +1,30 @@
+# Action vocabulary used to tell reads from writes by TOOL NAME. Natural-language verbs are an open set, so this is data,
+# not code: add your domain's verbs here (no code change needed). Beyond names, agenticreq also treats as writes the tools the
+# spec itself puts behind approval_required or limits, and says UNKNOWN (never silence) about a verb it does not recognise.
+write: [activate, add, adjust, administer, admit, alert, allocate, approve, archive, arm, assign, authorise, authorize, ban,
+  block, book, buy, bypass, cancel, capture, charge, close, commit, comp, control, countersign, create, curtail, deactivate,
+  deallocate, debit, decommission, delete, demote, deny, deploy, deposit, deprovision, dial, disable, disarm, disburse, discharge,
+  dismiss, dispatch, dispense, drop, edit, elevate, enable, energize, enroll, erase, escalate, execute, expire, export, extend,
+  fertilize, flag, freeze, garnish, grant, harvest, hire, hold, impersonate, import, inject, insert, invest, invite, irrigate,
+  isolate, issue, levy, liquidate, lock, log, mark, markdown, merge, modify, move, mute, notarize, notify, offboard, onboard,
+  order, override, overwrite, page, patch, pause, pay, place, play, post, prescribe, promote, provision, publish, purchase,
+  purge, push, put, quarantine, reaccommodate, rebalance, rebook, reconcile, redeem, refill, refund, register, reimburse,
+  reject, release, remit, remove, rename, renew, replace, reply, reprice, reroute, reschedule, reserve, reset, restore, resume,
+  revoke, ring, rotate, save, schedule, scrap, sell, send, set, settle, share, shed, sign, skip, spray, stamp, start, stop,
+  store, submit, subscribe, suspend, switch, sync, terminate, toggle, transfer, trigger, truncate, turn, unblock, underwrite,
+  unfreeze, unlock, unmute, unregister, unsubscribe, unsuspend, update, upload, upsert, vaccinate, void, wire, withdraw, write]
+high_impact: [administer, admit, approve, authorise, authorize, ban, block, book, buy, bypass, cancel, capture, charge, close,
+  commit, comp, debit, decommission, delete, deny, deploy, deprovision, destroy, dial, disarm, disburse, discharge, dispatch,
+  dispense, drop, elevate, enroll, erase, execute, freeze, grant, hire, impersonate, inject, invest, irrigate, issue, kill,
+  liquidate, markdown, merge, offboard, order, override, overwrite, pay, place, post, prescribe, provision, publish, purchase,
+  purge, push, quarantine, rebook, redeem, refill, refund, reimburse, reject, release, remit, remove, reply, reroute, reset,
+  revoke, rotate, scrap, sell, send, settle, shed, shutdown, sign, spray, submit, suspend, terminate, transfer, truncate,
+  underwrite, unlock, upload, vaccinate, void, wipe, wire, withdraw, write]
+read: [aggregate, analyze, answer, ask, assess, audit, browse, calculate, check, classify, compare, compose, compute, convert,
+  count, describe, detect, diagnose, diff, download, draft, dump, estimate, evaluate, explain, export, extract, fetch, filter,
+  find, forecast, format, generate, get, group, help, identify, inspect, list, load, locate, lookup, match, measure, monitor,
+  navigate, parse, ping, plan, predict, preview, query, rank, read, recommend, render, resolve, retrieve, review, scan, score,
+  screen, search, select, show, sort, status, suggest, summarise, summarize, test, track, translate, triage, validate, verify,
+  view, visit, whoami]
+read_noun_capable: [answer, ask, audit, diff, draft, estimate, filter, forecast, format, group, help, match, monitor, ping,
+  plan, rank, render, review, score, screen, sort, status, test, track, triage]

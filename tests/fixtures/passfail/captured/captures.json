@@ -1,0 +1,152 @@
+{
+ "entry": "tests/fixtures/passfail/captured/agent.py",
+ "runs": 1,
+ "coverage": "2/2",
+ "zero_touch": true,
+ "changed_files": [],
+ "libs_hooked": [
+  "httpx"
+ ],
+ "versions": {},
+ "llm_misses": [],
+ "egress_blocked": [],
+ "scrubbed_env": [],
+ "run_errors": {},
+ "sandbox": "mock-tools:mocks.yml",
+ "calls": [
+  {
+   "index": 0,
+   "run_id": "run-0",
+   "provider": "openai_responses",
+   "url": "http://127.0.0.1:9/v1/responses",
+   "client_lib": "httpx",
+   "model": "gpt-4o-2024-08-06",
+   "system_prompt": "Answer order questions.",
+   "tools": [
+    {
+     "name": "lookup_order",
+     "description": "Return the status of an order.",
+     "params": [
+      {
+       "name": "order_id",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_responses",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "lookup_order",
+      "description": "Return the status of an order.",
+      "parameters": {
+       "properties": {
+        "order_id": {
+         "title": "Order Id",
+         "type": "string"
+        }
+       },
+       "required": [
+        "order_id"
+       ],
+       "title": "lookup_order_args",
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    }
+   ],
+   "tool_calls": [
+    {
+     "name": "lookup_order",
+     "arguments": {
+      "order_id": "A1"
+     },
+     "id": "c1"
+    }
+   ],
+   "tool_results": [],
+   "prior_tool_calls": [],
+   "message_count": 1,
+   "trace_id": null,
+   "parent_id": null,
+   "overhead_ms": 0.0,
+   "synthetic": false,
+   "timestamp": 1760000000.0,
+   "raw_request": null
+  },
+  {
+   "index": 1,
+   "run_id": "run-0",
+   "provider": "openai_responses",
+   "url": "http://127.0.0.1:9/v1/responses",
+   "client_lib": "httpx",
+   "model": "gpt-4o-2024-08-06",
+   "system_prompt": "Answer order questions.",
+   "tools": [
+    {
+     "name": "lookup_order",
+     "description": "Return the status of an order.",
+     "params": [
+      {
+       "name": "order_id",
+       "type": "string",
+       "description": null,
+       "required": true,
+       "has_default": false,
+       "default": null,
+       "constraints": {}
+      }
+     ],
+     "source": "wire",
+     "code_ref": null,
+     "kind": "wire:openai_responses",
+     "func_name": null,
+     "features": [],
+     "body_bounds": {},
+     "raw": {
+      "name": "lookup_order",
+      "description": "Return the status of an order.",
+      "parameters": {
+       "properties": {
+        "order_id": {
+         "title": "Order Id",
+         "type": "string"
+        }
+       },
+       "required": [
+        "order_id"
+       ],
+       "title": "lookup_order_args",
+       "type": "object",
+       "additionalProperties": false
+      }
+     }
+    }
+   ],
+   "tool_calls": [],
+   "tool_results": [
+    {
+     "call_id": "c1",
+     "name": "lookup_order",
+     "content": "shipped"
+    }
+   ],
+   "prior_tool_calls": [],
+   "message_count": 3,
+   "trace_id": null,
+   "parent_id": null,
+   "overhead_ms": 0.0,
+   "synthetic": false,
+   "timestamp": 1760000001.0,
+   "raw_request": null
+  }
+ ]
+}
