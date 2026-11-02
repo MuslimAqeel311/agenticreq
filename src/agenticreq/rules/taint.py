@@ -207,7 +207,7 @@ def _flows(
     while changed:  # propagate along edges to a fixpoint
         changed = False
         for node in groups:
-            for nb in neighbours[node]:
+            for nb in sorted(neighbours[node]):
                 for src, (path, _) in list(reach[nb].items()):
                     if src not in reach[node] and node not in path:  # never re-enter an agent already on the path
                         reach[node][src] = (
