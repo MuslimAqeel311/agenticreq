@@ -80,7 +80,7 @@ langgraph = "agenticreq.recognizers.langgraph:LangGraphRecognizer"
 path = "src/agenticreq/__init__.py"
 
 [tool.hatch.build.targets.sdist]
-# only what a user or packager needs; scratch files (inst.txt, ac.py), validation corpora and caches stay out
+# only what a user or packager needs; scratch files (ac.py), validation corpora and caches stay out
 include = [
   "/src",
   "/tests",
@@ -92,9 +92,6 @@ include = [
   "/CONTRIBUTING.md",
   "/SECURITY.md",
   "/CODE_OF_CONDUCT.md",
-  "/SCOPE.md",
-  "/TESTING.md",
-  "/VALIDATION.md",
   "/pyproject.toml",
   "/action.yml",
   "/spec.schema.json",
