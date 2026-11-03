@@ -2,8 +2,9 @@
 
 **Does the agent's code actually enforce what its spec declares?** You write the requirements in `spec.yml`;
 agenticreq reads your agent's code (without running it) and reports which requirements the code enforces, which it
-does not, and which need a person or a test run to confirm. No LLM is called, and agenticreq never suggests numbers:
-you write them, it checks the code matches.
+does not, and which need a person or a test run to confirm. No LLM is called.
+
+**agenticreq never suggests numbers. You write them; it checks your code matches.**
 
 It is not a runtime guardrail or an eval tool. It finds where enforcement is missing, and can export the spec as a
 policy for OPA or Cedar.
