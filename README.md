@@ -17,6 +17,20 @@ agenticreq version
 
 Python 3.10 or newer. Installing writes nothing into your project.
 
+## Quick start
+
+Run these from the agent's folder:
+
+```bash
+pip install agenticreq     # 1. writes nothing into your project
+agenticreq audit           # 2. findings immediately: no spec, no setup
+agenticreq init            # 3. writes spec.yml; replace every TODO
+agenticreq mocks           # 4. writes mocks.yml for a test run with mock tools
+agenticreq mock-run        #    runs the agent with a canned model
+agenticreq check           # 5. compares spec.yml and the latest mock run with the code
+agenticreq guide           #    where this folder stands, and the next command
+```
+
 ## How it works
 
 Run the commands from the agent's folder. `agenticreq guide` always shows where the folder stands and the next command.
