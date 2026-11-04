@@ -3,7 +3,7 @@
 from pathlib import Path
 from textwrap import dedent
 
-from agenticreq.ast.classify import is_pinned, is_unbounded
+from agenticreq.ast.classify import is_pinned, is_unbounded, pin_judge
 from agenticreq.engine import run
 from agenticreq.observe import build_observed
 
@@ -79,8 +79,9 @@ def test_openai_agents_run_bound_and_tracing_cover_the_system(tmp_path: Path) ->
     """,
     )
     r = run(mode="audit", observed=obs)
-    assert not {"AS-306", "AS-307"} & {f.rule_id for f in r.findings}
-    assert {"AS-306", "AS-307"} <= {p.rule_id for p in r.passed}
+    assert "AS-306" not in {f.rule_id for f in r.findings} and "AS-306" in {p.rule_id for p in r.passed}
+    # a mechanism found but not shown to reach every agent: a person says so, it is neither a gap nor a pass
+    assert [f.status_hint for f in r.findings if f.rule_id == "AS-307"] == ["SIGN-OFF"]
 
 
 def test_crewai_per_agent_bound_is_not_an_aggregate_budget(tmp_path: Path) -> None:
@@ -95,8 +96,10 @@ def test_crewai_per_agent_bound_is_not_an_aggregate_budget(tmp_path: Path) -> No
     assert "AS-306" in {f.rule_id for f in run(mode="audit", observed=obs).findings}
 
 
-def test_gemini_stable_ids_are_pinned() -> None:
-    assert is_pinned("gemini-2.5-flash") and is_pinned("models/gemini-2.5-flash-image")
+def test_a_gemini_id_with_no_version_marker_is_not_called_pinned() -> None:
+    """Whether a bare Gemini id is fixed is a provider fact the id does not show: a person answers it."""
+    assert pin_judge("gemini-2.5-flash")[0] == "undecidable"
+    assert pin_judge("models/gemini-2.5-flash-image")[0] == "undecidable"
     assert not is_pinned("gemini-flash-latest") and not is_pinned("gemini-2.5-flash-latest")
 
 

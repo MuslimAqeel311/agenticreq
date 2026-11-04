@@ -29,10 +29,15 @@ from agenticreq.ast.tool_discovery import _gate_kind
 from agenticreq.ast.extract_support import (
     BIND_CALLS,
     BOUND_CALLS,
+    AGENT_BOUND_KWARGS,
     BOUND_KWARGS,
+    GATE_HOOK_CALLS,
     GATE_HOOK_KWARG,
+    GATE_HOOK_NAMES,
     GATE_KWARGS,
     MODEL_KWARGS,
+    NAME_KEYS,
+    PERSON_IN_LOOP,
     TOOL_LIST_KWARGS,
     TOOL_WRAPPERS,
     _GENERIC_BUILDER,
@@ -261,15 +266,32 @@ def _call_facts(ex: ProjectExtractor, fc: FileCtx, call: ast.Call, assigned_to: 
     # bounds (an expanded agent call recorded its own, one per agent). A bound on an agent's own constructor belongs
     # to that agent; one on a run / graph call applies to every agent.
     owner = built[0].name if fname in ex.agent_ctors and len(built) == 1 else None
+    limits = {**BOUND_KWARGS, **AGENT_BOUND_KWARGS} if fname in ex.agent_ctors else BOUND_KWARGS
     for k in call.keywords if id(call) not in ex._agent_bounds else []:
-        if k.arg in BOUND_KWARGS:
-            b = ex._bound_ref(fc, BOUND_KWARGS[k.arg], k.arg, k.value, call)
+        if k.arg in limits:
+            b = ex._bound_ref(fc, limits[k.arg], k.arg, k.value, call)
             b.agent = owner
             ex.obs.bounds.append(b)
     if fname in BOUND_CALLS and call.args and id(call) not in ex._agent_bounds:
         ex.obs.bounds.append(ex._bound_ref(fc, BOUND_CALLS[fname], fname, call.args[0], call))
     # gates
     gate_kind = _gate_kind(ex, fc, call)
+    named_in_args = {
+        x.id if isinstance(x, ast.Name) else x.attr
+        for a in call.args
+        for x in ast.walk(a)
+        if isinstance(x, (ast.Name, ast.Attribute))
+    }
+    if fname in PERSON_IN_LOOP or named_in_args & set(GATE_HOOK_CALLS.get(fname or "", ())):
+        ex.obs.gates.append(
+            GateRef(
+                kind="framework_hook",
+                tools=None,
+                code_ref=ref,
+                coverage="unverified",
+                coverage_note=f"{fname} can stop a tool call; which tools it covers is not known",
+            )
+        )
     if gate_kind:
         if not any(g.code_ref == ref for g in ex.obs.gates):
             # inside a tool's own body it gates that tool only; in a dispatcher / graph node it gates the tools that
@@ -300,7 +322,7 @@ def _call_facts(ex: ProjectExtractor, fc: FileCtx, call: ast.Call, assigned_to: 
                 )
             )
     for k in call.keywords:
-        hook = k.arg not in GATE_KWARGS and bool(GATE_HOOK_KWARG.match(k.arg or ""))
+        hook = k.arg not in GATE_KWARGS and (bool(GATE_HOOK_KWARG.match(k.arg or "")) or k.arg in GATE_HOOK_NAMES)
         if (k.arg in GATE_KWARGS or hook) and k.arg != "step_callback":
             ok, val = literal(k.value)
             if ok and val in (False, None, [], (), "NEVER"):
@@ -471,6 +493,17 @@ def _call_sites(ex: ProjectExtractor, fn: FuncDef) -> list[tuple[FileCtx, ast.Ca
         if is_test_file(fc.rel):
             continue  # a test calling the factory does not add an agent to the project
         for n in ast.walk(fc.tree):
+            if (
+                isinstance(n, ast.Call)
+                and _name(n.func) == "map"
+                and len(n.args) == 2
+                and _name(n.args[0]) == fn.name
+                and (rows := ex.ev.rows(ex.ev.frame_of(fc, n), n.args[1])) is not None
+            ):  # map(make, NAMES): one call per element
+                for row in rows:
+                    site = ast.Call(func=n.args[0], args=[row], keywords=[])
+                    out.append((fc, ast.copy_location(site, n)))
+                continue
             if not isinstance(n, ast.Call) or _name(n.func) != fn.name or isinstance(n.func, ast.Subscript):
                 continue
             if any(x is n for x in ast.walk(fn)):
@@ -567,8 +600,18 @@ def _declared_agent(
         and not _GENERIC_BUILDER.match(enclosing.name)
         else None
     )
+    own_key = sv(NAME_KEYS[fname]) if fname in NAME_KEYS else None
     name = (
-        sv("name") or positional or sv("role") or cv("name") or cv("role") or hint or assigned_to or returned or fname
+        sv("name")
+        or positional
+        or sv("role")
+        or own_key
+        or cv("name")
+        or cv("role")
+        or hint
+        or assigned_to
+        or returned
+        or fname
     )
     name = " ".join(name.split()).strip("\"'") or fname  # YAML `role: >` keeps written quotes
     prompt = (
@@ -613,7 +656,7 @@ def _declared_agent(
     allow = ev.value(fr, deleg) if deleg is not None else cfgv("allow_delegation")
     if env or cfg:  # bounds per agent: max_iter=c.get("max_iter", 6) / config max_iter
         ex._agent_bounds.add(id(call))
-        for kw, kind in BOUND_KWARGS.items():
+        for kw, kind in {**BOUND_KWARGS, **AGENT_BOUND_KWARGS}.items():
             node = _kw(c, kw)
             v = ev.value(fr, node) if node is not None else cfgv(kw)
             if node is None and v is UNK:

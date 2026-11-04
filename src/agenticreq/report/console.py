@@ -131,7 +131,8 @@ def _header(report: Report, sym: dict[str, str]) -> str:
         parts.append(report.agent_id)
     spec = report.metadata.get("spec_file")
     parts.append(f"spec: {spec}" if spec else "no spec")
-    parts.append(_mock_run_text(report))
+    if report.command != "validate":  # validate reads the spec on its own: no code, no run
+        parts.append(_mock_run_text(report))
     return dot.join(parts)
 
 
@@ -232,7 +233,7 @@ def render_console(
         # one column per group, as wide as its longest label up to 2/5 of the terminal (at least _MAX_COL);
         # a longer label is printed on its own line, so every reason starts in the same column
         col = min(max([len(r.label) for r in mine] + [12]), max(_MAX_COL, width * 2 // 5))
-        n = sum(1 for ln in lines if ln.group == group)
+        n = len(mine)
         if not n:
             continue
         if held_back and group in held_back:

@@ -1,0 +1,5 @@
+{"entry": "agent.py:main", "runs": 1, "coverage": "1/1", "run_ids": ["run-0"], "calls": [
+ {"index": 0, "run_id": "run-0", "url": "https://api.openai.com/v1/responses", "provider": "openai_responses",
+  "model": "gpt-4o-2024-08-06", "system_prompt": "Find.", "system_prompt_sha256": "abc", "message_count": 1,
+  "tools": [{"name": "hosted:web_search", "source": "wire", "kind": "wire:hosted"}],
+  "tool_calls": [], "prior_tool_calls": [], "tool_results": [], "synthetic": true}]}

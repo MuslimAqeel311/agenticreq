@@ -1,0 +1,7 @@
+entry: agent.py:main
+args: {task: write the report}
+order: [search, save_report]
+allow_write: [report.txt]
+tools:
+  search: {args: {q: a}}
+  save_report: {args: {text: hello}}

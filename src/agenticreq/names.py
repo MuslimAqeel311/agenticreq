@@ -9,14 +9,29 @@ original spelling is kept for display: reports show names as the code spells the
 from __future__ import annotations
 
 import re
+from functools import lru_cache
 from typing import Iterable
 
 _SEP = re.compile(r"[^a-z0-9]+")
 
 
+@lru_cache(maxsize=1)
+def _aliases() -> tuple[tuple[str, ...], dict[str, str]]:
+    from agenticreq.data import load_yaml
+
+    table = load_yaml("tool_aliases.yml")
+    return tuple(table["prefixes"]), dict(table["aliases"])
+
+
 def norm(name: str) -> str:
-    """``Web Search`` -> ``web_search``, ``search.web`` -> ``search_web``, ``__Fetch--Page__`` -> ``fetch_page``."""
-    return _SEP.sub("_", name.lower()).strip("_")
+    """``Web Search`` -> ``web_search``, ``search.web`` -> ``search_web``, ``__Fetch--Page__`` -> ``fetch_page``. A
+    provider's spelling of a hosted tool is the tool (``hosted:web_search``, ``web_search_20250305`` -> ``web_search``:
+    data/tool_aliases.yml)."""
+    prefixes, aliases = _aliases()
+    for p in prefixes:
+        name = name.removeprefix(p)
+    text = _SEP.sub("_", name.lower()).strip("_")
+    return aliases.get(text, text)
 
 
 def same(a: str, b: str) -> bool:

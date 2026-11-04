@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import ast
 import os
+from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 
@@ -58,10 +59,13 @@ def _constants(root: str) -> tuple[tuple[str, float, str], ...]:
                 tree = ast.parse(p.read_text(encoding="utf-8", errors="replace"))
             except (SyntaxError, ValueError, OSError):
                 continue
-            for node in tree.body:
+            # a module constant, or a field of a module-level class (a dataclass or settings default)
+            body = [*tree.body, *(n for c in tree.body if isinstance(c, ast.ClassDef) for n in c.body)]
+            for node in body:
                 if isinstance(node, (ast.Assign, ast.AnnAssign)) and node.value is not None:
                     targets = node.targets if isinstance(node, ast.Assign) else [node.target]
-                    v = _value(node.value)
+                    got = _default_in(node.value)
+                    v = got[0] if got else None
                     for t in targets:
                         if isinstance(t, ast.Name) and v is not None:
                             rel = os.path.relpath(p, root).replace(os.sep, "/")
@@ -69,17 +73,43 @@ def _constants(root: str) -> tuple[tuple[str, float, str], ...]:
     return tuple(out)
 
 
-def find(root: str | Path, *words: str, seconds: bool = False) -> tuple[float, str, str] | None:
-    """(value, name, file:line) of the one project constant whose name has all ``words``; ``seconds`` reads its unit
-    suffix (APPROVAL_TIMEOUT_H = 4 -> 14400). None when there is none, or more than one with different values."""
+@dataclass(frozen=True)
+class Several:
+    """The project gives this limit different values and nothing says which one the agent uses."""
+
+    name: str
+    files: tuple[str, ...]
+
+    def text(self) -> str:
+        return f"several values for {self.name} found in {', '.join(self.files)}; cannot pick"
+
+
+def lookup(
+    root: str | Path, *words: str, seconds: bool = False, near: tuple[str, ...] = ()
+) -> tuple[float, str, str] | Several | None:
+    """(value, name, file:line) of the project constant whose name has all ``words``; ``seconds`` reads its unit suffix
+    (APPROVAL_TIMEOUT_H = 4 -> 14400). With different values, the ones defined in ``near`` (the files that hold the
+    agent) win; when that leaves more than one, the result says so."""
     hits = []
     for name, v, where in _constants(str(Path(root).resolve())):
         parts = norm(name).split("_")
         if all(w in parts for w in words):
             unit = next((_UNITS[x] for x in reversed(parts) if x in _UNITS), 1) if seconds else 1
             hits.append((v * unit, name, where))
-    values = {h[0] for h in hits}
-    return hits[0] if len(values) == 1 else None
+    if not hits:
+        return None
+    if len({h[0] for h in hits}) == 1:
+        return hits[0]
+    close = [h for h in hits if h[2].rsplit(":", 1)[0] in near]
+    if close and len({h[0] for h in close}) == 1:
+        return close[0]
+    return Several(hits[0][1], tuple(sorted({h[2].rsplit(":", 1)[0] for h in close or hits})))
+
+
+def find(root: str | Path, *words: str, seconds: bool = False) -> tuple[float, str, str] | None:
+    """``lookup`` for a caller with no use for "several": None when there is none, or more than one value."""
+    hit = lookup(root, *words, seconds=seconds)
+    return None if isinstance(hit, Several) else hit
 
 
 @lru_cache(maxsize=64)
@@ -111,6 +141,68 @@ def setting_default(root: str | Path, attr: str) -> tuple[float, str] | None:
         return None
     v, env = sorted(found)[0]
     return v, (f"default in code of env {env}" if env else f"default in code of settings.{attr}")
+
+
+@lru_cache(maxsize=64)
+def plain_field(root: str | Path, attr: str) -> bool:
+    """``attr`` is a field of a plain class or dataclass, so its default is what the code runs with. A settings class
+    (pydantic BaseSettings) can be overridden from the environment."""
+    found = False
+    for dirpath, dirs, files in os.walk(str(root)):
+        dirs[:] = sorted(d for d in dirs if d not in _SKIP and not d.startswith("."))
+        for f in sorted(files):
+            if not f.endswith(".py"):
+                continue
+            try:
+                tree = ast.parse((Path(dirpath) / f).read_text(encoding="utf-8", errors="replace"))
+            except (SyntaxError, ValueError, OSError):
+                continue
+            for c in ast.walk(tree):
+                if not isinstance(c, ast.ClassDef):
+                    continue
+                if any(
+                    isinstance(n, ast.AnnAssign) and isinstance(n.target, ast.Name) and n.target.id == attr
+                    for n in c.body
+                ):
+                    if any("Settings" in ast.unparse(b) for b in c.bases):
+                        return False
+                    found = True
+    return found
+
+
+@lru_cache(maxsize=64)
+def setting_text(root: str | Path, attr: str) -> str | None:
+    """The text default of a class field ``attr: str = "x"``; None when it is not found, or found with two values."""
+    found: set[str] = set()
+    for dirpath, dirs, files in os.walk(str(root)):
+        dirs[:] = sorted(d for d in dirs if d not in _SKIP and not d.startswith("."))
+        for f in sorted(files):
+            if not f.endswith(".py"):
+                continue
+            try:
+                tree = ast.parse((Path(dirpath) / f).read_text(encoding="utf-8", errors="replace"))
+            except (SyntaxError, ValueError, OSError):
+                continue
+            for c in ast.walk(tree):
+                if isinstance(c, ast.ClassDef):
+                    for n in c.body:
+                        if (
+                            isinstance(n, ast.AnnAssign)
+                            and isinstance(n.target, ast.Name)
+                            and n.target.id == attr
+                            and isinstance(n.value, ast.Constant)
+                            and isinstance(n.value.value, str)
+                        ):
+                            found.add(n.value.value)
+    return next(iter(found)) if len(found) == 1 else None
+
+
+def setting_site(root: str | Path, attr: str) -> str | None:
+    """file:line of the first place a settings field ``attr`` gets its default."""
+    for name, _, where in _constants(str(Path(root).resolve())):
+        if name == attr:
+            return where
+    return None
 
 
 def _default_in(node: ast.AST) -> tuple[float, str] | None:

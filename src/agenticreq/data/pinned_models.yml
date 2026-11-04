@@ -1,0 +1,21 @@
+# Is a model id a fixed version? Syntactic rules only: nothing here is a claim about a provider, so an id these rules
+# cannot decide is a question for a person ("Is this model id a fixed version?"), never "not pinned".
+version: 1
+#: routing prefixes, removed before an id is judged
+routing_prefixes: [models/, openai/, anthropic/, vertex_ai/, bedrock/, gemini/, groq/, azure/, ollama/, openrouter/, litellm/]
+#: after these the rest is a name the user chose (an Azure deployment, a local tag): a person says what it is
+user_defined: [azure/, ollama/]
+#: first match wins, floating before pinned
+floating:
+  - {rule: "-latest marker", pattern: '[-:]latest$'}
+  - {rule: "-preview marker", pattern: '-preview(-|$)'}
+  - {rule: "-exp marker", pattern: '-exp(-|$)'}
+pinned:
+  - {rule: "dated suffix -YYYY-MM-DD", pattern: '-\d{4}-\d{2}-\d{2}$'}
+  - {rule: "dated suffix -YYYYMMDD", pattern: '-20\d{6}(-v\d+:\d+)?$'}
+  - {rule: "dated suffix @YYYYMMDD", pattern: '@20\d{6}$'}
+  - {rule: "numeric version suffix", pattern: '-\d{3,4}$'}
+  - {rule: "numeric version suffix", pattern: '-v\d+:\d+$'}
+#: a family name with no version on it (data/model_pins.yml lists the dated snapshots they point at)
+bare_family:
+  - {rule: "bare family name", pattern: '^(gpt-\d(\.\d)?[a-z]*(-mini|-nano|-turbo)?|o\d(-mini)?|chatgpt-[a-z0-9-]+|claude-[a-z0-9.-]+)$'}

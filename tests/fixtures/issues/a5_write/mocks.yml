@@ -1,0 +1,5 @@
+entry: agent.py:main
+args: {task: write}
+allow_write: []
+tools:
+  save_report: {args: {text: hello}}

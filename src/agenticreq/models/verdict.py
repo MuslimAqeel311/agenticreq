@@ -88,6 +88,7 @@ _UNLISTED = {
     "AS-118": "spec",
     "AS-218": "mcp_tool_safety",
     "AS-608": "tool_schema_strictness",
+    "AS-210": "version_pinning",
     "AS-901": "execution_model",
     "AS-902": "extraction",
     "AS-903": "runtime_evidence",
@@ -589,14 +590,17 @@ def _head(reason: str) -> tuple[str, str]:
     return head, note
 
 
-def settle_after_run(v: Verdict, rule_ids: tuple[str, ...], param: str) -> Verdict:
+def settle_after_run(
+    v: Verdict, rule_ids: tuple[str, ...], param: str, patched: frozenset[str] | None = None
+) -> Verdict:
     """A mock-run check after a mock run that is newer than the code: running it again changes nothing, so the
     line stays only when editing mocks.yml would settle it (a tool to add to order:, args: that reach an agent, a
     mock for the other path), and says so. Every other line moves to where it can be settled:
 
     * a number in spec.yml with no limit in the code -> a gap (add it in code, or confirm where it is enforced);
     * something agenticreq cannot read (a value from env, a library it cannot follow, checkpointing) -> sign-off;
-    * an approval gate inside a tool the mock replaced -> sign-off: the gate did not run.
+    * an approval gate inside a tool the mock replaced -> sign-off: the gate did not run. ``patched`` holds the
+      tools mocks.yml replaced (`patch:`); a gate in a tool that ran for real was not skipped by the mock.
     """
     if (
         "AS-201" in rule_ids
@@ -622,10 +626,16 @@ def settle_after_run(v: Verdict, rule_ids: tuple[str, ...], param: str) -> Verdi
             f"cannot read. Confirm it under confirmed:.{tail}",
         )
     if "AS-205" in rule_ids or "AS-212" in rule_ids and "gate" in head:
-        tool = re.search(r"(?:Code pattern only: )?([^()]+?) \(", head)
+        tool = re.match(r"(\S+) ran without", head) or re.search(r"(?:Code pattern only: )?([^()]+?) \(", head)
         name = tool.group(1).strip() if tool else "the tool"
+        if patched is None or _norm(name) in {_norm(p) for p in patched}:
+            return Verdict(
+                "SIGN-OFF", f"The mock replaced {name}, so the gate did not run; confirm it under confirmed:.{tail}"
+            )
         return Verdict(
-            "SIGN-OFF", f"The mock replaced {name}, so the gate did not run; confirm it under confirmed:.{tail}"
+            "SIGN-OFF",
+            f"{sentence(head).rstrip('.')}: the code has a gate, and no run recorded it. If it is a gate agenticreq "
+            f"cannot record, confirm it under confirmed:.{tail}",
         )
     if set(rule_ids) & _REAL_RUN_RULES:
         return Verdict(
@@ -641,6 +651,22 @@ def settle_after_run(v: Verdict, rule_ids: tuple[str, ...], param: str) -> Verdi
     return Verdict(
         "SIGN-OFF", f"{sentence(head).rstrip('.')}; a mock run cannot show more. Confirm it under confirmed:.{tail}"
     )
+
+
+def _norm(name: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")
+
+
+def _patched_tools(report: Report) -> frozenset[str]:
+    run = report.metadata.get("mock_run")
+    names = run.get("patched_tools") if isinstance(run, dict) else None
+    return frozenset(str(n) for n in names) if isinstance(names, list) else frozenset()
+
+
+def _unsupported(report: Report) -> list[str]:
+    run = report.metadata.get("mock_run")
+    names = run.get("unsupported") if isinstance(run, dict) else None
+    return [str(n) for n in names] if isinstance(names, list) else []
 
 
 def first_sentence(text: str) -> str:
@@ -707,12 +733,24 @@ def results(report: Report) -> list[ResultLine]:
     lines = []
     ran = mock_run_done(report)
     signed = _signed(report)
+    patched = _patched_tools(report)
+    blocked = _unsupported(report)
     for (agent, param), items in grouped.items():
         worst = min(items, key=lambda x: _RANK[x[0].status])[0]
         same = [v for v, _, _ in items if v.status == worst.status]
         reason = also(worst.reason, [v.reason for v in same[1:]])
-        if ran and worst.status == "CHECK":
-            worst = settle_after_run(Verdict("CHECK", reason), tuple(r for _, r, _ in items), param)
+        if blocked and worst.status == "CHECK":  # no run can ever show it: a person confirms it instead
+            head, _ = _head(reason)
+            worst = Verdict(
+                "SIGN-OFF",
+                f"{sentence(head).rstrip('.')}; mock run is not supported for {blocked[0]}. Confirm it under confirmed:.",
+            )
+            reason = worst.reason
+        elif ran and worst.status == "CHECK":
+            worst = settle_after_run(Verdict("CHECK", reason), tuple(r for _, r, _ in items), param, patched)
+            reason = worst.reason
+        if worst.status == "CHECK" and param in signed:  # the entry stays as written; it does not close this line
+            worst = Verdict("CHECK", f"{reason} This is settled by a mock run, not by a sign-off.")
             reason = worst.reason
         waived = worst.reason.startswith("waived by you")  # a waiver is the person's own decision
         if worst.status == "PASS" and param in TOOL_LIST_PARAMS and unresolved_tools(report) and not waived:
@@ -778,10 +816,15 @@ def results(report: Report) -> list[ResultLine]:
     return lines
 
 
+def distinct(lines: list[ResultLine]) -> list[ResultLine]:
+    """One entry per printed row: the same result for several agents is one result. Every count uses this."""
+    return list({(ln.param, ln.status, ln.reason): ln for ln in lines}.values())
+
+
 def totals(lines: list[ResultLine]) -> dict[str, int]:
     """Counts per group: gaps, sign-offs still open, sign-offs signed, sign-offs the owner marked not needed,
     mock-run checks, passed."""
-    lines = list({(ln.param, ln.status, ln.reason): ln for ln in lines}.values())  # one result, many agents
+    lines = distinct(lines)
     return {
         "gaps": sum(1 for ln in lines if ln.status == "GAP"),
         "sign_off_left": sum(1 for ln in lines if ln.status == "SIGN-OFF" or ln.status == "NOT NEEDED" and ln.open),
@@ -804,7 +847,7 @@ def overall(report: Report, lines: list[ResultLine] | None = None, fail_on: Fail
     if report.spec_status == "invalid" or report.nothing_checked:
         return "FAIL"
     run = report.metadata.get("mock_run")
-    if isinstance(run, dict) and not run.get("captured") and not run.get("stale"):
+    if isinstance(run, dict) and not run.get("captured") and not run.get("stale") and not run.get("unsupported"):
         return "FAIL"  # the latest mock run crashed or made no model call: nothing ran, so nothing passed
     lines = results(report) if lines is None else lines
     return "FAIL" if _fails(totals(lines), fail_on) else "PASS"

@@ -122,9 +122,20 @@ def _calls_agent(fn: ast.AST) -> bool:
         if isinstance(node, ast.Call):
             f = node.func
             name = f.attr if isinstance(f, ast.Attribute) else f.id if isinstance(f, ast.Name) else ""
-            if name in _RUN_CALLS:
+            if name in _RUN_CALLS or _provider_sdk_call(f):
                 return True
     return False
+
+
+def _provider_sdk_call(f: ast.expr) -> bool:
+    """A plain SDK loop calls the model itself: ``client.chat.completions.create(...)``, ``client.messages.create``,
+    ``client.responses.create``, ``client.models.generate_content``."""
+    if not isinstance(f, ast.Attribute):
+        return False
+    owner = f.value.attr if isinstance(f.value, ast.Attribute) else ""
+    return (f.attr == "create" and owner in ("completions", "messages", "responses")) or (
+        f.attr.startswith("generate_content") and owner == "models"
+    )
 
 
 def _reads_command_line(fn: ast.AST) -> bool:
@@ -408,7 +419,8 @@ HEADER = """\
 # entry:       the function that runs the agent (module:function or file.py:function)
 # args:        the inputs the mock run calls the entry with
 # python:      the interpreter; empty = ./.venv when it exists, else the one running agenticreq
-# order:       the order the canned model asks for tools; a tool not listed is asked for after these
+# order:       the order the canned model asks for tools; a tool not listed is asked for after these. Under
+#              runs:, a run's own order: is its whole path: tools it does not list are not asked for
 # tools:       per tool: args = sample arguments; patch + returns = replace the real function, so it never
 #              runs (used for tools that write, pay, send or delete); call: false = never ask for it
 #              (a tool this run does not need: `delete_file: {call: false}`; not_needed is for spec.yml)
@@ -421,13 +433,19 @@ HEADER = """\
 """
 
 
-def render_mocks(root: Path, obs: ObservedAgent, prohibited: set[str] | None = None) -> str:
-    from agenticreq.ast.classify import is_write_tool
+def render_mocks(
+    root: Path, obs: ObservedAgent, prohibited: set[str] | None = None, effects: dict[str, str] | None = None
+) -> str:
+    """``effects``: tool_effects: from spec.yml, which come before what the code shows."""
+    from agenticreq.ast.classify import effect_unsure, is_write_tool
     from agenticreq.jsonschema_util import example_arguments
 
     from agenticreq.names import norm, norm_set
 
     prohibited = norm_set(prohibited or set())
+    declared = {norm(k): v for k, v in (effects or {}).items()}
+    for t in obs.declared_tools.values():
+        t.declared_effect = declared.get(norm(t.name), t.declared_effect)  # type: ignore[assignment]
     guess = guess_entry(root, obs)
     lines = [HEADER]
     if guess.entry:
@@ -458,7 +476,11 @@ def render_mocks(root: Path, obs: ObservedAgent, prohibited: set[str] | None = N
             else:
                 lines.append(f"  {key}: {{call: false}}  # writes, and no function to replace was found")
             continue
-        note = "  # read-only"
+        note = (
+            "  # cannot tell whether it writes: add patch + returns, or tool_effects: in spec.yml"
+            if effect_unsure(t)
+            else "  # read-only"
+        )
         if name in online:
             note += f"; uses {', '.join(online[name])}, which may reach the network: add patch + returns so it does not"
         lines.append(f"  {key}: {_flow({'args': example_arguments(_schema(t))})}{note}")

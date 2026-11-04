@@ -120,7 +120,7 @@ def _tools_from_expr(
         if r is not None and r.kind == "class" and isinstance(r.node, ast.ClassDef):
             name = ex._class_tool(r.fc, r.node)
             if name:
-                return [name]
+                return [ex._named_instance(fc, node, name) or name]
             # a plugin class (Semantic Kernel): every method decorated as a tool is one of the agent's tools
             return [
                 ex.node_tool[id(m)]
@@ -188,6 +188,8 @@ def _tools_from_expr(
         # a tool named by a string (config files list tool names): only names the project declares
         name = node.value.rsplit("__", 1)[-1] if node.value.startswith("mcp__") else node.value  # Claude Agent SDK
         t = ex.var_to_tool.get(name, name)
+        if t not in ex.obs.declared_tools and (builtin := ex._builtin_tool(fc, node)):
+            return [builtin]
         return [t] if t in ex.obs.declared_tools else []
     if isinstance(node, ast.Dict):
         ok, d = literal(node)
@@ -475,6 +477,18 @@ def _note_excluded(ex: ProjectExtractor, fc: FileCtx, node: ast.AST) -> None:
                 ex.obs.excluded_tools.append(n)
 
 
+def _is_retry_loop(node: ast.For) -> bool:
+    """``for attempt in range(3): try: return call() except E: continue``: the loop repeats one call that failed, it
+    does not take steps. The structure decides (a try that leaves the loop on success); the name only helps."""
+    for t in ast.walk(node):
+        if isinstance(t, ast.Try) and t.handlers:
+            success = [*t.body, *t.orelse]
+            if any(isinstance(x, (ast.Return, ast.Break)) for s in success for x in ast.walk(s)):
+                return True
+    target = node.target.id.lower() if isinstance(node.target, ast.Name) else ""
+    return any(w in target for w in ("attempt", "retry", "retries"))
+
+
 def _range_bound(ex: ProjectExtractor, fc: FileCtx, node: ast.For) -> float | None:
     """N of ``for _ in range(N)`` when the body calls the model, else None."""
     it = node.iter
@@ -660,6 +674,11 @@ def _bindings_and_facts(ex: ProjectExtractor, fc: FileCtx) -> None:
             and _name(node.value.func) in ex.agent_ctors
         ):
             assigned_agents[id(node.value)] = node.targets[0].attr  # self.researcher = Agent(...)
+    for node in ast.walk(fc.tree):  # a registry: {"billing": Agent(...)} names the agent, whatever it says of itself
+        if isinstance(node, ast.Dict):
+            for k, v in zip(node.keys, node.values):
+                if isinstance(v, ast.Call) and _name(v.func) in ex.agent_ctors and (key := _str(k)):
+                    assigned_agents[id(v)] = key
     for node in ast.walk(fc.tree):
         if isinstance(node, ast.Call):
             ex._call_facts(fc, node, assigned_agents.get(id(node)))
@@ -705,11 +724,14 @@ def _bindings_and_facts(ex: ProjectExtractor, fc: FileCtx) -> None:
         elif isinstance(node, ast.For):  # `for _ in range(5): client.chat...create(...)` is a step bound
             steps = _range_bound(ex, fc, node)
             if steps is not None:
+                retry = _is_retry_loop(node)  # a retry loop never feeds max_steps: N attempts are N - 1 retries
                 ex.obs.bounds.append(
                     BoundRef(
-                        kind="max_steps",
-                        name="range() loop around the model call",
-                        value=float(steps),
+                        kind="max_retries" if retry else "max_steps",
+                        name="range() retry loop around the model call"
+                        if retry
+                        else "range() loop around the model call",
+                        value=float(steps) - 1 if retry else float(steps),
                         code_ref=_ref(fc.rel, node),
                     )
                 )

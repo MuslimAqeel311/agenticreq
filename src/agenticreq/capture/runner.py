@@ -20,27 +20,71 @@ from agenticreq.capture.entry import split_entry
 from agenticreq.capture.gates import GateProbe
 from agenticreq.capture.hook import CaptureSession
 from agenticreq.capture.responder import CannedResponder, MockConfig
-from agenticreq.capture.guard import ProcessGuard, SocketGuard
+from agenticreq.capture.guard import LLM_HOSTS, ProcessGuard, SocketGuard
+from agenticreq.capture.wire import configure
 
 
-def _stub(value: Any) -> Any:
+#: data/tool_wrappers.yml, resolved by the parent (the agent's environment needs no YAML reader); this copy is only
+#: for a child started without it
+_WRAPPER_LEVELS: tuple[tuple[str, ...], ...] = (("func", "coroutine"),)
+_ASYNC_ATTRS = ("coroutine",)
+
+
+def _same_face(stub: Any, real: Any) -> Any:
+    """The stub keeps the real function's name, docstring and signature: frameworks build the tool's schema from
+    them, and some refuse two tools with one name."""
+    if real is None:
+        return stub
+    for attr in ("__name__", "__qualname__", "__doc__", "__module__", "__annotations__"):
+        try:
+            setattr(stub, attr, getattr(real, attr))
+        except (AttributeError, TypeError):
+            pass
+    try:
+        stub.__signature__ = inspect.signature(real)
+    except (TypeError, ValueError):
+        pass
+    return stub
+
+
+def _stub(value: Any, real: Any = None) -> Any:
     def stub(*_a: Any, **_k: Any) -> Any:
         return value
 
-    return stub
+    return _same_face(stub, real)
 
 
-def _async_stub(value: Any) -> Any:
+def _async_stub(value: Any, real: Any = None) -> Any:
     async def stub(*_a: Any, **_k: Any) -> Any:
         return value
 
-    return stub
+    return _same_face(stub, real)
 
 
-def apply_patches(mocks: MockConfig) -> list[str]:
-    """Replace each ``patch:`` target with a stub returning ``returns``. A tool object (LangChain ``@tool``, a CrewAI
-    tool: anything holding the real function in ``func`` / ``coroutine``) is stubbed in place, so the lists the agent
-    built from it at import time get the stub too, and the real function never runs."""
+def _stub_for(attr: str, real: Any, value: Any, async_attrs: tuple[str, ...]) -> Any:
+    is_async = attr in async_attrs or inspect.iscoroutinefunction(real)
+    return _async_stub(value, real) if is_async else _stub(value, real)
+
+
+def _stub_in_place(target: Any, value: Any, levels: Any, async_attrs: tuple[str, ...]) -> bool:
+    """Stub the function a tool object or tool class holds, leaving the wrapper as it is. Only the innermost level
+    it has: the framework's own ``run()`` keeps working around the stub. False: it holds none."""
+    held = next((found for attrs in levels if (found := [a for a in attrs if callable(getattr(target, a, None))])), [])
+    for a in held:
+        new = _stub_for(a, getattr(target, a), value, async_attrs)
+        if inspect.isclass(target):
+            setattr(target, a, new)
+        else:
+            object.__setattr__(target, a, new)
+    return bool(held)
+
+
+def apply_patches(
+    mocks: MockConfig, levels: Any = _WRAPPER_LEVELS, async_attrs: tuple[str, ...] = _ASYNC_ATTRS
+) -> list[str]:
+    """Replace each ``patch:`` target with a stub returning ``returns``. A tool object or tool class (anything
+    holding the real function under a name in data/tool_wrappers.yml) is stubbed in place, so it keeps its type, the
+    lists the agent built from it at import time get the stub too, and the real function never runs."""
     applied = []
     for name, m in mocks.tools.items():
         if not m.patch:
@@ -49,12 +93,10 @@ def apply_patches(mocks: MockConfig) -> list[str]:
         mod = importlib.import_module(mod_name)
         value = m.returns if m.returns is not None else f"mock result for {name}"
         current = getattr(mod, attr, None)
-        held = [a for a in ("func", "coroutine") if callable(getattr(current, a, None))]
-        if held:
-            for a in held:
-                object.__setattr__(current, a, _async_stub(value) if a == "coroutine" else _stub(value))
-        else:
-            stub = _async_stub(value) if inspect.iscoroutinefunction(current) else _stub(value)  # async stays async
+        plain = current is None or inspect.isfunction(current) or inspect.ismethod(current)
+        if plain or not _stub_in_place(current, value, levels, async_attrs):
+            make = _async_stub if inspect.iscoroutinefunction(current) else _stub  # async stays async
+            stub = make(value, current)
             setattr(mod, attr, stub)
             if current is not None:
                 _replace_everywhere(current, stub)
@@ -223,10 +265,10 @@ class _Progress:
     """Writes how far the run got (model calls so far) every half second, so a run stopped by the timeout can
     still say which step it reached."""
 
-    def __init__(self, path: Path, session: Any) -> None:
+    def __init__(self, path: Path, session: Any, procs: Any = None) -> None:
         import threading
 
-        self.path, self.session = path, session
+        self.path, self.session, self.procs = path, session, procs
         self._stop = threading.Event()
         self._thread = threading.Thread(target=self._loop, daemon=True)
 
@@ -237,6 +279,7 @@ class _Progress:
             "calls": len(calls),
             "last_tools": [t.name for t in last.tools][:8] if last else [],
             "last_asked": [tc.name for tc in last.tool_calls] if last else [],
+            "blocked": [b.removeprefix("write:") for b in (self.procs.blocked if self.procs else [])][-3:],
         }
         try:
             self.path.write_text(json.dumps(data), encoding="utf-8")
@@ -285,7 +328,10 @@ def main(cfg_path: str) -> int:
         mocks = MockConfig.from_dict(cfg["mocks_data"])
     else:
         mocks = MockConfig.load(cfg["mocks"]).for_run(cfg.get("run_name")) if cfg.get("mocks") else MockConfig()
-    guard = SocketGuard([])  # a mock run has no network: its model is canned, its tools are local
+    if cfg.get("providers"):
+        configure(cfg["providers"])
+    hosts = [h for h in (cfg.get("providers") or {}).get("openai_compatible_hosts") or []]
+    guard = SocketGuard([], (*LLM_HOSTS, *hosts))  # a mock run has no network: its model is canned, its tools are local
     guard.install()
     # writes are allowed in the temp folder, the project's .agenticreq/ and the paths under allow_write: in
     # mocks.yml; nothing else (no library cache folders either)
@@ -295,6 +341,7 @@ def main(cfg_path: str) -> int:
         project=str(Path.cwd()),
     )
     procs.install()
+    procs.divert_writes(str(Path(cfg["out"]).resolve().parent / "blocked-writes"))
     session = CaptureSession(CannedResponder(mocks), run_id=cfg["run_id"], egress_allow=[])
     session.install()
     gates = GateProbe(session, answer=mocks.human_input)
@@ -302,11 +349,15 @@ def main(cfg_path: str) -> int:
     error = None
     failure: dict[str, Any] | None = None
     patched: list[str] = []
-    progress = _Progress(Path(cfg["out"]).with_suffix(".progress.json"), session)
+    progress = _Progress(Path(cfg["out"]).with_suffix(".progress.json"), session, procs)
     progress.start()
     phase = "patch"
     try:
-        patched = apply_patches(mocks)
+        patched = apply_patches(
+            mocks,
+            cfg.get("wrapper_levels") or _WRAPPER_LEVELS,
+            tuple(cfg.get("async_attrs") or _ASYNC_ATTRS),
+        )
         phase = "run"
         run_entry(cfg["entry"], cfg.get("call_args"))
     except SystemExit as e:
@@ -360,6 +411,7 @@ def main(cfg_path: str) -> int:
         "libs_hooked": session.libs_hooked,
         "gates_fired": gates.fired,
         "patched": patched,
+        "patched_tools": [name for name, m in mocks.tools.items() if m.patch and m.patch in patched],
         "error": error,
         "failure": failure,
         "rejections": session.rejections,

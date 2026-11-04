@@ -47,6 +47,8 @@ class MockConfig:
     final_text: str = "Done. (agenticreq canned response)"
     max_llm_calls: int = 40
     order: list[str] = field(default_factory=list)  # preferred tool order
+    #: a run under runs: with its own order: takes that path only; the top-level order: asks for the other tools after
+    only_order: bool = False
     #: field name -> value for structured-output answers (e.g. {is_relevant: true, plan: [...]})
     structured: dict[str, Any] = field(default_factory=dict)
     #: what the run answers at an input() prompt (a console approval or question): it never waits for a human
@@ -136,6 +138,7 @@ class MockConfig:
             tools=tools,
             runs=[],
             order=list(o["order"]) if "order" in o else self.order,
+            only_order="order" in o,
             structured={**self.structured, **dict(o.get("structured") or {})},
             final_text=str(o["final_text"]) if "final_text" in o else self.final_text,
             human_input=str(o["human_input"]) if "human_input" in o else self.human_input,
@@ -199,6 +202,11 @@ def _tool_schema(body: dict[str, Any], provider: str, name: str) -> dict[str, An
             return t.get("parameters")
         elif provider == "anthropic" and t.get("name") == name:
             return t.get("input_schema")
+        elif provider == "gemini":
+            for fn in t.get("functionDeclarations") or t.get("function_declarations") or []:
+                if fn.get("name") == name:
+                    schema: dict[str, Any] | None = fn.get("parametersJsonSchema") or fn.get("parameters")
+                    return schema
     return None
 
 
@@ -236,7 +244,7 @@ class CannedResponder:
     @staticmethod
     def conversation_key(call: CapturedCall, body: dict[str, Any]) -> str:
         first_user = ""
-        msgs = body.get("messages") or body.get("input") or []
+        msgs = body.get("messages") or body.get("input") or body.get("contents") or []
         if isinstance(msgs, str):
             first_user = msgs
         else:
@@ -262,7 +270,9 @@ class CannedResponder:
         asked = self._asked.setdefault(self.conversation_key(call, body), set())
         already = {tc.name for tc in call.prior_tool_calls} | asked
         offered = [t.name for t in call.tools if not t.name.startswith("hosted:")]
-        order = [n for n in self.mocks.order if n in offered] + [n for n in offered if n not in self.mocks.order]
+        order = [n for n in self.mocks.order if n in offered]
+        if not self.mocks.only_order:
+            order += [n for n in offered if n not in self.mocks.order]
         for name in order:
             mock = self.mocks.tools.get(name)
             if name in already or (mock is not None and not mock.call):
@@ -276,6 +286,10 @@ class CannedResponder:
     # ------------------------------------------------------------ rendering
     def render(self, call: CapturedCall, tool_calls: list[ToolCall], stream: bool) -> tuple[bytes, str]:
         model = call.model or "agenticreq-canned"
+        if call.provider == "gemini":
+            body = self._gemini(model, tool_calls)
+            sse = f"data: {json.dumps(body)}\n\n".encode()
+            return (sse if stream else json.dumps(body).encode()), "text/event-stream" if stream else "application/json"
         if call.provider == "anthropic":
             body = self._anthropic(model, tool_calls)
             return (self._anthropic_sse(body) if stream else json.dumps(body).encode()), (
@@ -292,6 +306,18 @@ class CannedResponder:
         )
 
     _USAGE_CHAT = {"prompt_tokens": 1, "completion_tokens": 1, "total_tokens": 2}
+
+    def _gemini(self, model: str, tcs: list[ToolCall]) -> dict[str, Any]:
+        parts: list[dict[str, Any]] = (
+            [{"functionCall": {"id": tc.id, "name": tc.name, "args": tc.arguments}} for tc in tcs]
+            if tcs
+            else [{"text": self._final}]
+        )
+        return {
+            "candidates": [{"content": {"role": "model", "parts": parts}, "finishReason": "STOP", "index": 0}],
+            "modelVersion": model,
+            "usageMetadata": {"promptTokenCount": 1, "candidatesTokenCount": 1, "totalTokenCount": 2},
+        }
 
     def _chat(self, model: str, tcs: list[ToolCall]) -> dict[str, Any]:
         msg: dict[str, Any] = {"role": "assistant", "content": None if tcs else self._final}

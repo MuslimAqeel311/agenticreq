@@ -22,6 +22,7 @@ EXAMPLES: dict[str, Any] = {
     # ---- meta
     "spec_version": 1,
     "extends": "profile:baseline",
+    "pinned_models": ["azure/my-prod-deployment"],
     "_derived": {"framework": "langgraph 1.2.15", "declared_tools": ["lookup_order"]},
     "confirmed": [
         {

@@ -460,6 +460,14 @@ def _line(ls: list[ResultLine], key: str) -> ResultLine | None:
     return got[0] if got else None
 
 
+def _no_place(reason: str) -> str:
+    """A number found in code prints where it was read; the tables here compare the number."""
+    if reason.startswith("Found in code:"):
+        assert re.search(r"\(.*:\d+.*\)", reason), reason
+        return re.sub(r" \(.*\)", "", reason)
+    return reason
+
+
 E2E = [pytest.param(key, risk, row, id=f"{key}|{risk}|{row}") for key in NAME for risk in RISKS for row in _scn(key)]
 
 
@@ -488,7 +496,7 @@ def test_end_to_end(tmp_path: Path, key: str, risk: str, row: str) -> None:
         unreadable_value = "not readable" in reason or "cannot read" in reason
         status = "CHECK" if reason.startswith("spec.yml says") and unreadable_value else "GAP"
     assert got is not None, f"{key} @ {risk}: {row}: no line"
-    assert (got.status, got.reason) == (status, reason), f"{key} @ {risk}: {row}"
+    assert (got.status, _no_place(got.reason)) == (status, reason), f"{key} @ {risk}: {row}"
     assert got.group == {"GAP": "gap", "CHECK": "mock_run", "SIGNED": "sign_off", "PASS": "passed"}[status]
 
 
@@ -505,14 +513,14 @@ def test_high_risk_code_120_without_a_spec_value_passes(tmp_path: Path) -> None:
     ls = lines_of(tmp_path, oai(120), "", "high")
     assert (_line(ls, "bounds.max_steps").status, _line(ls, "bounds.max_steps").reason) == (  # type: ignore[union-attr]
         "PASS",
-        "Found in code: 120.",
+        "Found in code: 120 (agent.py:10).",
     )
 
 
 def test_critical_spec_200_and_code_200_passes(tmp_path: Path) -> None:
     ls = lines_of(tmp_path, oai(200), "bounds: {max_steps: 200}", "critical")
     ln = _line(ls, "bounds.max_steps")
-    assert ln is not None and ln.status == "PASS" and ln.reason == "Found in code: 200."
+    assert ln is not None and ln.status == "PASS" and ln.reason.startswith("Found in code: 200 (")
 
 
 def test_spec_40_code_80_fails_naming_both(tmp_path: Path) -> None:
@@ -697,7 +705,7 @@ def test_each_agent_is_judged_on_its_own_bound(tmp_path: Path) -> None:
     steps = [ln for ln in ls if ln.param == "bounds.max_steps"]
     by_agent = {ln.agent: (ln.status, ln.reason) for ln in steps}
     assert len(by_agent) == 2, by_agent
-    assert ("PASS", "Found in code: 5.") in by_agent.values()
+    assert any(s == "PASS" and r.startswith("Found in code: 5 (") for s, r in by_agent.values())
     assert ("GAP", "Code allows 40 steps; spec.yml says 20.") in by_agent.values()
 
 

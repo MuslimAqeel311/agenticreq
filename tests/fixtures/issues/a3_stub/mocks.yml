@@ -1,0 +1,5 @@
+entry: agent.py:main
+args: {task: go}
+tools:
+  alpha: {patch: "tools:alpha", returns: one, args: {q: a}}
+  beta: {patch: "tools:beta", returns: two, args: {n: 1}}

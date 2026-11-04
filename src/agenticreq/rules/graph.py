@@ -14,6 +14,7 @@ from agenticreq.data import InjectedTools
 from agenticreq.graph.analysis import DelegationGraph, Edge, build, path_confidence, path_names
 from agenticreq.models.confidence import Confidence
 from agenticreq.models.finding import Finding, PassedCheck
+from agenticreq.models.observed import ObservedAgent
 from agenticreq.rules.base import CheckContext, Mode, rule
 from agenticreq.rules.registry import make_finding
 
@@ -172,7 +173,18 @@ def depth_and_cycles(ctx: CheckContext) -> Iterable[Finding]:
             )
         else:
             conf = path_confidence(path)
-            ctx.pass_(PassedCheck(rule_id="AS-302", subject=th.fmt(d), confidence=conf, param=p.key))
+            names = path_names(path)
+            agents = ctx.observed.declared_agents if ctx.observed else []
+            first = next((a.code_ref for a in agents if canonical(a.name) == canonical(names[0])), None)
+            ctx.pass_(
+                PassedCheck(
+                    rule_id="AS-302",
+                    subject=th.fmt(d),
+                    confidence=conf,
+                    param=p.key,
+                    note=f"{_arrow(names)}{f', {first}' if first else ''}",
+                )
+            )
     if eff.get("no_cycles", True):
         from agenticreq.rules.conformance import effective_step_bound
 
@@ -378,6 +390,19 @@ def authority(ctx: CheckContext) -> Iterable[Finding]:
     return out
 
 
+def one_trace_across_agents(obs: ObservedAgent) -> tuple[str, int] | None:
+    """(trace id, agents) when one id spans two or more agents in spans or in the model requests of a run."""
+    by_trace: dict[str, set[str]] = {}
+    for sp in obs.trace_spans:
+        if sp.trace_id and sp.agent_name:
+            by_trace.setdefault(sp.trace_id, set()).add(sp.agent_name)
+    for c in obs.captures:
+        if c.trace_id and c.system_prompt_sha256:
+            by_trace.setdefault(c.trace_id, set()).add(c.system_prompt_sha256)
+    best = max(sorted(by_trace), key=lambda t: len(by_trace[t]), default=None)
+    return (best, len(by_trace[best])) if best is not None and len(by_trace[best]) >= 2 else None
+
+
 @rule("graph", "AS-306", "AS-307", modes=_BOTH)
 def multi_agent_hygiene(ctx: CheckContext) -> Iterable[Finding]:
     g = _graph(ctx)
@@ -395,7 +420,27 @@ def multi_agent_hygiene(ctx: CheckContext) -> Iterable[Finding]:
     fw = load_yaml("framework_defaults.yml") or {}
     bound = effective_step_bound(obs)
     run_level = bool(bound and bound[1]) and obs.framework in (fw.get("run_level_bound") or [])
-    if not (s and s.aggregate_budget) and run_level and bound:
+    names = (fw.get("whole_run") or {}).get(obs.framework or "") or []
+    whole = next((b for b in obs.bounds if b.value and not b.agent and (b.name in names or b.kind in names)), None)
+    if whole is not None:
+        bound, run_level = (whole.label, whole.value, f"code {whole.code_ref}"), True
+    if not (s and s.aggregate_budget) and obs.framework in (fw.get("no_whole_run") or []) and not run_level:
+        out.append(
+            make_finding(
+                "AS-306",
+                confidence=Confidence.attestation(),
+                severity="attestation",
+                param="aggregate_budget",
+                status_hint="SIGN-OFF",
+                spec_ref=ctx.spec_ref() if s else None,
+                title="aggregate_budget: nothing in this framework limits a whole run",
+                detail=f"{len(g.nodes)} agents, and {obs.framework} has no setting that covers a whole run",
+                reason="What limits a whole run across the agents? This framework has no such setting. Confirm "
+                "under confirmed: in spec.yml.",
+                evidence=f"nodes: {sorted(g.nodes)}",
+            )
+        )
+    elif not (s and s.aggregate_budget) and run_level and bound:
         ctx.pass_(
             PassedCheck(
                 rule_id="AS-306",
@@ -433,22 +478,42 @@ def multi_agent_hygiene(ctx: CheckContext) -> Iterable[Finding]:
                 spec=spec_n,
                 spec_ref=ctx.spec_ref("aggregate_budget", p.key.split(".")[1]),
                 attested=att,
+                code_ref=whole.code_ref if whole is not None else None,
+                where=bound[2] if bound and whole is None else None,
                 evidence=f"{p.key}: spec={th.fmt(spec_n)}; run-level bound: "
                 f"{bound[0] + '=' + th.fmt(bound[1]) if bound else 'none'}",
             )
+    runtime = one_trace_across_agents(obs)
     traced = {sp.trace_id for sp in obs.trace_spans if sp.trace_id}
     agents_in_trace = {sp.agent_name for sp in obs.trace_spans if sp.agent_name}
     builtin = (fw.get("builtin_tracing") or {}).get(obs.framework if obs.framework_confirmed else "")
-    if builtin and not (len(traced) >= 1 and len(agents_in_trace) >= 2):
+    disabled = bool(obs.signal("tracing_disabled"))
+    found = [e.text() for e in obs.trace_evidence] + ([builtin] if builtin and not disabled else [])
+    if runtime:
         ctx.pass_(
             PassedCheck(
                 rule_id="AS-307",
-                subject=obs.framework or "",
-                confidence=Confidence.heuristic(),
-                note=f"{builtin}; not verified from traces",
+                subject=f"one trace id across {runtime[1]} agents",
+                confidence=Confidence.observed(0, 1),
+                note=f"trace {runtime[0][:16]}",
             )
         )
-    elif ctx.effective().get("end_to_end_trace_id", True) and not (len(traced) >= 1 and len(agents_in_trace) >= 2):
+    elif found:  # a mechanism exists; that it reaches every agent and log line is not provable from code
+        out.append(
+            make_finding(
+                "AS-307",
+                confidence=Confidence.attestation(),
+                severity="attestation",
+                param="end_to_end_trace_id",
+                status_hint="SIGN-OFF",
+                title="A trace id exists; that it reaches every agent is not shown",
+                detail="; ".join(found),
+                reason=f"Found: {'; '.join(found)}. Does this one id reach every agent and each log line? Confirm "
+                "under confirmed: in spec.yml.",
+                evidence="; ".join(found),
+            )
+        )
+    elif ctx.effective().get("end_to_end_trace_id", True):
         out.append(
             make_finding(
                 "AS-307",

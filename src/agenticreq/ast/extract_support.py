@@ -14,6 +14,7 @@ from agenticreq.ast.classify import BOUND_PARAMS
 from agenticreq.ast.classify import canonical
 from agenticreq.ast.schema import _name
 from agenticreq.ast.schema import literal
+from agenticreq.data import load_yaml
 from agenticreq.models.finding import SourceRef
 
 
@@ -52,38 +53,8 @@ FUNC_KW_PATTERN = re.compile(
     r"_(fn|func|function|callable|coroutine|handler)$",
     re.IGNORECASE,
 )
-AGENT_CTORS = {
-    "Agent",
-    "CodeAgent",
-    "ToolCallingAgent",
-    "MultiStepAgent",
-    "create_react_agent",
-    "ReActAgent",
-    "AssistantAgent",
-    "ConversableAgent",
-    "FunctionAgent",
-    "create_tool_calling_agent",
-    "UserProxyAgent",
-    "CodeExecutorAgent",
-    "SequentialAgent",
-    "ParallelAgent",
-    "LoopAgent",
-    "CodeActAgent",
-    "AgentExecutor",
-    "initialize_agent",
-    "create_agent",
-    "LlmAgent",
-    "ReAct",
-    "ChatAgent",
-    "create_openai_tools_agent",
-    "create_openai_functions_agent",
-    "create_structured_chat_agent",
-    "create_supervisor",
-    "create_swarm",
-    "OpenAIAgent",
-    "ChatCompletionAgent",
-    "ClaudeAgentOptions",
-}
+_AGENT_CLASSES = load_yaml("agent_classes.yml")
+AGENT_CTORS: set[str] = {c for ctors in _AGENT_CLASSES["frameworks"].values() for c in ctors}
 TOOL_LIST_KWARGS = {"tools", "functions", "allowed_tools", "plugins"}
 #: keyword arguments through which a framework receives tools that exist only at run time
 DYNAMIC_TOOL_KWARGS = {
@@ -134,35 +105,10 @@ BIND_CALLS = {
     "add_plugin",
     "add_plugins",
 }
-BOUND_KWARGS = {
-    "recursion_limit": "recursion_limit",
-    "max_iter": "max_iter",
-    "max_iterations": "max_iterations",
-    "max_turns": "max_turns",
-    "max_steps": "max_steps",
-    "max_retries": "max_retries",
-    "max_execution_time": "max_execution_time",
-    "max_rpm": "max_rpm",
-    "timeout": "timeout",
-    "max_tool_calls": "max_tool_calls",
-    "request_limit": "request_limit",
-    "tool_calls_limit": "tool_calls_limit",
-    "max_consecutive_auto_reply": "max_turns",
-    "max_tool_iterations": "max_iterations",
-    "max_llm_calls": "max_steps",
-    # other frameworks' spelling of the same bound: AutoGen GroupChat / MaxMessageTermination, Haystack Agent,
-    # DSPy ReAct, Semantic Kernel termination strategy and function-choice behaviour, Agno
-    "max_round": "max_turns",
-    "max_messages": "max_turns",
-    "max_agent_steps": "max_steps",
-    "max_iters": "max_iterations",
-    "maximum_iterations": "max_iterations",
-    "maximum_auto_invoke_attempts": "max_iterations",
-    "max_auto_invoke_attempts": "max_iterations",
-    "tool_call_limit": "tool_calls_limit",
-}
-#: constructors whose first positional argument is a step bound: MaxMessageTermination(10)
-BOUND_CALLS = {"MaxMessageTermination": "max_turns"}
+_BOUND_NAMES = load_yaml("bound_names.yml")
+BOUND_KWARGS: dict[str, str] = dict(_BOUND_NAMES["kwargs"])
+AGENT_BOUND_KWARGS: dict[str, str] = dict(_BOUND_NAMES["agent_kwargs"])
+BOUND_CALLS: dict[str, str] = dict(_BOUND_NAMES["calls"])
 GATE_CALLS = {
     "interrupt": "interrupt",
     "request_approval": "approval_call",
@@ -208,6 +154,10 @@ EXCLUDE_KEY = re.compile(
     r"^(tools?|functions?|actions?)_?(excluded?|blocked?|denied|blacklist|denylist)$|^(disallowed|denylist|blacklist)$",
     re.IGNORECASE,
 )
+_APPROVAL_GATES = load_yaml("approval_gates.yml")
+GATE_HOOK_NAMES = frozenset(_APPROVAL_GATES["hook_kwargs"])
+GATE_HOOK_CALLS: dict[str, list[str]] = dict(_APPROVAL_GATES["hook_calls"])
+PERSON_IN_LOOP = frozenset(_APPROVAL_GATES["person_in_loop"])
 #: approval kwargs that belong to one tool (on its decorator / wrapper), never to the whole agent
 _TOOL_SCOPED_GATES = {"needs_approval", "requires_approval", "requires_confirmation", "require_confirmation"}
 GATE_DECORATORS = {
@@ -402,18 +352,11 @@ _TRACE_CALLS = {
 }
 _CALLBACK_KEYS = {"callbacks", "callback_manager"}
 #: agent constructors whose first positional argument is the agent's name (AutoGen)
-_NAMED_FIRST_ARG = {"AssistantAgent", "UserProxyAgent", "ConversableAgent", "CodeExecutorAgent"}
+_NAMED_FIRST_ARG = set(_AGENT_CLASSES["named_first_arg"])
+NAME_KEYS: dict[str, str] = dict(_AGENT_CLASSES["name_keys"])
 #: multi-agent groups: every participant takes turns / is selected by a coordinator (AutoGen teams,
 #: LlamaIndex AgentWorkflow, CrewAI hierarchical crews, AutoGen 0.2 GroupChat)
-_GROUP_CTORS = {
-    "RoundRobinGroupChat",
-    "SelectorGroupChat",
-    "Swarm",
-    "MagenticOneGroupChat",
-    "GroupChat",
-    "AgentWorkflow",
-    "Crew",
-}
+_GROUP_CTORS = set(_AGENT_CLASSES["groups"])
 #: environment switches that turn tracing on when set in code / a .env file
 _TRACE_ENV = {
     "LANGCHAIN_TRACING_V2",

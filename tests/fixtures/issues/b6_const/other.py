@@ -1,0 +1,1 @@
+MAX_NO_PROGRESS = 9

@@ -2,14 +2,38 @@
 
 from __future__ import annotations
 
+import re
 from typing import Iterable
 
 from agenticreq.models.confidence import Confidence
 from agenticreq.models.finding import Finding
+from agenticreq.models.observed import ObservedAgent, UnresolvedAgent
 from agenticreq.rules.base import CheckContext, Mode, rule
 from agenticreq.rules.registry import make_finding
 
 _BOTH: tuple[Mode, ...] = ("check", "audit")
+
+
+_RUNTIME_VALUE = re.compile(r"`([^`]+)`")
+
+
+def _pool_reason(obs: ObservedAgent, u: UnresolvedAgent) -> str:
+    """A pool of agents whose size only the run knows. A run that saw them says how many."""
+    value = _RUNTIME_VALUE.search(u.reason)
+    seen = len({c.system_prompt_sha256 for c in obs.captures if c.system_prompt_sha256})
+    run = f"; a run saw {seen}" if seen else ""
+    return (
+        f"1+ agents built at {u.code_ref} from runtime value `{value.group(1) if value else 'unresolved'}`{run}. "
+        "Write the names under agent_registry, and confirm them under confirmed: in spec.yml."
+    )
+
+
+def _prompt_only(obs: ObservedAgent) -> str:
+    tools = ", ".join(sorted(obs.prompt_only_tools)) or "its tools"
+    return (
+        f"Prompt-only: a code agent gets {tools} as prompt text and calls them from code it writes, so neither the "
+        "code nor a run can show how they are used. Confirm it under confirmed: in spec.yml."
+    )
 
 
 @rule("meta", "AS-901", modes=_BOTH)
@@ -26,6 +50,8 @@ def execution_model(ctx: CheckContext) -> Iterable[Finding]:
                 detail="prompt-only / code agent: tools are Python signatures in the system prompt and "
                 "results land in unattributed execution logs. Tool checks wait for a mock run, never PASS.",
                 evidence=f"{obs.framework_tag()} | {obs.execution_model_evidence or 'CodeAgent'}",
+                reason=_prompt_only(obs),
+                status_hint="SIGN-OFF",
             )
         ]
     out = []
@@ -38,6 +64,8 @@ def execution_model(ctx: CheckContext) -> Iterable[Finding]:
                 detail=f"tools {sorted(obs.prompt_only_tools)} are used by a code agent; "
                 "their invocation cannot be verified at the boundary",
                 evidence=f"{obs.framework_tag()} | {obs.execution_model_evidence}",
+                reason=_prompt_only(obs),
+                status_hint="SIGN-OFF",
             )
         )
     if obs.execution_model == "unknown":
@@ -102,6 +130,8 @@ def unresolved_agents(ctx: CheckContext) -> Iterable[Finding]:
             f"holds are not known statically (reported as one placeholder node, {u.name!r}). "
             "Per-agent role boundary, agent_registry and delegation checks wait for a mock run for them",
             evidence=str(u.code_ref),
+            reason=_pool_reason(obs, u),
+            status_hint="SIGN-OFF",
         )
         for u in obs.unresolved_agents
     ]
@@ -120,6 +150,9 @@ def unresolved_agents(ctx: CheckContext) -> Iterable[Finding]:
                     detail=f"{missing} match no agent found in code; with agents built at runtime they may exist, so "
                     "their tools and delegation wait for a mock run, not passing",
                     evidence=f"unresolved agent constructions: {len(obs.unresolved_agents)}",
+                    reason=f"{', '.join(missing)} match no agent in the code, and agents are built at run time. Confirm "
+                    "them under confirmed: in spec.yml.",
+                    status_hint="SIGN-OFF",
                 )
             )
     return out
@@ -231,7 +264,7 @@ def needs_spec(ctx: CheckContext) -> Iterable[Finding]:
     if ctx.spec is not None:
         return []
     obs = ctx.observed
-    multi = bool(obs and (len(obs.declared_agents) > 1 or obs.edges))
+    multi = bool(obs and (len(obs.declared_agents) > 1 or obs.edges or obs.unresolved_agents))
     fields = [f for f in NEEDS_SPEC if f != "declared_delegation" or multi]
     return [
         make_finding(

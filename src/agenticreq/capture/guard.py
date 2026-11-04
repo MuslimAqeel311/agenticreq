@@ -112,6 +112,12 @@ def dotenv_credential_names(root: Path) -> list[str]:
     return sorted(set(names))
 
 
+def _provider_env() -> dict[str, Any]:
+    from agenticreq.data import load_yaml  # parent process only
+
+    return load_yaml("providers.yml")  # type: ignore[no-any-return]
+
+
 def build_child_env(
     parent: dict[str, str], agent_root: Path, extra: dict[str, str] | None = None
 ) -> tuple[dict[str, str], list[str]]:
@@ -123,6 +129,11 @@ def build_child_env(
         env[k] = FAKE_PREFIX + k.lower()
     for k in dotenv_credential_names(agent_root):
         env[k] = FAKE_PREFIX + k.lower()
+    table = _provider_env()
+    for k in table.get("credential_env") or []:
+        env[k] = FAKE_PREFIX + k.lower()
+    for k, v in (table.get("env_defaults") or {}).items():
+        env.setdefault(k, str(v))
     live = sorted(k for k, v in (extra or {}).items() if LIVE_VALUE.match(v))
     if live:
         raise MockRunRefused(f"mocks.yml env {live} look like live credentials; a mock run never starts with them")
@@ -208,8 +219,9 @@ class SocketGuard:
       guard, so inside a mock run it is replaced by the standard asyncio loop.
     """
 
-    def __init__(self, allow_hosts: list[str]) -> None:
+    def __init__(self, allow_hosts: list[str], llm_hosts: tuple[str, ...] = LLM_HOSTS) -> None:
         self.allow_hosts = allow_hosts
+        self.llm_hosts = llm_hosts
         self.blocked: list[str] = []
         self.llm_misses: list[str] = []
         self.notes: list[str] = []
@@ -238,7 +250,7 @@ class SocketGuard:
 
         def getaddrinfo(host: Any, *a: Any, **k: Any) -> Any:
             h = host.decode() if isinstance(host, bytes) else str(host)
-            if any(x in h for x in LLM_HOSTS):
+            if any(x in h for x in guard.llm_hosts):
                 guard.llm_misses.append(h)
             if h not in ("localhost", "None") and not _is_ip(h) and not guard._allowed(h):
                 # (an IP literal needs no DNS; connect() decides on it)
@@ -348,6 +360,13 @@ _PATH_EVENTS = frozenset(
     }
 )
 _DEVICES = frozenset({"nul", "conout$", "conin$", "con"})
+#: refused writes to one folder before the guard stops answering with PermissionError: on Windows tempfile treats a
+#: PermissionError as "that name is taken" and tries again, up to 10,000 times
+RETRY_CAP = 25
+
+
+class WriteLoopStopped(OSError):
+    """The agent keeps writing to a blocked folder. Not a PermissionError, so no retry loop swallows it."""
 
 
 class ProcessGuard:
@@ -379,6 +398,10 @@ class ProcessGuard:
         self.project = self._norm(project) if project else None
         self.blocked: list[str] = []
         self.active = False
+        #: blocked file -> the scratch file that took its writes, so the run goes on and can read back what it wrote
+        self.diverted: dict[str, str] = {}
+        self._denied: dict[str, int] = {}  # folder -> refused writes
+        self._restore: list[tuple[Any, str, Any]] = []
 
     @staticmethod
     def _norm(path: str) -> str:
@@ -405,12 +428,76 @@ class ProcessGuard:
         write_bits = os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_APPEND | os.O_TRUNC
         return isinstance(flags, int) and bool(flags & write_bits)
 
+    def _note(self, what: str) -> None:
+        if what not in self.blocked:
+            self.blocked.append(what)
+
     def _deny(self, what: str, event: str) -> None:
-        self.blocked.append(what)
+        folder = os.path.dirname(what.removeprefix("write:"))
+        self._denied[folder] = self._denied.get(folder, 0) + 1
+        if self._denied[folder] > RETRY_CAP:
+            raise WriteLoopStopped(
+                f"agenticreq mock run: {RETRY_CAP} writes to {folder or 'the project folder'} were blocked and the "
+                f"agent keeps trying (last: {what.removeprefix('write:')}). To allow it, list it under `allow_write:` "
+                "in mocks.yml."
+            )
+        self._note(what)
         raise PermissionError(
             f"agenticreq mock run: {event} blocked ({what}). To allow a folder for writing, list it "
             "under `allow_write:` in mocks.yml."
         )
+
+    def divert_writes(self, scratch: str) -> None:
+        """Files opened for writing outside the allowed paths go to a scratch file instead, and the path is listed
+        as blocked: the agent's real target is untouched and the run goes on. Whatever goes around ``open()``
+        (``os.open``, native code) still meets the audit hook."""
+        import builtins
+        import io
+        import pathlib
+
+        guard, real_open, real_mkdir = self, builtins.open, os.mkdir
+
+        def diverted(path: str, mode: str) -> str:
+            key = guard._norm(path)
+            if key not in guard.diverted:
+                os.makedirs(scratch, exist_ok=True)
+                guard.diverted[key] = os.path.join(scratch, f"{len(guard.diverted)}-{os.path.basename(key) or 'file'}")
+                if "a" in mode or "+" in mode:
+                    real_open(guard.diverted[key], "ab").close()
+            return guard.diverted[key]
+
+        def checked_open(file: Any, mode: str = "r", *a: Any, **k: Any) -> Any:
+            if guard.active and isinstance(file, (str, bytes, os.PathLike)):
+                path = os.fsdecode(file)
+                if guard._writes(mode, None) and not guard._under_roots(path):
+                    guard._note(f"write:{path}")
+                    return real_open(diverted(path, mode), mode.replace("x", "w"), *a, **k)
+                if guard._norm(path) in guard.diverted:
+                    return real_open(guard.diverted[guard._norm(path)], mode, *a, **k)
+            return real_open(file, mode, *a, **k)
+
+        def checked_mkdir(path: Any, mode: int = 0o777, *a: Any, **k: Any) -> None:
+            if guard.active and isinstance(path, (str, bytes, os.PathLike)):
+                p = os.fsdecode(path)
+                if not guard._under_roots(p) and not guard._leads_to_allowed(p):
+                    guard._note(f"write:{p}")
+                    return None  # the files written under it are diverted too
+            return real_mkdir(path, mode, *a, **k)
+
+        patches: list[tuple[Any, str, Any]] = [
+            (builtins, "open", checked_open),
+            (io, "open", checked_open),
+            (os, "mkdir", checked_mkdir),
+        ]
+        accessor = getattr(pathlib, "_NormalAccessor", None)  # Python 3.10 keeps its own reference to both
+        if accessor is not None:
+            patches += [
+                (accessor, "open", staticmethod(checked_open)),
+                (accessor, "mkdir", staticmethod(checked_mkdir)),
+            ]
+        for owner, attr, new in patches:
+            self._restore.append((owner, attr, getattr(owner, attr)))
+            setattr(owner, attr, new)
 
     def _hook(self, event: str, args: tuple[Any, ...]) -> None:
         if not self.active:
@@ -450,6 +537,9 @@ class ProcessGuard:
 
     def uninstall(self) -> None:
         self.active = False
+        for owner, attr, original in reversed(self._restore):
+            setattr(owner, attr, original)
+        self._restore.clear()
         if getattr(ProcessGuard, "_current", None) is self:
             ProcessGuard._current = None  # type: ignore[attr-defined]
 

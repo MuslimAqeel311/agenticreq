@@ -80,6 +80,19 @@ def _run_observed(run_file: Path, captured: int) -> Optional[ObservedAgent]:
         return None
 
 
+def _commented_out(path: Path, key: str) -> bool:
+    """A top-level ``# key: ...`` line in mocks.yml that names a value, and no live one: why a key looks missing."""
+    import re
+
+    text = path.read_text(encoding="utf-8", errors="replace")
+    return bool(re.search(rf"^#\s*{key}:\s*\S", text, re.M)) and not re.search(rf"^{key}:", text, re.M)
+
+
+def _asked_in(res: Any, run_id: str) -> list[str]:
+    """The tools the canned model asked for in one run, in order."""
+    return list(dict.fromkeys(tc.name for c in res.calls if c.run_id == run_id for tc in c.tool_calls))
+
+
 def _size(n: int) -> str:
     return f"{n} bytes" if n < 1024 else f"{n / 1024:.0f} KB" if n < 1024 * 1024 else f"{n / 1024 / 1024:.1f} MB"
 
@@ -134,7 +147,7 @@ def _never_offered(
 def _observe(
     path: Path, captures: Optional[Path], traces: Optional[Path], mcp: Optional[str], mcp_tools: Optional[Path]
 ) -> ObservedAgent:
-    from agenticreq.capture.discover import load_capture_bundle
+    from agenticreq.capture.discover import load_capture_bundle, load_patched_tools, load_unsupported
     from agenticreq.observe import build_observed
 
     calls, versions = load_capture_bundle(captures) if captures else ([], {})
@@ -157,7 +170,11 @@ def _observe(
         from agenticreq.mcp import list_tools_stdio
 
         tools += list_tools_stdio(mcp)
-    return build_observed(path, captures=calls, spans=spans, mcp_tools=tools, runtime_versions=versions)
+    obs = build_observed(path, captures=calls, spans=spans, mcp_tools=tools, runtime_versions=versions)
+    if captures:
+        obs.patched_tools = load_patched_tools(captures)
+        obs.mock_unsupported = load_unsupported(captures)
+    return obs
 
 
 class FailOn(str, Enum):
@@ -307,6 +324,8 @@ def _mock_run_info(captures: Path, obs: ObservedAgent) -> dict[str, object]:
         "total": total,
         "stale": stale,
         "file": str(captures),
+        "patched_tools": list(obs.patched_tools),
+        "unsupported": list(obs.mock_unsupported),
     }
 
 
@@ -392,8 +411,9 @@ def mock_run(
     lacks = not entry and (not chosen or any(not r.entry for r in chosen))  # a run with no entry: has nothing to run
     entry = entry or next((r.entry for r in chosen if r.entry), None)
     if lacks or not entry:
+        hidden = " (the entry: line is commented out)" if _commented_out(mocks, "entry") else ""
         err.print(
-            f"[red]{escape(str(mocks))} has no entry:[/red] write the function that runs your agent under "
+            f"[red]{escape(str(mocks))} has no entry:[/red]{hidden} write the function that runs your agent under "
             "entry: (e.g. my_package.agent:run), or pass --entry"
         )
         raise typer.Exit(2)
@@ -451,10 +471,23 @@ def mock_run(
         for rid, names in res.offered_by_run().items():
             n_calls = sum(1 for c in res.calls if c.run_id == rid)
             names_shown = [t for t in names if not (obs is not None and obs.is_output_schema(t))]
+            asked = _asked_in(res, rid)
             tail = f": {', '.join(names_shown) if names_shown else 'no tools offered'}"
+            tail += f"; asked for: {', '.join(asked)}" if asked else ""
             err.print(
                 f"mock run {escape(rid)}{' (kept)' if rid in res.kept else ''}: "
                 f"{n_calls} LLM call{'' if n_calls == 1 else 's'}{escape(tail)}"
+            )
+    from agenticreq.ast.classify import is_handoff_tool
+
+    for name in res.unsupported:
+        err.print(f"mock run is not supported for {escape(name)}")
+    for rid in res.run_ids:
+        handoffs = [t for t in _asked_in(res, rid) if is_handoff_tool(t)]
+        if len(handoffs) > 1:
+            err.print(
+                f"the canned model followed every handoff in {escape(rid)} ({escape(', '.join(handoffs))}). To take "
+                "one path, give a run its own order: under runs: in mocks.yml"
             )
     err.print(f"captured {cap}/{tot} LLM calls in {res.runs} run(s)")
     tools_seen = [t for t in offered if t not in schemas]
@@ -472,7 +505,7 @@ def mock_run(
     for path in res.blocked_writes()[:5]:
         rel_path = _rel(path)
         err.print(f"blocked write to {escape(rel_path)}; to allow it, add it under allow_write: in mocks.yml")
-    other = [b for b in res.egress_blocked if not b.startswith("write:")]
+    other = list(dict.fromkeys(b for b in res.egress_blocked if not b.startswith("write:")))
     if other:
         err.print(f"blocked during the run (network / other programs): {other[:5]}")
     for n in res.notes:
@@ -515,6 +548,7 @@ def mocks_cmd(
         err.print(f"[red]{escape(str(out))} exists[/red] - refusing to overwrite (use --force)")
         raise typer.Exit(2)
     prohibited: set[str] = set()
+    effects: dict[str, str] = {}
     spec_path = spec or (Path("spec.yml") if Path("spec.yml").is_file() else None)
     if spec_path is not None:
         from agenticreq.loader import load_spec
@@ -522,8 +556,9 @@ def mocks_cmd(
         loaded = load_spec(spec_path)
         if loaded.spec is not None:
             prohibited = loaded.spec.prohibited_tools()
+            effects = dict(loaded.spec.tool_effects or {})
     root = (path if path.is_dir() else path.parent).resolve()
-    text = render_mocks(root, extract(path), prohibited)
+    text = render_mocks(root, extract(path), prohibited, effects)
     out.write_text(text, encoding="utf-8")
     import yaml
 
@@ -990,6 +1025,7 @@ def validate(
         )
         raise typer.Exit(2 if left else 0)
     report = validate_spec(spec)
+    report.metadata["spec_file"] = str(spec)
     _emit(report, format, output)
     raise typer.Exit(report.exit_code)
 

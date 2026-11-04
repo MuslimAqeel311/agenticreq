@@ -7,6 +7,7 @@ leaves out is only reported where a gate is expected (confidence_threshold at cr
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Iterable
 
 from agenticreq import thresholds as th
@@ -18,12 +19,28 @@ from agenticreq.rules.base import CheckContext, rule
 from agenticreq.rules.registry import make_finding
 
 
-def _named(ctx: CheckContext, *words: str, seconds: bool = False) -> float | None:
-    """The value of the one project constant named after this limit (ast/constants.py), else None."""
-    from agenticreq.ast.constants import find
+@dataclass(frozen=True)
+class Named:
+    """What the project's constants say about a limit: a value and where, several values, or nothing."""
 
-    hit = find(ctx.observed.root, *words, seconds=seconds) if ctx.observed is not None else None
-    return hit[0] if hit else None
+    value: float | None = None
+    where: str | None = None
+    several: str | None = None
+
+
+def named(ctx: CheckContext, *words: str, seconds: bool = False) -> Named:
+    """The project constant named after a limit; several different values are settled by the files of the agent."""
+    from agenticreq.ast.constants import Several, lookup
+
+    obs = ctx.observed
+    if obs is None:
+        return Named()
+    near = tuple(sorted({r.file for t in obs.declared_tools.values() if (r := t.code_ref)}))
+    near += tuple(sorted({r.file for a in obs.declared_agents if (r := a.code_ref)}))
+    hit = lookup(obs.root, *words, seconds=seconds, near=near)
+    if isinstance(hit, Several):
+        return Named(several=hit.text())
+    return Named(hit[0], hit[2]) if hit else Named()
 
 
 def _seconds(t: str) -> float | None:
@@ -60,16 +77,17 @@ def unreadable_numbers(ctx: CheckContext) -> Iterable[Finding]:
         if spec_n is None and not asked:
             continue
         att = th.attestation(ctx, p)
-        code = _named(ctx, "max", "chars") if p is th.MAX_CHARS else None  # MAX_CHARS = 6000 in the code
+        hit = named(ctx, "max", "chars") if p is th.MAX_CHARS else Named()  # MAX_CHARS = 6000 in the code
         out += th.emit(
             ctx,
             p,
-            th.judge(p, risk, spec=spec_n, code=code, confirmed=att is not None),
+            th.judge(p, risk, spec=spec_n, code=hit.value, several=hit.several, confirmed=att is not None),
             risk=risk,
             spec=spec_n,
-            code=code,
+            code=hit.value,
             spec_ref=ctx.spec_ref(*p.key.split(".")),
             attested=att,
+            where=hit.where,
         )
     p = th.APPROVAL_TIMEOUT
     if not th.spec_todo(ctx, p):
@@ -97,18 +115,19 @@ def unreadable_numbers(ctx: CheckContext) -> Iterable[Finding]:
                     )
                 )
                 continue
-            secs, code = _seconds(t), _named(ctx, "approval", "timeout", seconds=True)
-            if secs is not None and code is not None:  # APPROVAL_TIMEOUT_S = 4 * 3600: compared in seconds
+            secs, hit = _seconds(t), named(ctx, "approval", "timeout", seconds=True)
+            if secs is not None and (hit.value is not None or hit.several):  # compared in seconds
                 out += th.emit(
                     ctx,
                     p,
-                    th.judge(p, risk, spec=secs, code=code, confirmed=att is not None),
+                    th.judge(p, risk, spec=secs, code=hit.value, several=hit.several, confirmed=att is not None),
                     risk=risk,
                     spec=secs,
-                    code=code,
+                    code=hit.value,
                     spec_ref=ctx.spec_ref("approval_required", i, "timeout"),
                     attested=att,
                     evidence=f"approval_required[{i}] ({a.tool}): timeout {t}",
+                    where=hit.where,
                 )
                 continue
             out += th.emit(

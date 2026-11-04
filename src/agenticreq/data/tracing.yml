@@ -1,0 +1,20 @@
+# Each framework's tracing mechanism and the id it exposes, listed only where the installed package provides it (each
+# name was read in that package's source). `tokens` are the names that show the project uses it. Frameworks left out
+# expose no run id of their own; OpenTelemetry and a project's own correlation id still count for them.
+version: 1
+frameworks:
+  openai-agents: {mechanism: Agents SDK tracing, id: trace_id, tokens: [trace, gen_trace_id, trace_id, RunConfig]}
+  langgraph: {mechanism: LangChain run tree, id: run_id, tokens: [run_id, RunnableConfig]}
+  langchain: {mechanism: LangChain run tree, id: run_id, tokens: [run_id, RunnableConfig]}
+  claude-agent-sdk: {mechanism: Claude session, id: session_id, tokens: [session_id]}
+  google-adk: {mechanism: ADK invocation, id: invocation_id, tokens: [invocation_id]}
+  autogen: {mechanism: AutoGen runtime tracing, id: trace id of its tracer, tokens: [tracer_provider]}
+  llamaindex: {mechanism: workflow run, id: run_id, tokens: [run_id]}
+  pydantic-ai: {mechanism: PydanticAI instrumentation, id: run_id, tokens: [run_id, instrument, InstrumentationSettings]}
+  haystack: {mechanism: Haystack tracer, id: trace id of its tracer, tokens: [tracer]}
+  agno: {mechanism: Agno run, id: run_id, tokens: [run_id, session_id]}
+  semantic-kernel: {mechanism: OpenTelemetry in Semantic Kernel, id: trace id of its tracer, tokens: [tracer_provider]}
+#: framework-neutral: calls that create a trace, and calls that carry it across a boundary
+otel:
+  create: [start_as_current_span, start_span, get_tracer, TracerProvider, set_tracer_provider]
+  carry: [inject, extract, use_span, attach]

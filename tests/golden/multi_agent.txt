@@ -36,5 +36,5 @@ CHECK WITH A MOCK RUN (4)
                       mock-run
 
 PASSED (2)
-  ✓ bounds.max_steps  Found in code: 5. Also: Found in code: 10.
-  ✓ version_pinning   Found in code: gpt-4o-2024-08-06.
+  ✓ bounds.max_steps  Found in code: 5 (agent.py:26). Also: Found in code: 10 (agent.py:27).
+  ✓ version_pinning   Found in code: gpt-4o-2024-08-06 (dated suffix -YYYY-MM-DD, agent.py:19).

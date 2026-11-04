@@ -1,0 +1,17 @@
+agent_id: biller
+risk_level: medium
+goal: {statement: Bill customers, done_criteria: [invoice sent]}
+out_of_scope: [legal advice]
+prohibited: []
+approval_required: []
+limits: []
+escalation:
+  - {metric: risk_score, op: ">=", threshold: 8, to: lead}
+untrusted_inputs: []
+owner: owner@example.com
+technical_owner: eng@example.com
+data_rules: {}
+dry_run_required: true
+bounds: {max_steps: 10, max_retries: 5, max_tool_calls: 3, max_duration_s: 300}
+progress_guard: {max_no_progress_steps: 6}
+rate_limits: {requests_per_minute: 20}

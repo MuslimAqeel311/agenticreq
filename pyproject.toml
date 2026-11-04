@@ -51,6 +51,8 @@ test = [
   "httpx>=0.25",
   "httpx2>=2.0",
   "cedarpy>=4.0",  # used by tests/test_export_types.py (skipped when absent)
+  "requests>=2.31",  # the mock run hooks it when an agent uses it (skipped when absent)
+  "aiohttp>=3.9",
 ]
 dev = [
   "agenticreq[test]",

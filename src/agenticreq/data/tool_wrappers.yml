@@ -1,0 +1,12 @@
+# Where the real function sits inside a tool object or tool class, innermost first. A `patch:` in mocks.yml stubs it in
+# place, so the wrapper keeps its type and the framework still accepts it. Only the first level that exists is
+# stubbed: a framework's own run() must keep working around the stub. A new framework needs a word here.
+version: 1
+levels:
+  # func / coroutine: LangChain, CrewAI, Google ADK; function: PydanticAI, Haystack; _func: AutoGen; _fn: LlamaIndex;
+  # entrypoint: Agno; method: Semantic Kernel; forward: smolagents; on_invoke_tool: OpenAI Agents
+  - [func, coroutine, function, _func, fn, _fn, _async_fn, entrypoint, method, forward, on_invoke_tool]
+  - [_run, _arun]                 # a tool class that overrides these
+  - [run, arun]
+#: these hold an async function even when their wrapper hides it
+async_attrs: [coroutine, _arun, arun, on_invoke_tool, _async_fn]

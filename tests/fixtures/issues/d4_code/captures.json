@@ -1,0 +1,4 @@
+{"entry": "agent.py:main", "runs": 1, "coverage": "1/1", "run_ids": ["run-0"], "calls": [
+ {"index": 0, "run_id": "run-0", "url": "https://api.openai.com/v1/chat/completions", "provider": "openai_chat",
+  "model": "gpt-4o-2024-08-06", "system_prompt": "s", "system_prompt_sha256": "abc", "message_count": 1,
+  "tools": [], "tool_calls": [], "prior_tool_calls": [], "tool_results": [], "synthetic": true}]}

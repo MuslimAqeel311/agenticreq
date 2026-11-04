@@ -29,7 +29,7 @@ def _lines(report: object) -> dict[str, tuple[str, str]]:
     return {ln.param: (ln.status, ln.reason) for ln in results(report)}  # type: ignore[arg-type]
 
 
-@pytest.mark.parametrize("variant,approval", [("gated", "PASS"), ("ungated", "CHECK")])
+@pytest.mark.parametrize("variant,approval", [("gated", "PASS"), ("ungated", "GAP")])
 def test_discover_run_decides_prohibited_and_approval(tmp_path: Path, variant: str, approval: str) -> None:
     (tmp_path / "mocks.yml").write_text("tools: {}\n", encoding="utf-8")
     caps = tmp_path / "c.json"

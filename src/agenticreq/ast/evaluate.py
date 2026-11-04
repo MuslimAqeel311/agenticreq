@@ -166,6 +166,9 @@ class Evaluator:
     def _row_field(self, fr: Frame, node: ast.Attribute, d: int) -> tuple[Frame, ast.expr] | None:
         """``X(...).attr`` for a project dataclass / NamedTuple ``X``: the keyword, or the positional argument in the
         order the class declares its fields."""
+        if isinstance(node.value, ast.Dict) and d <= 20:  # a row read from a file, or an enum member
+            hit = self._index(node.value, node.attr)
+            return self.reduce(fr, hit, d + 1) if hit is not None else None
         if not isinstance(node.value, ast.Call) or d > 20:
             return None
         call = node.value
@@ -732,6 +735,24 @@ class Evaluator:
             return str(p)
 
     # ------------------------------------------------------------ iteration
+    def _enum_members(self, fr: Frame, it: ast.AST) -> list[ast.expr] | None:
+        """``for r in Role``: one row per member, with its ``.name`` and ``.value``."""
+        if not isinstance(it, (ast.Name, ast.Attribute)):
+            return None
+        r = self.symbols.resolve(fr.fc, it)
+        if r is None or not isinstance(r.node, ast.ClassDef):
+            return None
+        if not any("Enum" in (_name(b) or "") for b in r.node.bases):
+            return None
+        return [
+            ast.Dict(
+                keys=[ast.Constant(value="name"), ast.Constant(value="value")],
+                values=[ast.Constant(value=s.targets[0].id), s.value],
+            )
+            for s in r.node.body
+            if isinstance(s, ast.Assign) and isinstance(s.targets[0], ast.Name)
+        ]
+
     def rows(self, fr: Frame, it: ast.AST, depth: int = 0) -> list[ast.expr] | None:
         """The elements ``for x in it`` visits, when ``it`` is known statically; else None."""
         if depth > _MAX_DEPTH:
@@ -779,6 +800,9 @@ class Evaluator:
                     rng = range(*args)
                     return [ast.Constant(value=i) for i in rng] if len(rng) <= 200 else None
                 return None
+        members = self._enum_members(fr, it)
+        if members is not None:
+            return members
         rfr, coll = self.reduce(fr, it, d)
         if isinstance(coll, ast.Dict):
             return [k for k in coll.keys if k is not None]

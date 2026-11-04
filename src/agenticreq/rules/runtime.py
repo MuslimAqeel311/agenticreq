@@ -93,14 +93,15 @@ def progress_guard(ctx: CheckContext) -> Iterable[Finding]:
         # no number in spec.yml, or no real run to measure it against: code cannot read this limit, so it is
         # signed off under confirmed:, or a mock run checks it
         att = th.attestation(ctx, p)
-        from agenticreq.ast.constants import find
+        from agenticreq.rules.numeric import named
 
-        hit = find(obs.root, "no", "progress")  # MAX_NO_PROGRESS_STEPS = 5: the code names the limit it sets
-        code = hit[0] if hit else None
+        hit = named(ctx, "no", "progress")  # MAX_NO_PROGRESS_STEPS = 5: the code names the limit it sets
+        code = hit.value
         return th.emit(
             ctx,
             p,
-            th.judge(p, risk, spec=limit, code=code, confirmed=att is not None),
+            th.judge(p, risk, spec=limit, code=code, several=hit.several, confirmed=att is not None),
+            where=hit.where,
             risk=risk,
             spec=limit,
             code=code,
@@ -239,6 +240,20 @@ def observed_rate(ctx: CheckContext) -> Iterable[Finding]:
     runs = [r for r in real_runs(obs) if len(r.times) >= 2]
     if not runs:  # no timestamps to measure a rate from: signed off under confirmed:, or a mock run checks it
         att = th.attestation(ctx, p)
+        rates = [b for b in obs.bounds if b.kind == "max_rpm" and b.value is not None]  # a rate, read from the code
+        if rates:
+            loosest = max(rates, key=lambda b: b.value or 0)
+            return th.emit(
+                ctx,
+                p,
+                th.judge(p, risk, spec=rpm, code=loosest.value),
+                risk=risk,
+                spec=rpm,
+                code=loosest.value,
+                spec_ref=ctx.spec_ref("rate_limits") if ctx.loaded else None,
+                code_ref=loosest.code_ref,
+                evidence=loosest.describe(),
+            )
         return th.emit(
             ctx,
             p,

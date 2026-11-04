@@ -268,6 +268,15 @@ def _model_from_node(
         a = ex._env_assumed(fc, node)
         if a is not None and isinstance(a.value, str) and looks_like_model(a.value):
             val, assumed = a.value, a.label
+    if not val:  # a value in a static config file: CFG["model"] of yaml.safe_load(open("models.yml"))
+        val = ex.ev.string(ex.ev.frame_of(fc, node), node)
+    if not val and isinstance(node, ast.Attribute):  # a settings object's default: settings.model
+        from agenticreq.ast.constants import plain_field, setting_text
+
+        val = setting_text(ex.obs.root, node.attr)
+        assumed = (
+            None if val is None or plain_field(ex.obs.root, node.attr) else f"default in code of settings.{node.attr}"
+        )
     if not val and call is not None and (why := _runtime_model_source(ex, fc, node)):
         if not any(u.code_ref == ref for u in ex.obs.unresolved_models):
             ex.obs.unresolved_models.append(UnresolvedModel(code_ref=ref, reason=why))

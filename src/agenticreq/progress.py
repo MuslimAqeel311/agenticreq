@@ -350,14 +350,27 @@ def can_print_unicode(stream: Any) -> bool:
 
 def held_back(p: Progress, lines: list[Any]) -> dict[str, str]:
     """The result groups check does not show yet at this step, each with the line that stands in for it."""
-    n = {g: sum(1 for ln in lines if ln.group == g) for g in ("sign_off", "mock_run", "passed")}
+    from agenticreq.models.verdict import distinct
+
+    names = {
+        g: list(dict.fromkeys(ln.param for ln in distinct(lines) if ln.group == g))
+        for g in ("sign_off", "mock_run", "passed")
+    }
+    n = {g: sum(1 for ln in distinct(lines) if ln.group == g) for g in names}
+
+    def listed(g: str) -> str:  # every counted item is named, even while its group waits
+        return f": {', '.join(names[g])}" if names[g] else ""
+
     out: dict[str, str] = {}
     if not p.step_done("spec"):
-        out["sign_off"] = f"Human sign-off: {_plural(n['sign_off'], 'item')}, shown after the spec is complete"
-        out["passed"] = f"Passed: {_plural(n['passed'], 'item')}, shown after the spec is complete"
+        out["sign_off"] = (
+            f"Human sign-off: {_plural(n['sign_off'], 'item')}, shown after the spec is complete{listed('sign_off')}"
+        )
+        out["passed"] = f"Passed: {_plural(n['passed'], 'item')}, shown after the spec is complete{listed('passed')}"
     if not p.step_done("check"):
         out["mock_run"] = (
-            f"Check with a mock run: {_plural(n['mock_run'], 'item')}, shown after the spec vs project gaps are fixed"
+            f"Check with a mock run: {_plural(n['mock_run'], 'item')}, shown after the spec vs project gaps are "
+            f"fixed{listed('mock_run')}"
         )
     return out
 

@@ -154,7 +154,7 @@ def entries(
 ) -> list[Entry]:
     """Every not_needed parameter: written on the field, or answered not_needed under confirmed:."""
     from agenticreq.models.verdict import sentence
-    from agenticreq.signoff import assess
+    from agenticreq.signoff import assess, why_text
 
     answers = {a.clause: a for a in (spec.confirmed if spec else []) if a.answer == VALUE}
     out: list[Entry] = []
@@ -166,9 +166,10 @@ def entries(
             out.append(Entry(param, NO_REASON, True, line))
             continue
         st = assess(a, today, root)
-        reason = sentence(a.reason) if a.reason else NO_REASON
+        words = why_text(a)
+        reason = sentence(words) if words else NO_REASON
         if st.state == VALUE:
-            out.append(Entry(param, reason, not a.reason, line))
+            out.append(Entry(param, reason, not words, line))
         else:  # a field the answer needs is missing (by, date, reason): it does not count yet
             out.append(
                 Entry(

@@ -43,9 +43,10 @@ HUMAN SIGN-OFF (16 left · 0 signed)
   SIGN-OFF regression_triggers     Do changes trigger the regression suite? Confirm under confirmed:
                                    in spec.yml.
 
-Check with a mock run: 2 items, shown after the spec vs project gaps are fixed
+Check with a mock run: 2 items, shown after the spec vs project gaps are fixed: prohibited,
+  runtime_evidence
 
 PASSED (3)
   ✓ role_boundary     Found in code: lookup_order.
-  ✓ bounds.max_steps  Found in code: 10.
-  ✓ version_pinning   Found in code: gpt-4o-2024-08-06.
+  ✓ bounds.max_steps  Found in code: 10 (agent.py:16).
+  ✓ version_pinning   Found in code: gpt-4o-2024-08-06 (dated suffix -YYYY-MM-DD, agent.py:11).

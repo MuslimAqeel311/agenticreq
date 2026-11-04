@@ -11,7 +11,7 @@ from __future__ import annotations
 import datetime as dt
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 RiskLevel = Literal["low", "medium", "high", "critical"]
 TimeoutAction = Literal["safe_stop", "deny", "escalate", "proceed"]
@@ -190,9 +190,21 @@ class Attestation(_Strict):
 class Waiver(_Strict):
     rule_id: str
     subject: str | None = None
-    reason: str
+    reason: str | None = None
+    evidence: str | None = None
     approved_by: str | None = None
     expires: dt.date | None = None
+
+    @model_validator(mode="after")
+    def _says_why(self) -> Waiver:
+        if not (self.reason or self.evidence):
+            raise ValueError("a waiver needs reason: or evidence:")
+        return self
+
+    @property
+    def why(self) -> str:
+        both = [x for x in (self.reason, self.evidence) if x]
+        return " (evidence: ".join(both) + ")" if len(both) == 2 else "".join(both)
 
 
 TIER1_FIELDS: tuple[str, ...] = (
@@ -260,6 +272,7 @@ TIER2_FIELDS: tuple[str, ...] = (
     "audit_log",
     "log_immutable",
     "version_pinning",
+    "pinned_models",
     "regression_triggers",
     "rollback_path",
     "drift_monitors",
@@ -348,6 +361,8 @@ class AgentSpec(_Strict):
     audit_log: bool | None = None
     log_immutable: bool | None = None
     version_pinning: bool | None = None
+    #: model ids the owner states are fixed versions (an Azure deployment, a local tag): the code must use these
+    pinned_models: list[str] | None = None
     regression_triggers: list[str] | None = None
     rollback_path: str | None = None
     drift_monitors: list[str] | None = None

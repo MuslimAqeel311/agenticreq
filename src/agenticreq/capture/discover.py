@@ -59,6 +59,10 @@ class DiscoverResult:
     by_run: dict[str, dict[str, list[str]]] = field(default_factory=dict)
     #: run ids kept from the file that was already saved (--keep), not run now
     kept: list[str] = field(default_factory=list)
+    #: tools mocks.yml replaced with `patch:` in these runs: only their real body did not run
+    patched_tools: list[str] = field(default_factory=list)
+    #: providers or transports the run cannot intercept (data/providers.yml): their items go to Human sign-off
+    unsupported: list[str] = field(default_factory=list)
 
     @property
     def coverage(self) -> tuple[int, int]:
@@ -71,13 +75,15 @@ class DiscoverResult:
         where it happened and the next step. A run that crashed, timed out, captured nothing, missed LLM calls or
         changed the agent's files must never look like an all-clear."""
         cap, tot = self.coverage
+        if self.unsupported:  # nothing a run can show: not a failed run, and the items become sign-offs
+            return []
         out = [explain(rid, self.failures.get(rid), msg, cap, self, python) for rid, msg in self.run_errors.items()]
         if self.llm_misses:
             hosts = ", ".join(sorted({m.split(" ")[-1] for m in self.llm_misses})[:3])
             out.append(
                 f"mock-run captured {cap} of {tot} model calls. {tot - cap} call(s) went to {hosts} through an "
-                "HTTP client the mock run cannot capture (only httpx / httpx2 are captured, which the OpenAI, "
-                "Anthropic and LangChain SDKs use). Use such a client, or replace that call with patch: in "
+                "HTTP client the mock run cannot capture (only httpx, httpx2, requests and aiohttp are captured, "
+                "which the OpenAI, Anthropic and LangChain SDKs use). Use such a client, or replace that call with patch: in "
                 f"mocks.yml, then run: {_NEXT}"
             )
         if cap == 0 and not self.run_errors and not self.llm_misses:
@@ -128,6 +134,8 @@ class DiscoverResult:
             "offered_tools": self.offered_tools(),
             "run_ids": self.run_ids,
             "by_run": self.by_run,
+            "patched_tools": self.patched_tools,
+            "unsupported": self.unsupported,
             "calls": [c.model_dump(mode="json", exclude={"raw_request"}) for c in self.calls],
         }
 
@@ -160,6 +168,8 @@ def _crash_hint(msg: str, python: str | None) -> str:
 
 
 _NEXT = "agenticreq mock-run"
+#: where frameworks keep per-user config, cache and data (Linux and macOS / Windows)
+_USER_DIRS = ("XDG_CONFIG_HOME", "XDG_CACHE_HOME", "XDG_DATA_HOME", "XDG_STATE_HOME", "APPDATA", "LOCALAPPDATA")
 
 
 def _calls(n: int) -> str:
@@ -190,11 +200,21 @@ def explain(
     if kind == "Timeout":
         step = f.get("step") or {}
         tools = ", ".join(step.get("last_tools") or []) or "none"
-        return (
+        head = (
             f"mock-run captured {_calls(int(step.get('calls') or 0))} before the {res.timeout:g}s limit stopped "
-            f"{rid} (last step: model call {int(step.get('calls') or 0)}, tools offered: {tools}). The agent may "
-            f"wait for input or loop. Raise --timeout, or fix what it waits for, then run: {_NEXT}"
+            f"{rid} (last step: model call {int(step.get('calls') or 0)}, tools offered: {tools})."
         )
+        blocked = step.get("blocked") or []
+        if blocked:
+            return (
+                f"{head} The last blocked write was {blocked[-1]}: the agent may be retrying it. List that folder "
+                f"under allow_write: in mocks.yml, then run: {_NEXT}"
+            )
+        return (
+            f"{head} The agent may wait for input or loop. Raise --timeout, or fix what it waits for, then run: {_NEXT}"
+        )
+    if "agenticreq mock run:" in msg:  # the write guard stopped it: say which file, and the key that allows it
+        return f"{lead}. The run stopped{at} at a blocked write. {msg.removeprefix('agenticreq mock run: ')}. Then run: {_NEXT}"
     if f.get("entry_missing"):
         return (
             f"{lead}. The entry point {res.entry} was not found ({err}). Fix entry: in mocks.yml (module:function "
@@ -205,7 +225,8 @@ def explain(
         where_py = python or sys.executable
         if str(mod).split(".")[0] == "agenticreq":  # the agent's environment is not the one agenticreq is in
             return (
-                f"{lead}. agenticreq is not installed in {where_py}, the environment that runs your agent: "
+                f"{lead}. agenticreq is not installed in {where_py}, the environment that runs your agent "
+                f"(agenticreq itself runs from {sys.executable}, started as {sys.argv[0]}): "
                 f"{WRONG_ENV}, then run: {_NEXT}"
             )
         return (
@@ -335,6 +356,51 @@ def check_framework_versions(root: Path, python: str | None, notes: list[str] | 
     return found
 
 
+def unsupported_transports(res: DiscoverResult, table: dict[str, Any]) -> list[str]:
+    """The providers and transports this run met that cannot be intercepted at the HTTP client layer."""
+    rows = table.get("unsupported") or {}
+    out = [
+        h["name"]
+        for h in rows.get("hosts") or []
+        if any(h["match"] in m for m in [*res.llm_misses, *res.egress_blocked])
+    ]
+    out += [name for mod, name in (rows.get("frameworks") or {}).items() if f"module:{mod}" in res.versions]
+    return list(dict.fromkeys(out))
+
+
+def scratch_config_dirs(tmp: str, python: str | None = None) -> dict[str, str]:
+    """Per-user folders for the run, inside its scratch folder: frameworks keep config, caches and databases under
+    the home folder, and write there freely (also when the real folders are read-only), while the user's own files
+    stay as they are. Packages installed with ``pip --user`` stay importable."""
+    home = Path(tmp) / "user" / "home"
+    home.mkdir(parents=True, exist_ok=True)
+    out = {k: str(Path(tmp) / "user" / k.lower()) for k in _USER_DIRS}
+    out.update({"HOME": str(home), "USERPROFILE": str(home)})
+    base = _user_base(python)
+    if base:
+        out["PYTHONUSERBASE"] = base
+    pyenv = Path.home() / ".pyenv"
+    if pyenv.is_dir():  # a shim finds its interpreters under the real home
+        out.setdefault("PYENV_ROOT", os.environ.get("PYENV_ROOT", str(pyenv)))
+    return out
+
+
+def _user_base(python: str | None) -> str:
+    """Where ``pip --user`` puts packages for this interpreter (it is worked out from the home folder)."""
+    try:
+        proc = subprocess.run(
+            [python or sys.executable, "-c", "import site; print(site.getuserbase())"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            encoding="utf-8",
+            errors="replace",
+        )
+    except (OSError, subprocess.SubprocessError):
+        return ""
+    return proc.stdout.strip() if proc.returncode == 0 else ""
+
+
 def discover(
     entry: str,
     *,
@@ -378,7 +444,11 @@ def discover(
     if target.endswith(".py"):
         abs_entry = str(Path(target).resolve()) + (":" + func if func else "")  # noqa: F841
 
+    from agenticreq.data import load_yaml
+
     with tempfile.TemporaryDirectory(prefix="agenticreq-") as tmp:
+        env.update(scratch_config_dirs(tmp, python))
+        wrappers = load_yaml("tool_wrappers.yml")
         env["PYTHONPATH"] = os.pathsep.join(x for x in (_isolated_package(tmp), env.get("PYTHONPATH", "")) if x)
         for run_id, spec in plan:
             run_entry, run_args = entry, call_args
@@ -401,6 +471,9 @@ def discover(
                 "mocks_data": mocks.for_run(spec.name if spec is not None else None).to_dict(),
                 "allow_write": allowed,
                 "call_args": run_args,
+                "providers": load_yaml("providers.yml"),
+                "wrapper_levels": wrappers["levels"],
+                "async_attrs": list(wrappers["async_attrs"]),
             }
             cfg_path = Path(tmp) / f"{fname}.cfg.json"
             cfg_path.write_text(json.dumps(cfg), encoding="utf-8")
@@ -452,6 +525,7 @@ def discover(
             }
             res.notes += [n for n in data.get("notes") or [] if n not in res.notes]
             res.libs_hooked = sorted(set(res.libs_hooked) | set(data["libs_hooked"]))
+            res.patched_tools += [t for t in data.get("patched_tools") or [] if t not in res.patched_tools]
             res.versions.update(data.get("versions") or {})
             if data.get("error"):
                 res.run_errors[run_id] = data["error"]
@@ -459,6 +533,7 @@ def discover(
                 res.failures[run_id] = data["failure"]
             res.rejections += [r for r in data.get("rejections") or [] if r not in res.rejections]
 
+    res.unsupported = unsupported_transports(res, load_yaml("providers.yml"))
     after = tree_hashes(root)
     changed = sorted(k for k in set(before) | set(after) if before.get(k) != after.get(k))
     inside = [k for k in changed if allowed and under(root / k, allowed)]
@@ -516,6 +591,8 @@ def _merge_kept(res: DiscoverResult, old: dict[str, Any]) -> None:
         res.egress_blocked = [m for v in by_run.values() for m in v.get("egress_blocked", [])] + res.egress_blocked
     res.run_errors = {**{k: v for k, v in (old.get("run_errors") or {}).items() if k in keep}, **res.run_errors}
     res.libs_hooked = sorted(set(res.libs_hooked) | set(old.get("libs_hooked") or []))
+    res.patched_tools += [str(t) for t in old.get("patched_tools") or [] if t not in res.patched_tools]
+    res.unsupported += [str(t) for t in old.get("unsupported") or [] if t not in res.unsupported]
     res.versions = {**{str(k): str(v) for k, v in (old.get("versions") or {}).items()}, **res.versions}
     res.notes = [*[n for n in old.get("notes") or [] if n not in res.notes], *res.notes]
     seen = {r for r, _ in res.wrote}
@@ -562,6 +639,25 @@ def load_capture_bundle(path: str | Path) -> tuple[list[CapturedCall], dict[str,
         return from_spike(data)
     versions = data.get("versions", {}) if isinstance(data, dict) else {}
     return load_captures(path), {str(k): str(v) for k, v in versions.items()}
+
+
+def _saved_list(path: str | Path, key: str) -> list[str]:
+    try:
+        data = json.loads(Path(path).read_text(encoding="utf-8-sig"))
+    except (OSError, ValueError):
+        return []
+    names = data.get(key) if isinstance(data, dict) else None
+    return [str(t) for t in names] if isinstance(names, list) else []
+
+
+def load_patched_tools(path: str | Path) -> list[str]:
+    """The tools a saved mock run replaced with ``patch:`` (a file from another tool lists none)."""
+    return _saved_list(path, "patched_tools")
+
+
+def load_unsupported(path: str | Path) -> list[str]:
+    """What a saved mock run could not intercept."""
+    return _saved_list(path, "unsupported")
 
 
 def load_captures(path: str | Path) -> list[CapturedCall]:

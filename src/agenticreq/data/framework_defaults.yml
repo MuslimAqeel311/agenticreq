@@ -14,6 +14,18 @@ step_bounds:
 # Frameworks whose loop bound counts across every agent of one run (handoffs / subgraphs included),
 # so it is an aggregate budget for AS-306. CrewAI's max_iter is per agent and is not listed.
 run_level_bound: [openai-agents, langgraph]
+# Settings that limit one whole run, whatever agent is active (each name read from the framework's source).
+whole_run:
+  openai-agents: [max_turns]
+  langgraph: [recursion_limit]
+  google-adk: [max_llm_calls]
+  pydantic-ai: [request_limit]
+  autogen: [MaxMessageTermination, max_messages, max_turns]
+  semantic-kernel: [maximum_iterations]
+  claude-agent-sdk: [max_turns]
+  llamaindex: [max_iterations]
+# Frameworks with no setting that covers a whole run: a person says what limits it, so a missing one is a sign-off.
+no_whole_run: [crewai, smolagents, haystack, agno]
 # Frameworks that create one trace per run spanning all agents by default (AS-307).
 builtin_tracing:
   openai-agents: "agents.tracing: one trace per Runner.run, handoffs included (unless tracing is disabled)"

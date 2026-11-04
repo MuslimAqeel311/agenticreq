@@ -4,27 +4,48 @@ Supported wire formats (see SCOPE.md for what is not):
 * OpenAI Chat Completions   POST …/chat/completions
 * OpenAI Responses          POST …/responses
 * Anthropic Messages        POST …/messages   (incl. beta.messages)
+* Gemini generateContent    POST …/models/<m>:generateContent, :streamGenerateContent
+
+Which format a request is comes from data/providers.yml. A mock run gets the table from its parent through
+``configure``, so the agent's environment needs no YAML reader.
 """
 
 from __future__ import annotations
 
 import hashlib
 import json
+import re
 from typing import Any
 
 from agenticreq.jsonschema_util import tool_from_json_schema
 from agenticreq.models.observed import CapturedCall, Provider, ToolCall, ToolResult, ToolSchema
 
 
+_table: dict[str, Any] | None = None
+
+
+def configure(table: dict[str, Any]) -> None:
+    """The contents of data/providers.yml, handed over by the parent of a mock run."""
+    global _table
+    _table = table
+
+
+def provider_table() -> dict[str, Any]:
+    global _table
+    if _table is None:
+        from agenticreq.data import load_yaml
+
+        _table = load_yaml("providers.yml")
+    return _table
+
+
 def detect_provider(url: str, body: dict[str, Any] | None) -> Provider | None:
     """None = not an LLM call at all."""
     path = url.split("?", 1)[0].rstrip("/")
-    if path.endswith("/chat/completions"):
-        return "openai_chat"
-    if path.endswith("/responses"):
-        return "openai_responses"
-    if path.endswith("/messages") and isinstance(body, dict) and "messages" in body:
-        return "anthropic"
+    for f in provider_table()["formats"]:
+        hit = path.endswith(f["path_end"]) if "path_end" in f else bool(re.search(f["path_regex"], path))
+        if hit and (not f.get("body_has") or (isinstance(body, dict) and f["body_has"] in body)):
+            return f["name"]  # type: ignore[no-any-return]
     if isinstance(body, dict) and "model" in body and ("messages" in body or "input" in body):
         return "unknown"
     return None
@@ -149,6 +170,37 @@ def _parse_anthropic(body: dict[str, Any], c: CapturedCall) -> None:
     c.message_count = len(body.get("messages") or [])
 
 
+def _parse_gemini(url: str, body: dict[str, Any], c: CapturedCall) -> None:
+    found = re.search(r"/models/([^/:]+):", url)
+    c.model = found.group(1) if found else c.model
+    system = body.get("systemInstruction") or body.get("system_instruction")
+    if isinstance(system, dict):
+        c.system_prompt = _text_of(system.get("parts")) or None
+    for m in body.get("contents") or []:
+        for p in (m.get("parts") if isinstance(m, dict) else None) or []:
+            if not isinstance(p, dict):
+                continue
+            call = p.get("functionCall") or p.get("function_call")
+            result = p.get("functionResponse") or p.get("function_response")
+            if isinstance(call, dict):
+                c.prior_tool_calls.append(
+                    ToolCall(name=call.get("name", "?"), arguments=call.get("args") or {}, id=call.get("id"))
+                )
+            elif isinstance(result, dict):
+                c.tool_results.append(
+                    ToolResult(
+                        call_id=result.get("id"), name=result.get("name"), content=json.dumps(result.get("response"))
+                    )
+                )
+    for t in body.get("tools") or []:
+        for fn in (
+            (t.get("functionDeclarations") or t.get("function_declarations") or []) if isinstance(t, dict) else []
+        ):
+            schema = fn.get("parametersJsonSchema") or fn.get("parameters")
+            c.tools.append(tool_from_json_schema(fn["name"], fn.get("description"), schema, "wire", "wire:gemini"))
+    c.message_count = len(body.get("contents") or [])
+
+
 def parse_request(
     index: int, url: str, body: dict[str, Any], *, run_id: str = "run-0", client_lib: str = "httpx"
 ) -> CapturedCall:
@@ -167,6 +219,8 @@ def parse_request(
         _parse_openai_responses(body, c)
     elif provider == "anthropic":
         _parse_anthropic(body, c)
+    elif provider == "gemini":
+        _parse_gemini(url, body, c)
     if c.system_prompt:
         c.system_prompt_sha256 = sha256(c.system_prompt)
     return c
@@ -190,4 +244,10 @@ def parse_response_tool_calls(provider: Provider, body: dict[str, Any]) -> list[
         for b in body.get("content") or []:
             if isinstance(b, dict) and b.get("type") == "tool_use":
                 out.append(ToolCall(name=b.get("name", "?"), arguments=b.get("input") or {}, id=b.get("id")))
+    elif provider == "gemini":
+        for cand in body.get("candidates") or []:
+            for p in (cand.get("content") or {}).get("parts") or []:
+                if isinstance(p, dict) and isinstance(p.get("functionCall"), dict):
+                    fc = p["functionCall"]
+                    out.append(ToolCall(name=fc.get("name", "?"), arguments=fc.get("args") or {}, id=fc.get("id")))
     return out

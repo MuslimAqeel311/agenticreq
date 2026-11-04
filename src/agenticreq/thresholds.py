@@ -150,6 +150,7 @@ def judge(
     looked: bool | None = None,
     confirmed: bool = False,
     observed_ok: bool = False,
+    several: str | None = None,
 ) -> Decision:
     """The decision table above. ``code`` is the value read from code (None = none readable), ``code_present`` says a
     limit of this kind exists in code but its value cannot be read, ``looked`` overrides ``p.looked``.
@@ -166,6 +167,13 @@ def judge(
             return Decision("match", "PASS", None, f"Found in code: {fmt(code)}.")
         return Decision("looser", "FAIL", "missing", f"Code allows {fmt(code)}{unit}; spec.yml says {fmt(spec)}.")
     if spec is not None:
+        if several and not confirmed:  # the code sets it, in more than one place with different values
+            return Decision(
+                "unreadable",
+                "FAIL",
+                "not_proven",
+                f"spec.yml says {fmt(spec)}; {several} (or sign it off under confirmed:). Run: {MOCK_RUN}",
+            )
         if look and not code_present:
             return Decision("no_limit", "FAIL", "missing", f"spec.yml says {fmt(spec)}; the code sets no limit.")
         if observed_ok:
@@ -271,8 +279,10 @@ def emit(
     evidence: str = "",
     rule_id: str | None = None,
     attested: Attestation | None = None,
+    where: str | None = None,
 ) -> list[Finding]:
-    """PASS -> recorded on ``ctx``; FAIL -> returned as a finding carrying the exact report line."""
+    """PASS -> recorded on ``ctx``; FAIL -> returned as a finding carrying the exact report line. A number found in
+    code is printed with the file:line it was read from (``where`` or ``code_ref``), or not at all."""
     from agenticreq.rules.registry import REGISTRY, make_finding
 
     ev = (
@@ -281,6 +291,7 @@ def emit(
         f"code={fmt(code) if code is not None else 'none'}"
     )
     if d.row in ("match", "code_only"):
+        at = where or (str(code_ref) if code_ref else None)
         ctx.pass_(
             PassedCheck(
                 rule_id=rule_id or p.differs,
@@ -288,6 +299,8 @@ def emit(
                 confidence=Confidence.proven(),
                 param=p.key,
                 agent=agent,
+                note=at or "",
+                reason=None if at else "Limit found in code.",
             )
         )
         return []

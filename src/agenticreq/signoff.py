@@ -46,8 +46,40 @@ class Assessment:
     message: str = ""
 
 
+#: either key answers "why": each is accepted for every answer
+EITHER = ("reason", "evidence")
+
+
+def why_text(a: Attestation) -> str:
+    """The person's words, whichever key they used; both are shown when both are written."""
+    both = [str(x).strip() for x in (a.reason, a.evidence) if x and str(x).strip()]
+    return " (evidence: ".join(both) + ")" if len(both) == 2 else "".join(both)
+
+
 def missing(a: Attestation) -> list[str]:
-    return [f for f in REQUIRED[a.answer] if not getattr(a, f)]
+    out = []
+    for f in REQUIRED[a.answer]:
+        if f in EITHER:
+            if not why_text(a):
+                out.append(" or ".join(EITHER))
+        elif not getattr(a, f):
+            out.append(f)
+    return out
+
+
+def bad_reference(a: Attestation, root: str | Path | None = None) -> str:
+    """A ``file:line`` in the evidence that points nowhere. Only the place is checked, never what the line says."""
+    bases = [Path(root)] if root is not None else []
+    bases.append(Path.cwd())
+    for m in _FILE_REF.finditer(" ".join(str(x) for x in (a.evidence, a.reason) if x)):
+        name, line = m.group(1), int(m.group(2))
+        p = next((b / name for b in bases if (b / name).is_file()), None)
+        if p is None:
+            return f"{name}:{line}: no such file"
+        total = len(p.read_text(encoding="utf-8", errors="replace").splitlines())
+        if not 1 <= line <= total:
+            return f"{name}:{line}: the file has {total} lines"
+    return ""
 
 
 def lapsed(a: Attestation, today: dt.date, root: str | Path | None = None) -> str:
@@ -103,12 +135,12 @@ def assess(a: Attestation, today: dt.date, root: str | Path | None = None) -> As
     gaps = missing(a)
     if gaps:
         return Assessment("open", f"{' and '.join(gaps)} {'is' if len(gaps) == 1 else 'are'} missing")
-    why = lapsed(a, today, root)
+    why = bad_reference(a, root) or lapsed(a, today, root)
     if why:
         return Assessment("open", why)
     if a.answer == "yes":
         return Assessment("signed")
-    return Assessment(a.answer, a.reason or "")
+    return Assessment(a.answer, why_text(a))
 
 
 def counts(a: Attestation, today: dt.date, root: str | Path | None = None) -> bool:

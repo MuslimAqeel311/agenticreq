@@ -191,6 +191,8 @@ def fidelity(ctx: CheckContext) -> Iterable[Finding]:
         wire = wire_by.get(canonical(name))
         if wire is None or code.kind == "dict-schema":  # hand-written JSON schema: identical by construction
             continue
+        if wire.kind == "wire:hosted":  # the provider's own tool: it carries no schema to compare
+            continue
         issues, verbatim, total = compare_tool(code, wire)
         ctx.clause(extracted=True)
         if not issues:

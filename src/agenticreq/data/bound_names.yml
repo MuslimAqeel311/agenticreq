@@ -1,0 +1,35 @@
+# Keyword arguments and dict keys that set a limit, per framework spelling, and the common concept each one means.
+# Concepts: step-like bounds feed bounds.max_steps; retries feed bounds.max_retries; tool-call caps feed
+# bounds.max_tool_calls; max_rpm is a rate limit; a timeout is a duration. A new framework needs a line here.
+version: 1
+kwargs:
+  recursion_limit: recursion_limit
+  max_iter: max_iter
+  max_iterations: max_iterations
+  max_turns: max_turns
+  max_steps: max_steps
+  max_retries: max_retries
+  max_retry_limit: max_retries        # CrewAI Agent
+  output_retries: max_retries         # PydanticAI Agent
+  max_execution_time: max_execution_time
+  max_rpm: max_rpm
+  timeout: timeout
+  max_tool_calls: max_tool_calls
+  request_limit: request_limit
+  tool_calls_limit: tool_calls_limit
+  max_consecutive_auto_reply: max_turns
+  max_tool_iterations: max_iterations
+  max_llm_calls: max_steps
+  max_round: max_turns                # AutoGen GroupChat
+  max_messages: max_turns             # AutoGen MaxMessageTermination
+  max_agent_steps: max_steps          # Haystack Agent
+  max_iters: max_iterations           # DSPy ReAct
+  maximum_iterations: max_iterations  # Semantic Kernel termination strategy
+  maximum_auto_invoke_attempts: max_iterations
+  max_auto_invoke_attempts: max_iterations
+  tool_call_limit: tool_calls_limit   # Agno
+#: too common a word to read anywhere else: these count only on an agent's own constructor
+agent_kwargs:
+  retries: max_retries                # PydanticAI Agent
+calls:
+  MaxMessageTermination: max_turns

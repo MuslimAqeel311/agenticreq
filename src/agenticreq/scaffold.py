@@ -333,10 +333,11 @@ def render_init(
     )
     L.append("#          Level 2 numbers are never filled in for you; agenticreq only checks your code against them.")
     agents = [a for a in obs.declared_agents if a.kind != "group_chat"]
-    L += numeric_field_notes(multi_agent=len(agents) > 1 or bool(obs.edges))
+    # two or more agents, or a pool whose size only the run knows, turn Level 3 on
+    multi = len(agents) > 1 or bool(obs.edges) or bool(obs.unresolved_agents)
+    L += numeric_field_notes(multi_agent=multi)
     L.append("# Level 3 (multi-agent): topology, agent_registry, declared_delegation, conflict_resolution;")
     L.append("#          the other 10 have defaults.")
-    multi = len(agents) > 1 or bool(obs.edges)
     if multi:  # several agents: the Level 3 fields are the user's to write, as real TODOs (check reports each one)
         L.append("# More than one agent was found: fill these in.")
         L.append(

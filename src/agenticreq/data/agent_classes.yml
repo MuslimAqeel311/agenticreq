@@ -1,0 +1,26 @@
+# Constructors and builders that make an agent, per framework. A user's subclass of one counts too. A new framework
+# needs a line here, never a code change.
+version: 1
+frameworks:
+  langgraph: [create_react_agent, create_agent, create_supervisor, create_swarm]
+  langchain: [AgentExecutor, initialize_agent, create_tool_calling_agent, create_openai_tools_agent, create_openai_functions_agent, create_structured_chat_agent]
+  crewai: [Agent]
+  openai-agents: [Agent]
+  claude-agent-sdk: [ClaudeAgentOptions, AgentDefinition]
+  google-adk: [Agent, LlmAgent, SequentialAgent, ParallelAgent, LoopAgent]
+  smolagents: [CodeAgent, ToolCallingAgent, MultiStepAgent]
+  autogen: [AssistantAgent, ConversableAgent, UserProxyAgent, CodeExecutorAgent]
+  llamaindex: [FunctionAgent, ReActAgent, CodeActAgent, OpenAIAgent]
+  pydantic-ai: [Agent]
+  haystack: [Agent]
+  agno: [Agent]
+  semantic-kernel: [ChatCompletionAgent]
+  dspy: [ReAct]
+  other: [ChatAgent]
+#: teams, supervisors and workflows: they group agents and are not an agent of their own
+groups: [RoundRobinGroupChat, SelectorGroupChat, Swarm, MagenticOneGroupChat, GroupChat, AgentWorkflow, Crew, Team, AgentGroupChat]
+#: constructors whose first positional argument is the agent's name
+named_first_arg: [AssistantAgent, UserProxyAgent, ConversableAgent, CodeExecutorAgent]
+#: constructors with no name= of their own, and the keyword that stands for it
+name_keys:
+  AgentDefinition: description

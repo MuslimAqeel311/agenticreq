@@ -1,0 +1,8 @@
+entry: agent.py:main
+args: {task: route}
+tools:
+  transfer_to_billing: {args: {note: a}}
+  transfer_to_support: {args: {note: a}}
+runs:
+  - {name: billing, order: [transfer_to_billing]}
+  - {name: support, order: [transfer_to_support]}

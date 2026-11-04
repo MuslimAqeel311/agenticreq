@@ -1,0 +1,13 @@
+# Each framework's own approval mechanism, beyond the keyword names read in ast/extract_support.py. These are hooks:
+# they may block a tool call, but whether they do is not provable from code, so each is an unverified gate.
+version: 1
+hook_kwargs:
+  - can_use_tool            # Claude Agent SDK
+  - confirmation_strategies # Haystack Agent
+  - confirmation_strategy
+#: a call that is a gate when one of the listed names appears in its arguments
+hook_calls:
+  wait_for_event: [HumanResponseEvent]              # LlamaIndex workflows
+  add_filter: [AUTO_FUNCTION_INVOCATION]            # Semantic Kernel
+#: constructors that put a person in the loop
+person_in_loop: [UserProxyAgent]                    # AutoGen

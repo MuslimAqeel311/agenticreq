@@ -1,0 +1,4 @@
+entry: agent.py:main
+args: {task: go}
+tools:
+  lookup: {args: {q: a}}

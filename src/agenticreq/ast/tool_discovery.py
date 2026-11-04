@@ -168,7 +168,39 @@ def _function_tool(
                         waits_forever=waits_forever(ex, fc, inner),
                     )
                 )
+    guard = guard_call(fn)
+    if guard is not None and not any(g.tools == [name] for g in ex.obs.gates):
+        ex.obs.gates.append(
+            GateRef(
+                kind="guard_call",
+                tools=[name],
+                code_ref=_ref(fc.rel, guard),
+                coverage="unverified",
+                coverage_note=f"{_name(guard.func)}() can stop {name} before it acts; nothing shows it asks a person",
+            )
+        )
     return name
+
+
+#: calls that test a value, never a decision: a guard around these is input handling, not approval
+_NOT_A_GUARD = frozenset(dir(__import__("builtins"))) | {"get", "startswith", "endswith", "strip", "lower", "upper"}
+_VALIDATION = re.compile(r"valid|sanitize|parse|format", re.IGNORECASE)
+
+
+def guard_call(fn: ast.AST) -> ast.Call | None:
+    """The call that can stop the tool before it acts, read from behaviour rather than a name: a statement of the
+    tool's own body, ``if not f(...): return`` / ``raise``. Once the tool's effects are read, one that comes after
+    the write is dropped (ast/extractor.py). It shows a check exists, not that a person makes it, so the result is a
+    gate to verify and never a pass."""
+    for st in getattr(fn, "body", []):
+        if not isinstance(st, ast.If) or not any(isinstance(x, (ast.Return, ast.Raise)) for x in st.body):
+            continue
+        for c in ast.walk(st.test):
+            nm = _name(c.func) if isinstance(c, ast.Call) else None
+            if nm and nm not in _NOT_A_GUARD and not (_VALIDATION.search(nm) and "approv" not in nm.lower()):
+                assert isinstance(c, ast.Call)
+                return c
+    return None
 
 
 #: names in a function that put a time limit on waiting for a person
@@ -248,8 +280,8 @@ def _class_tool(ex: ProjectExtractor, fc: FileCtx, cls: ast.ClassDef) -> str | N
             attrs[stmt.targets[0].id] = stmt.value
         elif isinstance(stmt, ast.AnnAssign) and isinstance(stmt.target, ast.Name) and stmt.value is not None:
             attrs[stmt.target.id] = stmt.value
-    name = _str(attrs.get("name")) or cls.name
-    desc = _str(attrs.get("description")) or parse_docstring(ast.get_docstring(cls))[0]
+    name = _attr_name(attrs.get("name")) or _inherited_name(ex, fc, cls) or cls.name
+    desc = _attr_name(attrs.get("description")) or parse_docstring(ast.get_docstring(cls))[0]
     params = []
     kind = "BaseTool"
     run_fn = next(
@@ -281,7 +313,48 @@ def _class_tool(ex: ProjectExtractor, fc: FileCtx, cls: ast.ClassDef) -> str | N
         features=ex._body_features(run_fn, fc) if run_fn else [],
         body_bounds=ex._body_bounds(run_fn) if run_fn else {},
     )
+    ex._tool_classes[name] = cls.name
     return ex._add_tool(t, cls.name, cls)
+
+
+def _attr_name(node: ast.expr | None) -> str | None:
+    """A class attribute's text: ``name = "x"`` or ``name: str = Field(default="x")``."""
+    if isinstance(node, ast.Call) and _name(node.func) == "Field":
+        return _str(_kw(node, "default")) or (_str(node.args[0]) if node.args else None)
+    return _str(node)
+
+
+def _inherited_name(ex: ProjectExtractor, fc: FileCtx, cls: ast.ClassDef, depth: int = 0) -> str | None:
+    """``name`` set on a project base class."""
+    for b in cls.bases:
+        r = ex.symbols.resolve(fc, b)
+        if r is None or r.kind != "class" or not isinstance(r.node, ast.ClassDef) or depth >= _MAX_DEPTH:
+            continue
+        for s in r.node.body:
+            if not isinstance(s, (ast.Assign, ast.AnnAssign)):
+                continue
+            target = s.targets[0] if isinstance(s, ast.Assign) else s.target
+            if isinstance(target, ast.Name) and target.id == "name":
+                return _attr_name(s.value)
+        if got := _inherited_name(ex, r.fc, r.node, depth + 1):
+            return got
+    return None
+
+
+def named_instance(ex: ProjectExtractor, fc: FileCtx, call: ast.Call, cls_tool: str) -> str | None:
+    """``_Tool(name="save_file")``: this instance is its own tool, whatever its class is called."""
+    explicit = _str(_kw(call, "name"))
+    if not explicit:
+        return None
+    base = ex.obs.declared_tools[cls_tool]
+    ex._instanced.add(cls_tool)
+    if explicit in ex.obs.declared_tools:
+        return explicit
+    desc = _str(_kw(call, "description")) or base.description
+    ex.obs.declared_tools[explicit] = base.model_copy(
+        update={"name": explicit, "description": desc, "code_ref": _ref(fc.rel, call)}
+    )
+    return explicit
 
 
 def _is_tool_class(ex: ProjectExtractor, fc: FileCtx, cls: ast.ClassDef, depth: int = 0) -> bool:

@@ -59,6 +59,10 @@ def enforceability(spec: AgentSpec, obs: ObservedAgent | None, passed: list[Pass
         rows.append({"clause": f"untrusted:{u.source}", "code": "", "export": ""})
     if spec.data_rules:
         rows.append({"clause": "data_rules", "code": "", "export": ""})
+    if any(p.rule_id == "AS-307" for p in passed):  # the same evidence the rule used
+        rows.append({"clause": "end_to_end_trace_id", "code": "one trace id across agents", "export": ""})
+    elif obs is not None and obs.trace_evidence:
+        rows.append({"clause": "end_to_end_trace_id", "code": "", "export": ""})
     total = len(rows)
     in_code = sum(1 for r in rows if r["code"])
     any_point = sum(1 for r in rows if r["code"] or r["export"])
@@ -73,12 +77,20 @@ def enforceability(spec: AgentSpec, obs: ObservedAgent | None, passed: list[Pass
 
 
 def trace_coverage(spec: AgentSpec, obs: ObservedAgent | None) -> dict[str, Any]:
+    from agenticreq.rules.graph import one_trace_across_agents
     from agenticreq.traces.coverage import coverage_matrix, derive_scenarios
 
+    one = one_trace_across_agents(obs) if obs else None
+    end_to_end = {"end_to_end": bool(one), "mechanisms": [e.mechanism for e in obs.trace_evidence] if obs else []}
     if not obs or not obs.trace_spans:
-        return {"scenarios": len(derive_scenarios(spec)), "covered": None, "note": "no traces supplied"}
+        return {"scenarios": len(derive_scenarios(spec)), "covered": None, "note": "no traces supplied", **end_to_end}
     m = coverage_matrix(spec, obs.trace_spans)
-    return {"scenarios": len(m), "covered": sum(1 for _, n in m if n), "matrix": {sc.id: n for sc, n in m}}
+    return {
+        "scenarios": len(m),
+        "covered": sum(1 for _, n in m if n),
+        "matrix": {sc.id: n for sc, n in m},
+        **end_to_end,
+    }
 
 
 def stats(obs: ObservedAgent, spec: AgentSpec | None = None, passed: list[PassedCheck] | None = None) -> dict[str, Any]:

@@ -6,6 +6,7 @@ Moved out of ``extractor.py`` unchanged; each function takes the extractor as ``
 from __future__ import annotations
 
 import ast
+import re
 from agenticreq.ast.classify import BOUND_PARAMS
 from agenticreq.ast.schema import _name
 from agenticreq.ast.schema import literal
@@ -33,6 +34,18 @@ from agenticreq.ast.extract_support import (
     _unbounded_read,
     _url_vars,
 )
+
+
+_DRY_RUN_NAME = re.compile(r"dry_?run", re.IGNORECASE)
+
+
+def _is_dry_run_flag(x: ast.AST) -> bool:
+    """``DRY_RUN`` / ``settings.dry_run`` / ``os.getenv("DRY_RUN")`` in a test of the tool's body."""
+    if isinstance(x, ast.Name):
+        return bool(_DRY_RUN_NAME.search(x.id))
+    if isinstance(x, ast.Attribute):
+        return bool(_DRY_RUN_NAME.search(x.attr))
+    return isinstance(x, ast.Constant) and isinstance(x.value, str) and bool(_DRY_RUN_NAME.search(x.value))
 
 
 def _non_idempotent(fn: FuncDef, params: set[str]) -> bool:
@@ -69,6 +82,30 @@ def _non_idempotent(fn: FuncDef, params: set[str]) -> bool:
     return False
 
 
+def uses_audit_logger(tree: ast.AST, fn: FuncDef) -> bool:
+    """``fn`` logs through a logger created for audit: ``trail = logging.getLogger("audit.payments")``."""
+    names = {
+        t.id
+        for n in ast.walk(tree)
+        if isinstance(n, ast.Assign)
+        and isinstance(n.value, ast.Call)
+        and _name(n.value.func) == "getLogger"
+        and n.value.args
+        and isinstance(n.value.args[0], ast.Constant)
+        and "audit" in str(n.value.args[0].value).lower()
+        for t in n.targets
+        if isinstance(t, ast.Name)
+    }
+    return any(
+        isinstance(c, ast.Call)
+        and isinstance(c.func, ast.Attribute)
+        and c.func.attr in _LOG_CALLS
+        and isinstance(c.func.value, ast.Name)
+        and c.func.value.id in names
+        for c in ast.walk(fn)
+    )
+
+
 def _body_features(fn: FuncDef | None) -> list[str]:
     if fn is None:
         return []
@@ -93,6 +130,8 @@ def _body_features(fn: FuncDef | None) -> list[str]:
             for x in ast.walk(n.test)
         ):
             feats.add("dry_run_branch")  # the body actually behaves differently in a dry run
+        if isinstance(n, (ast.If, ast.IfExp, ast.While)) and any(_is_dry_run_flag(x) for x in ast.walk(n.test)):
+            feats.add("dry_run_flag")  # a module-level flag or env switch read in the body
         if (
             isinstance(n, ast.Return)
             and n.value is not None
@@ -148,7 +187,7 @@ def _body_features(fn: FuncDef | None) -> list[str]:
             ):
                 if fname != "open" or "fs_write" in feats:
                     feats.add("self_modify")  # open(__file__, "w"), Path(__file__).write_text(...)
-        if fname in _LOG_CALLS and owner and ("log" in owner.lower() or owner == "logging"):
+        if fname in _LOG_CALLS and owner and ("log" in owner.lower() or owner.lower().startswith("audit")):
             feats.add("logs")
     for n in ast.walk(fn):
         if isinstance(n, (ast.Assign, ast.AugAssign, ast.AnnAssign)):

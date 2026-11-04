@@ -29,9 +29,12 @@ from agenticreq.ast.symbols import SKIP_DIRS
 from agenticreq.ast.symbols import SymbolTable
 from agenticreq.ast.symbols import iter_py_files
 from agenticreq.models.finding import SourceRef
+from agenticreq.ast import tracing
+from agenticreq.data import load_yaml
 from agenticreq.models.observed import BoundRef
 from agenticreq.models.observed import DeclaredAgent
 from agenticreq.models.observed import ExtractionError
+from agenticreq.models.observed import GateRef
 from agenticreq.models.observed import ObservedAgent
 from agenticreq.models.observed import ToolSchema
 from agenticreq.models.observed import UnresolvedTool
@@ -50,6 +53,12 @@ _EFFECT_DEPTH = 4
 __all__ = ["ProjectExtractor", "extract", "iter_py_files", "SKIP_DIRS"]
 
 
+def _guard_after_write(g: GateRef, tool: str, write_line: int) -> bool:
+    return (
+        g.kind == "guard_call" and g.tools == [tool] and g.code_ref is not None and (g.code_ref.line or 0) > write_line
+    )
+
+
 class ProjectExtractor:
     def __init__(self, root: str | Path) -> None:
         self.root = Path(root).resolve()
@@ -59,6 +68,8 @@ class ProjectExtractor:
         self.files: list[FileCtx] = []
         self.var_to_tool: dict[str, str] = {}  # python identifier -> tool name
         self.node_tool: dict[int, str] = {}  # id(def / class node) -> tool name
+        self._tool_classes: dict[str, str] = {}  # tool name -> the class it is declared by
+        self._instanced: set[str] = set()  # class tools whose instances carry their own name=
         self.agent_vars: dict[str, DeclaredAgent] = {}
         self.tool_list_vars: dict[str, list[str]] = {}
         self.agent_ctors: set[str] = set(AGENT_CTORS)
@@ -131,6 +142,7 @@ class ProjectExtractor:
         if self._default_provider:  # agents SDK: set_default_openai_client(AsyncOpenAI(base_url=<groq>))
             for m in self.obs.models:
                 m.provider = m.provider or self._default_provider
+        self._drop_unregistered_classes()
         self.obs.tool_vars = dict(self.var_to_tool)
         self.obs.tool_groups = _merge_groups(list(self._groups.values()))
         self._framework()
@@ -145,6 +157,7 @@ class ProjectExtractor:
         if not self.obs.framework and not self.obs.declared_tools:
             self._loose_functions()
         self._attach_limits()
+        self.obs.trace_evidence = tracing.trace_evidence(self)
         for rel, why in self.ev.errors:  # a config file the code reads could not be parsed: say so (AS-902)
             self.obs.extraction_errors.append(
                 ExtractionError(
@@ -152,6 +165,29 @@ class ProjectExtractor:
                 )
             )
         return self.obs
+
+    def _drop_unregistered_classes(self) -> None:
+        """A tool class nothing registers is not a tool: a helper base (`_RunScoped`) or a class left unused. Only
+        when the project does bind tools, so a project whose tools the scan cannot follow keeps every candidate."""
+        if not self.obs.bound_tools:
+            return
+        used: set[str] = set()
+        for fc in self.files:
+            bases = {
+                id(x) for c in ast.walk(fc.tree) if isinstance(c, ast.ClassDef) for b in c.bases for x in ast.walk(b)
+            }
+            for n in ast.walk(fc.tree):
+                if id(n) in bases:
+                    continue
+                if isinstance(n, ast.Name):
+                    used.add(n.id)
+                elif isinstance(n, ast.Attribute):
+                    used.add(n.attr)
+        for name, cls in self._tool_classes.items():
+            if name in self.obs.bound_tools or (cls in used and name not in self._instanced):
+                continue
+            self.obs.declared_tools.pop(name, None)
+            self.var_to_tool = {k: v for k, v in self.var_to_tool.items() if v != name}
 
     def _tool_function(self, t: ToolSchema) -> tuple[FileCtx, FuncDef] | None:
         """The function a tool runs, found by the file and name it was declared with."""
@@ -188,6 +224,8 @@ class ProjectExtractor:
             fc, fn = found
             eff = classify_body(self, fc, fn)
             t.effect, t.effect_reason, t.effect_line = eff.effect, eff.reason, eff.line
+            if eff.line:  # a check after the write gates nothing
+                self.obs.gates = [g for g in self.obs.gates if not _guard_after_write(g, t.name, eff.line)]
             lims = find_limits(self, fc, fn)
             if not lims:
                 continue
@@ -310,6 +348,31 @@ class ProjectExtractor:
     def _dict_schema_tool(self, fc: FileCtx, node: ast.Dict) -> None:
         tool_discovery._dict_schema_tool(self, fc, node)
 
+    def _builtin_tool(self, fc: FileCtx, node: ast.Constant) -> str | None:
+        """A framework's built-in tool named by a string: ``allowed_tools=["Bash", "Bash(git:*)"]`` (the table is
+        data/known_injected_tools.yml; only the file's own framework counts, a tool called `Read` elsewhere is not it)."""
+        table = load_yaml("known_injected_tools.yml")["frameworks"]
+        name = str(node.value).split("(")[0]
+        for fw, body in table.items():
+            row = (body.get("builtin") or {}).get(name)
+            if row and fw.replace("-", "_") in fc.imports:
+                if name not in self.obs.declared_tools:
+                    self.obs.declared_tools[name] = ToolSchema(
+                        name=name,
+                        description=f"{fw} built-in tool",
+                        source="ast",
+                        code_ref=_ref(fc.rel, node),
+                        kind=f"builtin:{fw}",
+                        effect=row["effect"],
+                        effect_reason=f"a {fw} built-in tool",
+                        capability=row.get("capability"),
+                    )
+                return name
+        return None
+
+    def _named_instance(self, fc: FileCtx, call: ast.Call, cls_tool: str) -> str | None:
+        return tool_discovery.named_instance(self, fc, call, cls_tool)
+
     def _resolve_class(self, fc: FileCtx, node: ast.AST) -> ast.ClassDef | None:
         return tool_discovery._resolve_class(self, fc, node)
 
@@ -336,11 +399,11 @@ class ProjectExtractor:
             if a is not None and isinstance(a.value, (int, float)):
                 ok, val, assumed = True, a.value, a.label
             elif isinstance(node, ast.Attribute):  # config.settings.max_messages: the settings' default in code
-                from agenticreq.ast.constants import setting_default
+                from agenticreq.ast.constants import plain_field, setting_default
 
                 got = setting_default(self.obs.root, node.attr)
                 if got is not None:
-                    ok, val, assumed = True, got[0], got[1]
+                    ok, val, assumed = True, got[0], None if plain_field(self.obs.root, node.attr) else got[1]
             elif isinstance(
                 node, ast.Call
             ):  # _num("MAX_MESSAGES", 120, int): a project helper reading env with a default
@@ -366,6 +429,8 @@ class ProjectExtractor:
         feats = set(body_analysis._body_features(fn))
         if fn is not None and fc is not None:
             feats |= self._callee_effects(fc, fn)
+            if body_analysis.uses_audit_logger(fc.tree, fn):
+                feats.add("logs")
         return sorted(feats)
 
     def _callee_effects(self, fc: FileCtx, fn: FuncDef) -> frozenset[str]:

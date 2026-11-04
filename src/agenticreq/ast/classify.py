@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import re
-from typing import Any
+from functools import lru_cache
+from typing import Any, Literal
 
+from agenticreq.data import load_yaml
 from agenticreq.models.observed import ToolSchema
 
 
@@ -287,14 +289,6 @@ _MODEL_NAME = re.compile(
     r"anthropic\.|us\.anthropic|openai/|anthropic/|bedrock/|vertex_ai/|azure/)",
     re.IGNORECASE,
 )
-_PINNED = [
-    re.compile(r"^(models/)?gemini-\d+(\.\d+)?-(?!.*latest)[a-z0-9.-]+$"),  # Google stable ids are fixed versions
-    re.compile(r"-\d{4}-\d{2}-\d{2}$"),  # gpt-4o-2024-08-06
-    re.compile(r"-20\d{6}(-v\d+:\d+)?$"),  # claude-sonnet-4-5-20250929, bedrock ...-v1:0
-    re.compile(r"@20\d{6}$"),  # vertex claude-3-5-sonnet@20240620
-    re.compile(r"-\d{3,4}$"),  # gpt-4-0613, gemini-1.5-pro-002
-    re.compile(r"-v\d+:\d+$"),
-]
 
 
 def strip_provider(s: str) -> str:
@@ -308,11 +302,33 @@ def looks_like_model(s: str) -> bool:
     return bool(_MODEL_NAME.match(s)) and " " not in s and len(s) < 120
 
 
+@lru_cache(maxsize=1)
+def _pin_table() -> dict[str, Any]:
+    return load_yaml("pinned_models.yml")  # type: ignore[no-any-return]
+
+
+PinState = Literal["pinned", "floating", "undecidable"]
+
+
+def pin_judge(model: str) -> tuple[PinState, str]:
+    """Is ``model`` a fixed version, and the rule that decided (data/pinned_models.yml)? An id the rules cannot decide
+    stays undecidable: a person answers it."""
+    table = _pin_table()
+    name = strip_provider(model.strip())
+    for prefix in table["user_defined"]:
+        if name.startswith(prefix):
+            return "undecidable", f"a name you chose ({prefix.rstrip('/')})"
+    for prefix in table["routing_prefixes"]:
+        name = name.removeprefix(prefix)
+    for state, key in (("floating", "floating"), ("pinned", "pinned"), ("floating", "bare_family")):
+        for row in table[key]:
+            if re.search(row["pattern"], name):
+                return state, row["rule"]  # type: ignore[return-value]
+    return "undecidable", "no version marker"
+
+
 def is_pinned(model: str) -> bool:
-    m = strip_provider(model.strip())
-    if m.endswith("-latest") or m.endswith(":latest"):
-        return False
-    return any(p.search(m) for p in _PINNED)
+    return pin_judge(model)[0] == "pinned"
 
 
 def model_key(name: str) -> str:

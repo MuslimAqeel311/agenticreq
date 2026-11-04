@@ -3,13 +3,30 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 from agenticreq.ast.framework import refine_with_wire
 from agenticreq.ast.extractor import extract
 from agenticreq.models.observed import CapturedCall, ObservedAgent, TraceSpan, ToolSchema
 
 
+def _plugin_names(obs: ObservedAgent, calls: list[CapturedCall]) -> None:
+    """``Notes-lookup`` on the wire is the code's ``lookup`` (data/tool_aliases.yml)."""
+    from agenticreq.data import load_yaml
+
+    sep = (load_yaml("tool_aliases.yml").get("plugin_separator") or {}).get(obs.framework or "")
+    if not sep:
+        return
+    for c in calls:
+        items: list[Any] = [*c.tools, *c.tool_calls, *c.prior_tool_calls]
+        for item in items:
+            tail = item.name.split(sep, 1)[-1]
+            if sep in item.name and tail in obs.declared_tools:
+                item.name = tail
+
+
 def merge_captures(obs: ObservedAgent, calls: list[CapturedCall]) -> None:
+    _plugin_names(obs, calls)
     obs.captures.extend(calls)
     for c in calls:
         if c.provider == "unknown":

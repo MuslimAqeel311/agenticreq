@@ -15,7 +15,7 @@ from agenticreq.models.confidence import Confidence
 from agenticreq.models.finding import SourceRef
 
 ExecutionModel = Literal["schema-based", "prompt-only", "unknown"]
-Provider = Literal["openai_chat", "openai_responses", "anthropic", "unknown"]
+Provider = Literal["openai_chat", "openai_responses", "anthropic", "gemini", "unknown"]
 ToolSource = Literal["ast", "wire", "mcp", "trace"]
 
 
@@ -49,6 +49,8 @@ class ToolSchema(BaseModel):
     effect_line: int | None = None
     #: tool_effects: in spec.yml, the person's declaration (read | write)
     declared_effect: Literal["read", "write"] | None = None
+    #: what a framework's built-in tool can do (shell_execution, file_write): data/known_injected_tools.yml
+    capability: str | None = None
     raw: dict[str, Any] | None = None
 
     def param(self, name: str) -> ParamSchema | None:
@@ -235,6 +237,29 @@ class TraceSpan(BaseModel):
     start_time: float | None = None  # unix seconds
 
 
+class TraceEvidence(BaseModel):
+    """One way a trace id can follow a run, with the places the code shows it (ast/tracing.py)."""
+
+    mechanism: str  # "OpenTelemetry", "correlation id", a framework's own mechanism
+    name: str  # the id
+    created: list[SourceRef] = Field(default_factory=list)
+    used: list[SourceRef] = Field(default_factory=list)
+    logged: list[SourceRef] = Field(default_factory=list)
+
+    def text(self) -> str:
+        def at(refs: list[SourceRef]) -> str:
+            return ", ".join(str(r) for r in refs[:3])
+
+        parts = [f"{self.mechanism} ({self.name})"]
+        if self.created:
+            parts.append(f"created at {at(self.created)}")
+        if self.used:
+            parts.append(f"used at {at(self.used)}")
+        if self.logged:
+            parts.append(f"in log records at {at(self.logged)}")
+        return ", ".join(parts)
+
+
 class ExtractionError(BaseModel):
     file: str
     line: int | None = None
@@ -285,6 +310,9 @@ class ObservedAgent(BaseModel):
     secrets: list[SecretRef] = Field(default_factory=list)
     graph_reachable: dict[str, bool] | None = None  # from recognizers (LangGraph)
     prompt_only_tools: list[str] = Field(default_factory=list)  # tools of code agents (no wire schema)
+    trace_evidence: list[TraceEvidence] = Field(default_factory=list)  # ast/tracing.py
+    patched_tools: list[str] = Field(default_factory=list)  # tools mocks.yml replaced with `patch:` in the mock run
+    mock_unsupported: list[str] = Field(default_factory=list)  # providers / transports the mock run cannot intercept
     direct_calls: dict[str, list[SourceRef]] = Field(default_factory=dict)  # tool fn called from Python
     tool_vars: dict[str, str] = Field(default_factory=dict)  # python identifier holding a tool -> tool name
     #: tools that are bound together (one list / bind_tools call / Controller class): one LLM context each

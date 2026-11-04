@@ -22,6 +22,7 @@ from agenticreq.ast.classify import (
     effect_unsure,
     is_write_tool,
     model_key,
+    pin_judge,
     near_miss,
     offers_snapshots,
     verb_class,
@@ -160,8 +161,22 @@ def never_reached(ctx: CheckContext) -> Iterable[Finding]:
             reasons.append("bound on a branch / phase the run did not reach")
         if canonical(name) in {canonical(k) for k in obs.direct_calls}:
             reasons.append("called directly from Python, not via the model")
-        if name in obs.prompt_only_tools:
-            reasons.append("used by a code agent (prompt-only)")
+        if name in obs.prompt_only_tools:  # it never travels as a schema: another run would show the same
+            out.append(
+                make_finding(
+                    "AS-201",
+                    confidence=Confidence.attestation(),
+                    severity="attestation",
+                    code_ref=t.code_ref,
+                    title=f"{name} never reached the model boundary",
+                    detail=f"{name} is used by a code agent: it reaches the model as prompt text, not as a schema",
+                    evidence=f"wire tools seen: {sorted(obs.offered_tools())[:12]}",
+                    reason=f"Prompt-only: {name} reaches the model as prompt text (a code agent), so no run can "
+                    "show it. Confirm it under confirmed: in spec.yml.",
+                    status_hint="SIGN-OFF",
+                )
+            )
+            continue
         out.append(
             make_finding(
                 "AS-201",
@@ -349,6 +364,16 @@ def _wire_evidence(obs: ObservedAgent, name: str) -> str:
     return f"{name} in MCP tools/list" if name in obs.mcp_tools else name
 
 
+def _by_capability(obs: ObservedAgent, name: str) -> str:
+    """``shell_execution`` in the spec is the tool that has that ability here (Claude Agent SDK ``Bash``)."""
+    from agenticreq.data import load_yaml
+
+    words = load_yaml("known_injected_tools.yml").get("capability_names") or {}
+    wanted = words.get(canonical(name))
+    tool = next((t.name for t in obs.declared_tools.values() if wanted and t.capability == wanted), None)
+    return tool or name
+
+
 # =============================================================== spec vs code
 @rule("conformance", "AS-203", "AS-204")
 def prohibited(ctx: CheckContext) -> Iterable[Finding]:
@@ -373,6 +398,8 @@ def prohibited(ctx: CheckContext) -> Iterable[Finding]:
             out += _detector_hits(ctx, obs, i, p.action or p.tool or "?", p.detector.type, p.detector.params, real_runs)
         if not p.tool:
             continue
+        p = p.model_copy(update={"tool": _by_capability(obs, p.tool)})
+        assert p.tool is not None
         key = canonical(p.tool)
         sref = ctx.spec_ref("prohibited", i)
         ctx.clause(extracted=True)
@@ -618,7 +645,16 @@ def approval_gates(ctx: CheckContext) -> Iterable[Finding]:
         if key not in declared:
             continue  # AS-217 reports spec tools missing from code
         rt = approval_evidence(obs, a.tool)
-        if rt.ran_ungated:  # the tool's result reached the model and no known gate fired in between
+        scoped = [g for g in obs.gates if g.tools and key in {canonical(t) for t in g.tools}]
+        global_ = [
+            g
+            for g in obs.gates
+            if g.tools is None
+            and g.kind in ("interrupt", "interrupt_before", "human_input", "needs_approval", "approval_call")
+        ]
+        # a run with no approval says something when a gate exists, in the code or seen firing in another run; with
+        # neither, the static gap stays
+        if rt.ran_ungated and (scoped or global_ or rt.held):  # its result reached the model and no known gate fired
             n, total = len(rt.ran_ungated), len(rt.ran_ungated) + len(rt.held)
             out.append(
                 make_finding(
@@ -646,13 +682,6 @@ def approval_gates(ctx: CheckContext) -> Iterable[Finding]:
                 )
             )
             continue
-        scoped = [g for g in obs.gates if g.tools and key in {canonical(t) for t in g.tools}]
-        global_ = [
-            g
-            for g in obs.gates
-            if g.tools is None
-            and g.kind in ("interrupt", "interrupt_before", "human_input", "needs_approval", "approval_call")
-        ]
         verified = [g for g in scoped if g.verified]
         # PASS only for a gate verified on every path to the tool's action; a gate on some paths, or one
         # whose scope is unknown, is UNKNOWN: it may be bypassed, and a PASS would say it cannot be
@@ -831,6 +860,12 @@ def limits(ctx: CheckContext) -> Iterable[Finding]:
             code_t = declared.get(key)
             body = code_t.body_bounds.get(p.name, []) if code_t else []
             in_body = k in ("max", "min") and any(abs(b - float(v)) < 1e-9 for b in body)
+            numbers = [x for x in have.values() if isinstance(x, (int, float)) and not isinstance(x, bool)]
+            both = (
+                f"{lim.tool}.{lim.arg}: code allows {th.fmt(numbers[0])}; spec.yml says {th.fmt(v)}."
+                if numbers and isinstance(v, (int, float))
+                else None
+            )
             out.append(
                 make_finding(
                     "AS-207",
@@ -838,6 +873,7 @@ def limits(ctx: CheckContext) -> Iterable[Finding]:
                     spec_ref=sref,
                     code_ref=tool.code_ref,
                     severity="blocker" if strict and not in_body else "warning",
+                    reason=both,
                     detail=f"spec limits {lim.tool}.{lim.arg} {k} {th.fmt(v) if isinstance(v, (int, float)) else v}; the {src} schema has "
                     f"{have or 'no such constraint'}"
                     + (
@@ -914,7 +950,6 @@ _STEP_KINDS = {
     "max_turns",
     "max_steps",
     "request_limit",
-    "tool_calls_limit",
 }
 
 
@@ -980,7 +1015,7 @@ def step_bounds(ctx: CheckContext) -> Iterable[Finding]:
                         "AS-209",
                         confidence=H(),
                         spec_ref=sref,
-                        reason=d.reason,
+                        reason=f"No bound in code: {where} allows {value:g} steps; spec.yml says {th.fmt(spec_max)}.",
                         status_hint=d.line_status,
                         param=p.key,
                         title=f"Framework default {kind}={value:g} exceeds the spec bound",
@@ -1060,7 +1095,14 @@ def step_bounds(ctx: CheckContext) -> Iterable[Finding]:
             )
         else:
             ctx.pass_(
-                PassedCheck(rule_id="AS-209", subject=th.fmt(b.value), confidence=conf, param=p.key, agent=b.agent)
+                PassedCheck(
+                    rule_id="AS-209",
+                    subject=th.fmt(b.value),
+                    confidence=conf,
+                    param=p.key,
+                    agent=b.agent,
+                    note=str(b.code_ref) if b.code_ref else "",
+                )
             )
     # several agents: one without a bound of its own, and no run-level bound over all of them, has none
     agents = _agents_of_run(obs)
@@ -1165,7 +1207,39 @@ def model_pinning(ctx: CheckContext) -> Iterable[Finding]:
                 "in the spec and keep regression_triggers: [model_change].",
             )
         )
+    stated = {model_key(x): x for x in (ctx.spec.pinned_models if ctx.spec else None) or []}
     for key, refs in groups.items():
+        if stated and key not in stated:  # the owner said which ids run; the code uses another
+            first = next((m for m in refs if m.code_ref is not None), refs[0])
+            ctx.clause(extracted=True)
+            out.append(
+                make_finding(
+                    "AS-210",
+                    confidence=P(),
+                    code_ref=first.code_ref,
+                    spec_ref=ctx.spec_ref("pinned_models"),
+                    param="version_pinning",
+                    status_hint="GAP",
+                    title=f"Model {first.name!r} is not in pinned_models",
+                    detail=f"the code uses {first.name} ({first.code_ref}); spec.yml pinned_models lists {', '.join(sorted(stated.values()))}",
+                    reason=f"The code uses {first.name} ({first.code_ref}); spec.yml pinned_models lists "
+                    f"{', '.join(sorted(stated.values()))}.",
+                    evidence=f"model={first.name!r}",
+                )
+            )
+            continue
+        if key in stated:  # the owner's statement decides what the id cannot show
+            first = next((m for m in refs if m.code_ref is not None), refs[0])
+            ctx.clause(extracted=True)
+            ctx.pass_(
+                PassedCheck(
+                    rule_id="AS-210",
+                    subject=first.name,
+                    confidence=P(),
+                    note=f"listed in pinned_models, {first.code_ref}",
+                )
+            )
+            continue
         no_snapshots = next((m.provider for m in refs if not offers_snapshots(m.provider)), None)
         if no_snapshots and not all(m.pinned for m in refs):
             # pinning is impossible here: say what that means instead of advising the impossible
@@ -1192,17 +1266,39 @@ def model_pinning(ctx: CheckContext) -> Iterable[Finding]:
         assumed_from = next((m.assumed_from for m in refs if m.assumed_from), None)
         conf = H() if assumed_from else P()
         if all(m.pinned for m in refs):
+            at = next((m.code_ref for m in refs if m.code_ref is not None), None)
+            rule = pin_judge(refs[0].name)[1]
             ctx.pass_(
                 PassedCheck(
                     rule_id="AS-210",
                     subject=refs[0].name,
                     confidence=conf,
-                    note=f"assumed: {assumed_from}; confirm the deployed value" if assumed_from else "",
+                    note=f"assumed: {assumed_from}; confirm the deployed value"
+                    if assumed_from
+                    else f"{rule}{f', {at}' if at else ''}",
                 )
             )
             continue
         bad = [m for m in refs if not m.pinned]
         first = next((m for m in bad if m.code_ref is not None), bad[0])
+        state, rule = pin_judge(first.name)
+        if state == "undecidable":  # never "not pinned": the id does not say
+            out.append(
+                make_finding(
+                    "AS-210",
+                    confidence=Confidence.attestation(),
+                    severity="attestation",
+                    code_ref=first.code_ref,
+                    param="version_pinning",
+                    status_hint="SIGN-OFF",
+                    title=f"Is {first.name!r} a fixed version?",
+                    detail=f"{first.name}: {rule}, so the id alone does not say whether it is a fixed version",
+                    reason=f"Is this model id a fixed version? {first.name} ({rule}, {first.code_ref}). Confirm under "
+                    "confirmed: in spec.yml, or list it under pinned_models:.",
+                    evidence=f"model={first.name!r}; rule: {rule}",
+                )
+            )
+            continue
         sites = [str(m.code_ref) for m in bad if m.code_ref is not None]
         sources = sorted({m.source for m in bad})
         out.append(
@@ -1211,6 +1307,9 @@ def model_pinning(ctx: CheckContext) -> Iterable[Finding]:
                 confidence=conf,
                 code_ref=first.code_ref,
                 title=f"Model {first.name!r} is not pinned" + (f" (assumed: {assumed_from})" if assumed_from else ""),
+                reason=f"Model {first.name!r} is not pinned ({rule}, {first.code_ref})."
+                if first.code_ref is not None
+                else None,
                 detail=f"{first.name} is an alias; the provider can change the model behind it"
                 + (f" ({len(sites)} call sites)" if len(sites) > 1 else ""),
                 evidence=f"{'+'.join(sources)}: model={first.name!r}"

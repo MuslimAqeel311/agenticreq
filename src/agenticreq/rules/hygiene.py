@@ -496,6 +496,16 @@ def dry_run(ctx: CheckContext) -> Iterable[Finding]:
         if only is None and not (is_high_impact_write(t) or c in approval):
             continue  # a dry run matters for writes that cannot be undone, not for a cache entry or a calendar slot
         ctx.clause(extracted=True)
+        if "dry_run_flag" in t.features:  # DRY_RUN read in the body: the mode exists, the flag is set outside the tool
+            ctx.pass_(
+                PassedCheck(
+                    rule_id="AS-227",
+                    subject=f"dry-run flag read by {t.name}",
+                    confidence=H(),
+                    note=f"the body branches on a dry-run flag ({t.code_ref})",
+                )
+            )
+            continue
         if any(canonical(p.name) in _DRY_RUN_PARAMS for p in t.params):
             if "dry_run_branch" in t.features:
                 ctx.pass_(

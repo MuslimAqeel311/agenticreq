@@ -1,0 +1,17 @@
+agent_id: payer
+risk_level: medium
+goal: {statement: Write reports, done_criteria: [a report exists]}
+out_of_scope: [legal advice]
+prohibited: []
+approval_required:
+  - {tool: pay_invoice, approver: lead@example.com}
+  - {tool: refund, approver: lead@example.com}
+  - {tool: archive, approver: lead@example.com}
+limits: []
+escalation:
+  - {metric: risk_score, op: ">=", threshold: 8, to: lead}
+untrusted_inputs: []
+owner: owner@example.com
+technical_owner: eng@example.com
+data_rules: {}
+bounds: {max_steps: 6}

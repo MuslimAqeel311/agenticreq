@@ -52,7 +52,7 @@ def _apply_waivers(
                 {
                     "rule_id": f.rule_id,
                     "detail": f.detail,
-                    "reason": w.reason,
+                    "reason": w.why,
                     "approved_by": w.approved_by or "",
                     "param": params[0] if params else "",
                 }
@@ -211,11 +211,11 @@ def run(
     if waived:
         report.metadata["waived"] = waived
     if ctx.spec is not None and ctx.spec.confirmed and mode != "audit":
-        from agenticreq.signoff import assess
+        from agenticreq.signoff import assess, why_text
 
         root = observed.root if observed is not None else None
         report.metadata["confirmed"] = {  # a sign-off line for any parameter is settled by its confirmed: entry
-            a.clause: {"state": st.state, "by": a.by, "reason": a.reason or st.message}
+            a.clause: {"state": st.state, "by": a.by, "reason": why_text(a) or st.message}
             for a in ctx.spec.confirmed
             for st in [assess(a, ctx.today, root)]
         }

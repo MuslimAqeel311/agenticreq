@@ -1590,8 +1590,40 @@
         "reason": {
           "anyOf": [
             {
-              "title": "Reason",
-              "type": "string"
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Reason"
+            },
+            {
+              "const": "TODO",
+              "description": "not written yet: `agenticreq check` reports it as a gap"
+            },
+            {
+              "const": "not_needed",
+              "description": "this does not apply to the project"
+            }
+          ]
+        },
+        "evidence": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Evidence"
             },
             {
               "const": "TODO",
@@ -1654,8 +1686,7 @@
         }
       },
       "required": [
-        "rule_id",
-        "reason"
+        "rule_id"
       ],
       "title": "Waiver",
       "type": "object"
@@ -3195,6 +3226,34 @@
           "default": null,
           "title": "Version Pinning",
           "description": "Level 2 (Observability & Change Safety). model version pinned. Also called: version_pinning (model_pinning, pin_model, pinned_model)."
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "pinned_models": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pinned Models",
+          "description": "Level 2 (Observability & Change Safety). model ids you state are fixed versions. Also called: pinned_models (fixed_models)."
         },
         {
           "const": "TODO",

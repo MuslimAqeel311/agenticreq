@@ -1,0 +1,15 @@
+agent_id: writer
+risk_level: medium
+goal: {statement: Write reports, done_criteria: [a report exists]}
+out_of_scope: [legal advice]
+prohibited: []
+approval_required:
+  - {tool: save_report, approver: lead@example.com, timeout: 1h, on_timeout: deny}
+limits: []
+escalation:
+  - {metric: risk_score, op: ">=", threshold: 8, to: lead}
+untrusted_inputs: []
+owner: owner@example.com
+technical_owner: eng@example.com
+data_rules: {}
+bounds: {max_steps: 6}

@@ -28,3 +28,35 @@ frameworks:
     exact: [final_result]
     prefix: [final_result_]
     note: structured-output tool when output_type is set
+  claude-agent-sdk:
+    note: built-in tools, allowed by name in allowed_tools= / tools=; they run in the SDK's own process
+    # capability: what the tool can do, so `prohibited` and `role_boundary` can name the ability and not the spelling
+    builtin:
+      Read: {effect: read}
+      Glob: {effect: read}
+      Grep: {effect: read}
+      WebFetch: {effect: read}
+      WebSearch: {effect: read}
+      ListMcpResources: {effect: read}
+      ReadMcpResource: {effect: read}
+      TodoWrite: {effect: read}
+      Task: {effect: read}
+      Skill: {effect: read}
+      SlashCommand: {effect: read}
+      ExitPlanMode: {effect: read}
+      Write: {effect: write, capability: file_write}
+      Edit: {effect: write, capability: file_write}
+      MultiEdit: {effect: write, capability: file_write}
+      NotebookEdit: {effect: write, capability: file_write}
+      Bash: {effect: write, capability: shell_execution}
+      BashOutput: {effect: read}
+      KillShell: {effect: write, capability: shell_execution}
+# the words a spec may use for a capability
+capability_names:
+  shell_execution: shell_execution
+  shell: shell_execution
+  run_shell: shell_execution
+  command_execution: shell_execution
+  file_write: file_write
+  file_writes: file_write
+  write_files: file_write

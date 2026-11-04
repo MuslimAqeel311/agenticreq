@@ -1,0 +1,3 @@
+entry: agent.py:main
+args: {task: go}
+tools: {}
