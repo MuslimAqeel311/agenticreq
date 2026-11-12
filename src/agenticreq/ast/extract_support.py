@@ -109,14 +109,9 @@ _BOUND_NAMES = load_yaml("bound_names.yml")
 BOUND_KWARGS: dict[str, str] = dict(_BOUND_NAMES["kwargs"])
 AGENT_BOUND_KWARGS: dict[str, str] = dict(_BOUND_NAMES["agent_kwargs"])
 BOUND_CALLS: dict[str, str] = dict(_BOUND_NAMES["calls"])
-GATE_CALLS = {
-    "interrupt": "interrupt",
-    "request_approval": "approval_call",
-    "ask_human": "human_input",
-    "get_human_approval": "approval_call",
-    "require_approval": "approval_call",
-    "confirm": "approval_call",
-}
+_APPROVAL_GATES = load_yaml("approval_gates.yml")
+#: every gate table lives in data/approval_gates.yml, one entry per framework mechanism
+GATE_CALLS: dict[str, str] = dict(_APPROVAL_GATES["gate_calls"])
 #: a call that asks a person, recognised by WHAT it says it does (ask_user_to_confirm, request_human_signoff,
 #: get_approval, confirm_with_user ...), not only by the few exact names above
 HUMAN_GATE_CALL = re.compile(
@@ -125,21 +120,7 @@ HUMAN_GATE_CALL = re.compile(
     r"^[a-z_]*_(approval|confirmation|consent)$",
     re.IGNORECASE,
 )
-GATE_KWARGS = {
-    "interrupt_before": "interrupt_before",
-    "interrupt_after": "interrupt_after",
-    "human_input": "human_input",
-    "needs_approval": "needs_approval",
-    "input_guardrails": "input_guardrail",
-    "output_guardrails": "output_guardrail",
-    "requires_approval": "needs_approval",
-    "require_approval": "needs_approval",
-    "require_confirmation": "needs_approval",
-    "tool_input_guardrails": "input_guardrail",
-    "step_callback": "step_callback",
-    "human_input_mode": "human_input",
-    "requires_confirmation": "needs_approval",
-}
+GATE_KWARGS: dict[str, str] = dict(_APPROVAL_GATES["gate_kwargs"])
 #: any other keyword that names a before-tool hook or an approval policy (Google ADK before_tool_callback, pre_tool_hook,
 #: tool_approval_policy, confirm_fn ...): a callable may block the call, but whether it does is not provable (unverified)
 GATE_HOOK_KWARG = re.compile(
@@ -154,18 +135,15 @@ EXCLUDE_KEY = re.compile(
     r"^(tools?|functions?|actions?)_?(excluded?|blocked?|denied|blacklist|denylist)$|^(disallowed|denylist|blacklist)$",
     re.IGNORECASE,
 )
-_APPROVAL_GATES = load_yaml("approval_gates.yml")
 GATE_HOOK_NAMES = frozenset(_APPROVAL_GATES["hook_kwargs"])
 GATE_HOOK_CALLS: dict[str, list[str]] = dict(_APPROVAL_GATES["hook_calls"])
 PERSON_IN_LOOP = frozenset(_APPROVAL_GATES["person_in_loop"])
+GATE_HOOK_DICT_KEYS = frozenset(_APPROVAL_GATES["hook_dict_keys"])
+#: middleware constructor -> the keyword naming the tools it pauses
+GATE_MIDDLEWARE: dict[str, str] = dict(_APPROVAL_GATES["middleware"])
 #: approval kwargs that belong to one tool (on its decorator / wrapper), never to the whole agent
 _TOOL_SCOPED_GATES = {"needs_approval", "requires_approval", "requires_confirmation", "require_confirmation"}
-GATE_DECORATORS = {
-    "input_guardrail": "input_guardrail",
-    "output_guardrail": "output_guardrail",
-    "tool_input_guardrail": "input_guardrail",
-    "requires_approval": "needs_approval",
-}
+GATE_DECORATORS: dict[str, str] = dict(_APPROVAL_GATES["gate_decorators"])
 MODEL_KWARGS = {"model", "model_id", "model_name", "llm", "deployment_name", "azure_deployment"}
 
 _LIVE_SECRET = re.compile(

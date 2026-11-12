@@ -18,7 +18,12 @@ from __future__ import annotations
 import ast
 from typing import Literal
 
+from agenticreq.data import load_yaml
+
 Coverage = Literal["all_paths", "partial", "unverified"]
+
+#: calls that only put the question to the person (data/approval_gates.yml: ask_calls)
+_ASK_CALLS = frozenset(load_yaml("approval_gates.yml").get("ask_calls") or ())
 
 #: calls that read or build values; seeing one both before and after the gate is not a bypass
 _PURE = {
@@ -134,7 +139,9 @@ def _effects(stmts: list[ast.stmt], skip: ast.AST | None = None) -> set[str]:
                 continue
             if isinstance(n, ast.Call):
                 name = _call_name(n.func)
-                if name and name not in _PURE and not name[:1].isupper():  # Model(...) builds a value
+                if (
+                    name and name not in _PURE and name not in _ASK_CALLS and not name[:1].isupper()
+                ):  # Model(...) builds a value
                     out.add(f"call:{name}")
             elif isinstance(n, (ast.Subscript, ast.Attribute)) and isinstance(n.ctx, ast.Store):
                 out.add(f"store:{ast.unparse(n.value)}")  # REFUNDS[key] = ..., self.state = ...

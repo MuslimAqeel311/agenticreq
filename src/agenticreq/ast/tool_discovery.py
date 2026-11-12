@@ -153,6 +153,14 @@ def _function_tool(
         body_bounds=ex._body_bounds(fn),
     )
     name = ex._add_tool(t, var, fn)
+    scan_gates(ex, fc, fn, name)
+    return name
+
+
+def scan_gates(ex: ProjectExtractor, fc: FileCtx, fn: FuncDef, name: str) -> None:
+    """The gates in a tool's own body: a call named like a human check, and the framework-neutral guard (any call
+    that can return or raise before the tool acts, whatever its name). A guard whose function asks a person (input()
+    with no time limit, or a helper that calls it) is a human gate; any other guard is a check to verify."""
     for inner in ast.walk(fn):
         if isinstance(inner, ast.Call) and (gate := _gate_kind(ex, fc, inner)):
             ref = _ref(fc.rel, inner)
@@ -170,16 +178,26 @@ def _function_tool(
                 )
     guard = guard_call(fn)
     if guard is not None and not any(g.tools == [name] for g in ex.obs.gates):
+        gname = _name(guard.func)
+        r = ex.symbols.resolve(fc, guard.func)
+        asks = gname == "input" or (
+            r is not None
+            and r.kind == "function"
+            and isinstance(r.node, (ast.FunctionDef, ast.AsyncFunctionDef))
+            and _asks_human(ex, r.node)
+        )
         ex.obs.gates.append(
             GateRef(
-                kind="guard_call",
+                kind="human_input" if gname == "input" else "approval_call" if asks else "guard_call",
                 tools=[name],
                 code_ref=_ref(fc.rel, guard),
                 coverage="unverified",
-                coverage_note=f"{_name(guard.func)}() can stop {name} before it acts; nothing shows it asks a person",
+                coverage_note=f"{gname}() asks a person and can stop {name} before it acts"
+                if asks
+                else f"{gname}() can stop {name} before it acts; nothing shows it asks a person",
+                waits_forever=asks and waits_forever(ex, fc, guard),
             )
         )
-    return name
 
 
 #: calls that test a value, never a decision: a guard around these is input handling, not approval
@@ -197,6 +215,9 @@ def guard_call(fn: ast.AST) -> ast.Call | None:
             continue
         for c in ast.walk(st.test):
             nm = _name(c.func) if isinstance(c, ast.Call) else None
+            if nm == "input":  # `if input("approve? ") != "y": return` asks a person
+                assert isinstance(c, ast.Call)
+                return c
             if nm and nm not in _NOT_A_GUARD and not (_VALIDATION.search(nm) and "approv" not in nm.lower()):
                 assert isinstance(c, ast.Call)
                 return c

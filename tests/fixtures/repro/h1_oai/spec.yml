@@ -1,0 +1,15 @@
+agent_id: gated
+risk_level: medium
+goal: {statement: Save records, done_criteria: [a record is saved]}
+out_of_scope: [legal advice]
+prohibited: []
+approval_required:
+  - {tool: save_record, approver: lead@example.com, timeout: 1h, on_timeout: deny}
+limits: []
+escalation:
+  - {metric: risk_score, op: ">=", threshold: 8, to: lead}
+untrusted_inputs: []
+owner: owner@example.com
+technical_owner: eng@example.com
+data_rules: {}
+bounds: {max_steps: 6}

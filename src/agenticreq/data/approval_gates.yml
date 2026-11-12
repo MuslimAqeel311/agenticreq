@@ -1,13 +1,90 @@
-# Each framework's own approval mechanism, beyond the keyword names read in ast/extract_support.py. These are hooks:
-# they may block a tool call, but whether they do is not provable from code, so each is an unverified gate.
-version: 1
+# How each framework pauses a tool call for a person. ast/extract_support.py loads every table below; nothing about
+# gates is hard-coded in Python except the framework-neutral rules (a call whose name says it asks a person, and a
+# call in a tool body that can return or raise before the write, whatever its name: ast/tool_discovery.py).
+#
+# A gate the framework enforces from configuration (needs_approval=True, interrupt_before=["tools"], a HITL
+# middleware entry set to True) covers every call of the tools it names. Every other mechanism here is a hook: it
+# MAY block the call, but whether it does is decided by code at run time, so it is an unverified gate. An unverified
+# gate is never a pass and never a hard gap: the result goes to "Check with a mock run".
+version: 2
+
+#: which mechanisms each framework offers (documentation and a test: every framework below has at least one entry
+#: in the tables that follow; names only, version rules live in supported_versions.yml)
+frameworks:
+  langgraph: [interrupt, interrupt_before, interrupt_after]
+  langchain: [HumanInTheLoopMiddleware]
+  llamaindex: [wait_for_event(HumanResponseEvent)]
+  strands: [add_callback(BeforeToolCallEvent), add_hook(BeforeToolCallEvent)]
+  haystack: [confirmation_strategies, confirmation_strategy, ConfirmationHook]
+  agno: [requires_confirmation]
+  openai-agents: [needs_approval, input_guardrails, output_guardrails, tool_input_guardrails]
+  google-adk: [before_tool_callback, require_confirmation]
+  crewai: [human_input]
+  claude-agent-sdk: [can_use_tool, PreToolUse]
+  autogen: [UserProxyAgent, human_input_mode]
+  semantic-kernel: [add_filter(AUTO_FUNCTION_INVOCATION)]
+  pydantic-ai: [requires_approval]
+
+#: a call with one of these names is a human gate (value: the gate kind)
+gate_calls:
+  interrupt: interrupt                 # LangGraph (only when the file imports langgraph)
+  request_approval: approval_call
+  ask_human: human_input
+  get_human_approval: approval_call
+  require_approval: approval_call
+  confirm: approval_call
+
+#: keyword arguments that turn on the framework's own approval (value: the gate kind)
+gate_kwargs:
+  interrupt_before: interrupt_before   # LangGraph
+  interrupt_after: interrupt_after     # LangGraph
+  human_input: human_input             # CrewAI Agent (Task(human_input=) reviews the answer, see agent_discovery.py)
+  needs_approval: needs_approval       # OpenAI Agents
+  input_guardrails: input_guardrail    # OpenAI Agents
+  output_guardrails: output_guardrail  # OpenAI Agents
+  requires_approval: needs_approval    # PydanticAI
+  require_approval: needs_approval
+  require_confirmation: needs_approval # Google ADK FunctionTool
+  tool_input_guardrails: input_guardrail
+  step_callback: step_callback
+  human_input_mode: human_input        # AutoGen
+  requires_confirmation: needs_approval # Agno
+
+#: decorators that are gates (value: the gate kind)
+gate_decorators:
+  input_guardrail: input_guardrail
+  output_guardrail: output_guardrail
+  tool_input_guardrail: input_guardrail
+  requires_approval: needs_approval
+
+#: keyword arguments that take a callback deciding each tool call (an unverified hook)
 hook_kwargs:
   - can_use_tool            # Claude Agent SDK
   - confirmation_strategies # Haystack Agent
   - confirmation_strategy
-#: a call that is a gate when one of the listed names appears in its arguments
+
+#: a call that is a gate when one of the listed names appears in its arguments (an unverified hook). Inside a tool's
+#: own body it gates that tool; elsewhere it gates the tools its callback names.
 hook_calls:
   wait_for_event: [HumanResponseEvent]              # LlamaIndex workflows
   add_filter: [AUTO_FUNCTION_INVOCATION]            # Semantic Kernel
-#: constructors that put a person in the loop
-person_in_loop: [UserProxyAgent]                    # AutoGen
+  add_callback: [BeforeToolCallEvent]               # Strands hook registry
+  add_hook: [BeforeToolCallEvent]                   # Strands
+
+#: keys of a `hooks=` mapping that run before every tool call (an unverified hook)
+hook_dict_keys:
+  - PreToolUse              # Claude Agent SDK
+
+#: constructors that put a person in the loop (an unverified hook)
+person_in_loop:
+  - UserProxyAgent          # AutoGen
+  - ConfirmationHook        # Haystack
+
+#: middleware constructors that pause named tools; the keyword holds {tool name: True | False | config}
+middleware:
+  HumanInTheLoopMiddleware: interrupt_on   # LangChain
+
+#: calls that put the question to the person right before a gate waits for the answer; they act on nothing, so one
+#: before the gate is not "the tool acted before approval" (ast/paths.py)
+ask_calls:
+  - write_event_to_stream   # LlamaIndex: emits the InputRequiredEvent the human answers

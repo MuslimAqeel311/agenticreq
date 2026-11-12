@@ -32,7 +32,9 @@ from agenticreq.ast.extract_support import (
     AGENT_BOUND_KWARGS,
     BOUND_KWARGS,
     GATE_HOOK_CALLS,
+    GATE_HOOK_DICT_KEYS,
     GATE_HOOK_KWARG,
+    GATE_MIDDLEWARE,
     GATE_HOOK_NAMES,
     GATE_KWARGS,
     MODEL_KWARGS,
@@ -101,6 +103,89 @@ def _filter_gate(ex: ProjectExtractor, fc: FileCtx, call: ast.Call, fname: str, 
                     coverage_note="a registered filter/hook asks a human; that it covers every path is not provable",
                 )
             )
+
+
+def _enclosing_class(fc: FileCtx, fn: ast.AST) -> ast.ClassDef | None:
+    for c in ast.walk(fc.tree):
+        if isinstance(c, ast.ClassDef) and any(m is fn for m in c.body):
+            return c
+    return None
+
+
+def _named_tools(ex: ProjectExtractor, node: ast.AST | None) -> list[str]:
+    """The declared tools a piece of code names in a string constant (``if event.tool_use["name"] == "save"``)."""
+    if node is None:
+        return []
+    return sorted(
+        {
+            n.value
+            for n in ast.walk(node)
+            if isinstance(n, ast.Constant) and isinstance(n.value, str) and n.value in ex.obs.declared_tools
+        }
+    )
+
+
+def _hook_gate(ex: ProjectExtractor, fc: FileCtx, call: ast.Call, fname: str, ref: SourceRef) -> None:
+    """A framework hook that can stop a tool call (data/approval_gates.yml: hook_calls, person_in_loop). Inside a
+    tool's own body it gates that tool; in a hook class or function it gates the tools that code names; else its
+    scope is unknown. Whether it stops the call is decided at run time: always unverified, never a pass."""
+    if any(g.code_ref == ref for g in ex.obs.gates):
+        return
+    fn = ex._enclosing_fn.get(id(call))
+    owner = (ex.node_tool.get(id(fn)) or ex._method_owner.get(id(fn))) if fn is not None else None
+    if owner and fn is not None:
+        cov, why = gate_coverage(fn, call)
+        tools: list[str] | None = [owner]
+        note = f"{fname} can stop {owner}" + (f" ({why})" if why else "") + "; whether it does is decided at run time"
+        cov = "partial" if cov == "partial" else "unverified"  # a hook decides at run time what to do
+    else:
+        cov = "unverified"
+        scope = _enclosing_class(fc, fn) if fn is not None else None
+        named = _named_tools(ex, scope or fn)
+        tools = named or None
+        note = f"{fname} can stop a tool call; " + (
+            f"its code names {', '.join(named)}" if named else "which tools it covers is not known"
+        )
+    ex.obs.gates.append(GateRef(kind="framework_hook", tools=tools, code_ref=ref, coverage=cov, coverage_note=note))
+
+
+def _middleware_gate(ex: ProjectExtractor, fc: FileCtx, call: ast.Call, fname: str, kw: str) -> None:
+    """A middleware that pauses the tools named in one keyword ({tool: True | False | config}): a tool set to True
+    or to a config is paused by the framework before every call (config, all paths); False pauses nothing; a value
+    the scan cannot read leaves the scope unknown."""
+    v = _kw(call, kw)
+    ref = _ref(fc.rel, v if v is not None else call)
+    if v is None:
+        return
+    if not isinstance(v, ast.Dict):
+        ex.obs.gates.append(
+            GateRef(
+                kind="hitl_middleware",
+                tools=None,
+                code_ref=ref,
+                coverage="unverified",
+                coverage_note=f"{fname}({kw}=...) is not a literal mapping; which tools it pauses is not known",
+            )
+        )
+        return
+    for k, val in zip(v.keys, v.values):
+        name = _str(k) if k is not None else None
+        if not name or k is None:
+            continue
+        ok, lit = literal(val)
+        if ok and lit in (False, None):
+            continue
+        ex.obs.gates.append(
+            GateRef(
+                kind="hitl_middleware",
+                tools=[name],
+                code_ref=_ref(fc.rel, k),
+                coverage="all_paths" if (ok and lit is True) or isinstance(val, ast.Dict) else "unverified",
+                coverage_note=f"{fname} pauses {name} for a person before every call"
+                if (ok and lit is True) or isinstance(val, ast.Dict)
+                else f"{fname}: whether {name} is paused is decided at run time",
+            )
+        )
 
 
 def _seq_elements(ev: Any, fr: Any, node: ast.AST | None, depth: int = 0) -> list[ast.expr]:
@@ -283,15 +368,22 @@ def _call_facts(ex: ProjectExtractor, fc: FileCtx, call: ast.Call, assigned_to: 
         if isinstance(x, (ast.Name, ast.Attribute))
     }
     if fname in PERSON_IN_LOOP or named_in_args & set(GATE_HOOK_CALLS.get(fname or "", ())):
-        ex.obs.gates.append(
-            GateRef(
-                kind="framework_hook",
-                tools=None,
-                code_ref=ref,
-                coverage="unverified",
-                coverage_note=f"{fname} can stop a tool call; which tools it covers is not known",
+        _hook_gate(ex, fc, call, fname, ref)
+    if fname in GATE_MIDDLEWARE:
+        _middleware_gate(ex, fc, call, fname, GATE_MIDDLEWARE[fname])
+    hooks = _kw(call, "hooks")
+    if isinstance(hooks, ast.Dict) and any(_str(k) in GATE_HOOK_DICT_KEYS for k in hooks.keys if k is not None):
+        key = next(_str(k) for k in hooks.keys if k is not None and _str(k) in GATE_HOOK_DICT_KEYS)
+        if not any(g.code_ref == _ref(fc.rel, hooks) for g in ex.obs.gates):
+            ex.obs.gates.append(
+                GateRef(
+                    kind="framework_hook",
+                    tools=None,
+                    code_ref=_ref(fc.rel, hooks),
+                    coverage="unverified",
+                    coverage_note=f"a {key} hook runs before every tool call; whether it stops one is decided at run time",
+                )
             )
-        )
     if gate_kind:
         if not any(g.code_ref == ref for g in ex.obs.gates):
             # inside a tool's own body it gates that tool only; in a dispatcher / graph node it gates the tools that

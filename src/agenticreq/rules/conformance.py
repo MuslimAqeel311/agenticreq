@@ -632,6 +632,13 @@ def approval_evidence(obs: ObservedAgent, tool: str) -> ApprovalEvidence:
     return ev
 
 
+#: gates that, with no tool named, are taken to cover every tool (unchanged behaviour)
+_GLOBAL_GATES = ("interrupt", "interrupt_before", "human_input", "needs_approval", "approval_call")
+#: gates whose scope is not known and whose decision is made at run time: they make a tool's approval a check for
+#: a mock run, never a pass and never a gap (data/approval_gates.yml)
+_HOOK_GATES = ("framework_hook", "hitl_middleware", "needs_approval(unscoped)")
+
+
 @rule("conformance", "AS-205")
 def approval_gates(ctx: CheckContext) -> Iterable[Finding]:
     s, obs = ctx.spec, ctx.observed
@@ -646,12 +653,7 @@ def approval_gates(ctx: CheckContext) -> Iterable[Finding]:
             continue  # AS-217 reports spec tools missing from code
         rt = approval_evidence(obs, a.tool)
         scoped = [g for g in obs.gates if g.tools and key in {canonical(t) for t in g.tools}]
-        global_ = [
-            g
-            for g in obs.gates
-            if g.tools is None
-            and g.kind in ("interrupt", "interrupt_before", "human_input", "needs_approval", "approval_call")
-        ]
+        global_ = [g for g in obs.gates if g.tools is None and g.kind in (*_GLOBAL_GATES, *_HOOK_GATES)]
         # a run with no approval says something when a gate exists, in the code or seen firing in another run; with
         # neither, the static gap stays
         if rt.ran_ungated and (scoped or global_ or rt.held):  # its result reached the model and no known gate fired
@@ -1374,11 +1376,10 @@ def tool_shape(ctx: CheckContext) -> Iterable[Finding]:
     prohibited = {canonical(t) for t in (s.prohibited_tools() if s else set())}
     gated = {canonical(t) for g in obs.gates if g.verified for t in (g.tools or [])}
     partly = {canonical(t): g for g in obs.gates if not g.verified for t in (g.tools or [])}
-    global_gate = any(
-        g.tools is None
-        and g.kind in ("interrupt", "interrupt_before", "human_input", "needs_approval", "approval_call")
-        for g in obs.gates
-    )
+    global_gate = any(g.tools is None and g.kind in _GLOBAL_GATES for g in obs.gates)
+    # a framework hook / middleware / unscoped approval whose tools are not known: it may cover this tool, so the
+    # tool is neither proven gated nor proven ungated (Check with a mock run, never a gap or a pass)
+    hook_gate = next((g for g in obs.gates if g.tools is None and g.kind in _HOOK_GATES), None)
     unbounded_policy = eff.get("unbounded_tool_policy", "warn")
     out = []
     for t in obs.loose_functions:  # no framework: what each function does, not whether the model can call it
@@ -1471,6 +1472,32 @@ def tool_shape(ctx: CheckContext) -> Iterable[Finding]:
                         reason=_then_run_text(
                             f"Cannot tell whether {t.name} writes: it {t.effect_reason} (line {t.effect_line})"
                         ),
+                        status_hint="CHECK",
+                    )
+                )
+            elif (
+                needs_gate
+                and c not in approval
+                and c not in gated
+                and (c in partly or not global_gate)
+                and (partly[c].coverage != "partial" if c in partly else hook_gate is not None)
+            ):
+                # a gate exists, but it is a hook decided at run time or its scope is unknown: not shown on every
+                # path, not shown missing. A gate proven to skip a path ("partial") stays a gap below.
+                g = partly.get(c) or hook_gate
+                assert g is not None
+                out.append(
+                    make_finding(
+                        "AS-212",
+                        confidence=U(),
+                        code_ref=t.code_ref,
+                        title=f"Approval gate for {t.name} not verified on every path",
+                        detail=f"{t.name} looks like a {'high-impact ' if high else ''}write; a {g.kind} gate was "
+                        f"found at {g.code_ref}, but whether it stops every call is decided at run time: "
+                        f"{g.coverage_note or 'which tools it covers is not known'}",
+                        evidence=f"gates found: {[x.kind for x in obs.gates]}; body features: {t.features or 'none'}",
+                        reason=f"Approval gate for {t.name} not verified on every path: {g.kind} at {g.code_ref}. "
+                        "Add a mock that exercises it, then run: agenticreq mock-run",
                         status_hint="CHECK",
                     )
                 )

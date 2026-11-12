@@ -53,9 +53,21 @@ _EFFECT_DEPTH = 4
 __all__ = ["ProjectExtractor", "extract", "iter_py_files", "SKIP_DIRS"]
 
 
-def _guard_after_write(g: GateRef, tool: str, write_line: int) -> bool:
+def _guard_after_write(g: GateRef, tool: str, write_line: int, fc: FileCtx, fn: FuncDef) -> bool:
+    """A guard inside the tool's own body that comes after its write gates nothing."""
+    ref = g.code_ref
+    inside = (
+        ref is not None
+        and ref.file == fc.rel
+        and fn.lineno <= (ref.line or 0) <= (getattr(fn, "end_lineno", None) or fn.lineno)
+    )
     return (
-        g.kind == "guard_call" and g.tools == [tool] and g.code_ref is not None and (g.code_ref.line or 0) > write_line
+        # a guard (guard_call, or a guard that asks a person: approval_call / human_input, always unverified)
+        (g.kind == "guard_call" or (g.kind in ("approval_call", "human_input") and g.coverage == "unverified"))
+        and g.tools == [tool]
+        and inside
+        and ref is not None
+        and (ref.line or 0) > write_line
     )
 
 
@@ -156,6 +168,7 @@ class ProjectExtractor:
         self.obs.bounds = unique
         if not self.obs.framework and not self.obs.declared_tools:
             self._loose_functions()
+        self._link_schema_handlers()
         self._attach_limits()
         self.obs.trace_evidence = tracing.trace_evidence(self)
         for rel, why in self.ev.errors:  # a config file the code reads could not be parsed: say so (AS-902)
@@ -211,6 +224,29 @@ class ProjectExtractor:
                     break
         return (fc, fn) if isinstance(fn, (ast.FunctionDef, ast.AsyncFunctionDef)) else None
 
+    def _link_schema_handlers(self) -> None:
+        """A tool declared only as a JSON schema (plain provider SDK code) runs the project function of the same
+        name. When exactly one such function exists, the gates in its body are that tool's gates (an
+        ``if not _approved(...): return`` before the write). Only gates: the tool's other facts are unchanged."""
+        from agenticreq.ast.effects import classify_body
+
+        for t in self.obs.declared_tools.values():
+            if t.kind != "dict-schema" or t.func_name:
+                continue
+            found = [
+                (fc, fc.functions[t.name])
+                for fc in self.files
+                if not is_test_file(fc.rel)
+                and isinstance(fc.functions.get(t.name), (ast.FunctionDef, ast.AsyncFunctionDef))
+            ]
+            if len(found) != 1 or any(g.tools and t.name in g.tools for g in self.obs.gates):
+                continue
+            fc, fn = found[0]
+            tool_discovery.scan_gates(self, fc, fn, t.name)
+            eff = classify_body(self, fc, fn)
+            if eff.line:  # a check after the write gates nothing
+                self.obs.gates = [g for g in self.obs.gates if not _guard_after_write(g, t.name, eff.line, fc, fn)]
+
     def _attach_limits(self) -> None:
         """Each tool's caps, in any of the forms ast/limits.py reads, with where they are."""
         from agenticreq.ast.limits import best, find_limits
@@ -225,7 +261,7 @@ class ProjectExtractor:
             eff = classify_body(self, fc, fn)
             t.effect, t.effect_reason, t.effect_line = eff.effect, eff.reason, eff.line
             if eff.line:  # a check after the write gates nothing
-                self.obs.gates = [g for g in self.obs.gates if not _guard_after_write(g, t.name, eff.line)]
+                self.obs.gates = [g for g in self.obs.gates if not _guard_after_write(g, t.name, eff.line, fc, fn)]
             lims = find_limits(self, fc, fn)
             if not lims:
                 continue
