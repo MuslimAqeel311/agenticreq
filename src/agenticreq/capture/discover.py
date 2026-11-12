@@ -518,7 +518,7 @@ def discover(
                 call.index += offset
                 res.calls.append(call)
             res.llm_misses += data["llm_misses"]
-            res.egress_blocked += data["egress_blocked"]
+            res.egress_blocked += [b for b in data["egress_blocked"] if b not in res.egress_blocked]
             res.by_run[run_id] = {
                 "llm_misses": list(data["llm_misses"]),
                 "egress_blocked": list(data["egress_blocked"]),
@@ -589,6 +589,7 @@ def _merge_kept(res: DiscoverResult, old: dict[str, Any]) -> None:
     else:
         res.llm_misses = [m for v in by_run.values() for m in v.get("llm_misses", [])] + res.llm_misses
         res.egress_blocked = [m for v in by_run.values() for m in v.get("egress_blocked", [])] + res.egress_blocked
+    res.egress_blocked = list(dict.fromkeys(res.egress_blocked))  # one line per blocked thing, across runs
     res.run_errors = {**{k: v for k, v in (old.get("run_errors") or {}).items() if k in keep}, **res.run_errors}
     res.libs_hooked = sorted(set(res.libs_hooked) | set(old.get("libs_hooked") or []))
     res.patched_tools += [str(t) for t in old.get("patched_tools") or [] if t not in res.patched_tools]

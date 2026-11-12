@@ -369,6 +369,95 @@ class WriteLoopStopped(OSError):
     """The agent keeps writing to a blocked folder. Not a PermissionError, so no retry loop swallows it."""
 
 
+#: programs the standard library and SDK platform headers ("Stainless" clients: OpenAI, Groq ...) start to describe
+#: the machine. Read-only, with fixed arguments: a run is never refused, or listed as blocked, for one of them.
+_PROBE_PROGRAMS = frozenset({"uname", "sw_vers", "ver"})
+_PROBE_FLAG = re.compile(r"^-{1,2}[A-Za-z][\w-]*$")
+
+
+def _argv(value: Any) -> list[str]:
+    if isinstance(value, (str, bytes, os.PathLike)):
+        text = os.fsdecode(value)
+        return [p.strip('"') for p in text.split()] if " " in text else [text]
+    if isinstance(value, (list, tuple)):
+        return [os.fsdecode(a) if isinstance(a, (str, bytes, os.PathLike)) else str(a) for a in value]
+    return []
+
+
+def _program(token: str) -> str:
+    base = re.split(r"[\\/]", token)[-1].lower()
+    return base[:-4] if base.endswith((".exe", ".com")) else base
+
+
+def is_platform_probe(event: str, args: tuple[Any, ...]) -> bool:
+    """A process start that only asks what machine this is: ``uname -p``, ``sw_vers -productVersion``, ``file -b
+    <path>`` (reads one file), ``ver`` or ``cmd /c ver`` (Windows). Anything else, or any extra argument, is not one.
+    Works on the audit-event arguments of all three OSes (a Windows shell=True call arrives as one string)."""
+    if event == "subprocess.Popen":
+        argv = _argv(args[1] if len(args) > 1 and args[1] else args[0] if args else None)
+    elif event == "os.posix_spawn":
+        argv = _argv(args[1] if len(args) > 1 else None)
+    else:
+        return False
+    if not argv:
+        return False
+    prog, rest = _program(argv[0]), argv[1:]
+    if prog in ("cmd", "command") and [a.lower() for a in rest[:1]] == ["/c"]:
+        prog, rest = (_program(rest[1]), rest[2:]) if len(rest) > 1 else ("", [])
+    if prog == "file":  # architecture(): `file -b <the interpreter>`; reads that one file
+        flags = [a for a in rest if a.startswith("-")]
+        return all(_PROBE_FLAG.match(a) for a in flags) and len(rest) - len(flags) <= 1
+    return prog in _PROBE_PROGRAMS and all(_PROBE_FLAG.match(a) for a in rest)
+
+
+def freeze_platform() -> None:
+    """Answer the standard library's platform lookups without starting a program, on every OS.
+
+    ``platform.platform()`` / ``uname().processor`` / ``architecture()`` / ``win32_ver()`` run ``uname -p``,
+    ``file`` or ``cmd /c ver``; SDKs call them for an OS header that has nothing to do with the model. The real values
+    are taken once here, before any guard is on (posix: those same read-only probes; Windows: the interpreter's own
+    ``sys.getwindowsversion()``, no process), and the helpers that would start a program return them afterwards."""
+    import platform
+
+    try:
+        platform.uname().processor  # noqa: B018 - computes and caches the real value on the cached uname()
+    except Exception:  # noqa: BLE001 - a platform lookup that fails stays the library's own business
+        pass
+    if sys.platform == "win32" and hasattr(platform, "_syscmd_ver"):
+        real_ver = platform._syscmd_ver
+
+        def _syscmd_ver(system: str = "", release: str = "", version: str = "", *a: Any, **k: Any) -> Any:
+            try:
+                v = sys.getwindowsversion()  # type: ignore[attr-defined]
+            except Exception:  # noqa: BLE001
+                return real_ver(system, release, version, *a, **k)
+            return (
+                system or "Microsoft Windows",
+                release or str(v.major if v.major < 10 else 10),
+                version or f"{v.major}.{v.minor}.{v.build}",
+            )
+
+        platform._syscmd_ver = _syscmd_ver  # type: ignore[attr-defined]
+    syscmd_file = getattr(platform, "_syscmd_file", None)
+    if syscmd_file is not None:
+        try:
+            known = {sys.executable: syscmd_file(sys.executable, "")}
+        except Exception:  # noqa: BLE001
+            known = {}
+
+        def _file(target: str, default: str = "") -> Any:
+            return known.get(target, default)
+
+        platform._syscmd_file = _file  # type: ignore[attr-defined]
+    proc = getattr(platform, "_Processor", None)
+    if proc is not None and hasattr(proc, "from_subprocess"):
+        try:
+            value = platform.uname().processor
+        except Exception:  # noqa: BLE001
+            value = ""
+        proc.from_subprocess = staticmethod(lambda: value)
+
+
 class ProcessGuard:
     """Blocks what the network guard cannot see: starting other programs and changing files outside a scratch area.
 
@@ -503,7 +592,11 @@ class ProcessGuard:
         if not self.active:
             return
         if event in _EXEC_EVENTS:
+            if is_platform_probe(event, args):
+                return  # the interpreter / an SDK asking what machine this is: read-only, never listed
             first = args[0] if args else ""
+            if not first and event == "subprocess.Popen" and len(args) > 1:  # executable=None: name it from argv
+                first = (_argv(args[1]) or [""])[0]
             self._deny(f"exec:{os.fsdecode(first) if isinstance(first, (str, bytes, os.PathLike)) else event}", event)
         elif event == "open" and len(args) >= 3 and isinstance(args[0], (str, bytes, os.PathLike)):
             if self._writes(args[1], args[2]):

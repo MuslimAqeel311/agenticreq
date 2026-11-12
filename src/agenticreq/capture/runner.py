@@ -20,7 +20,7 @@ from agenticreq.capture.entry import split_entry
 from agenticreq.capture.gates import GateProbe
 from agenticreq.capture.hook import CaptureSession
 from agenticreq.capture.responder import CannedResponder, MockConfig
-from agenticreq.capture.guard import LLM_HOSTS, ProcessGuard, SocketGuard
+from agenticreq.capture.guard import LLM_HOSTS, ProcessGuard, SocketGuard, freeze_platform
 from agenticreq.capture.wire import configure
 
 
@@ -331,6 +331,7 @@ def main(cfg_path: str) -> int:
     if cfg.get("providers"):
         configure(cfg["providers"])
     hosts = [h for h in (cfg.get("providers") or {}).get("openai_compatible_hosts") or []]
+    freeze_platform()  # before any guard: platform lookups never start a program during the run
     guard = SocketGuard([], (*LLM_HOSTS, *hosts))  # a mock run has no network: its model is canned, its tools are local
     guard.install()
     # writes are allowed in the temp folder, the project's .agenticreq/ and the paths under allow_write: in
@@ -405,7 +406,7 @@ def main(cfg_path: str) -> int:
     out = {
         "run_id": cfg["run_id"],
         "calls": [c.model_dump(mode="json") for c in session.calls],
-        "egress_blocked": session.blocked + guard.blocked + procs.blocked,
+        "egress_blocked": list(dict.fromkeys(session.blocked + guard.blocked + procs.blocked)),
         "llm_misses": guard.llm_misses,
         "notes": guard.notes + [f"capture: {m}" for m in session.errors],
         "libs_hooked": session.libs_hooked,
