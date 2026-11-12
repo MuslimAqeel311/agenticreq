@@ -170,6 +170,20 @@ def _crash_hint(msg: str, python: str | None) -> str:
 _NEXT = "agenticreq mock-run"
 #: where frameworks keep per-user config, cache and data (Linux and macOS / Windows)
 _USER_DIRS = ("XDG_CONFIG_HOME", "XDG_CACHE_HOME", "XDG_DATA_HOME", "XDG_STATE_HOME", "APPDATA", "LOCALAPPDATA")
+#: per-user folders under the home folder: Linux (XDG defaults), macOS (~/Library) and Windows (%USERPROFILE%\AppData)
+_HOME_SUBDIRS = (
+    ".config",
+    ".cache",
+    ".local/share",
+    ".local/state",
+    "Library/Application Support",
+    "Library/Caches",
+    "Library/Preferences",
+    "Library/Logs",
+    "AppData/Roaming",
+    "AppData/Local",
+    "AppData/LocalLow",
+)
 
 
 def _calls(n: int) -> str:
@@ -243,7 +257,43 @@ def explain(
             f"{lead}. The run stopped{at} with {err}: the {f['sdk']} SDK rejected the request before sending it."
             f"{hidden} Fix the value or the model, then run: {_NEXT}"
         )
-    return f"{lead}. The run stopped{at} with {err}.{hidden} Fix the error, then run: {_NEXT}"
+    return f"{lead}. The run stopped{at} with {err}.{_origin(f)}{hidden} Fix the error, then run: {_NEXT}"
+
+
+#: the variables a mock run points at scratch folders (scratch_config_dirs): an import-time lookup of one can fail
+_REDIRECTED_VARS = "HOME / USERPROFILE, APPDATA, LOCALAPPDATA and XDG_*"
+
+
+def _origin(f: dict[str, Any]) -> str:
+    """Where an error came from when it is not the project's own code: the package and its file:line, whether it
+    happened while that package was imported, and the file it was about to use. Never a bare exception name."""
+    out = ""
+    pkg, at = str(f.get("package") or ""), str(f.get("package_where") or "")
+    if pkg:
+        fw = next((x for x in (_framework_of(p) for p in [*(f.get("packages") or []), pkg]) if x), "")
+        out += f" It was raised inside {pkg}{f' ({fw})' if fw and fw != pkg else ''}" + (f" at {at}" if at else "")
+        out += " while it was being imported." if f.get("importing") else "."
+        if f.get("importing"):
+            out += (
+                f" A mock run points {_REDIRECTED_VARS} at scratch folders it creates; if the import looks one of "
+                "them up, set it under env: in mocks.yml."
+            )
+    if f.get("filename"):
+        out += f" The file involved is {f['filename']}."
+    return out
+
+
+def _framework_of(package: str) -> str:
+    """The framework an installed package belongs to (crewai, langgraph ...), from ast/framework.py's table."""
+    try:
+        from agenticreq.ast.framework import FRAMEWORKS
+    except Exception:  # noqa: BLE001
+        return ""
+    top = package.split(".")[0]
+    for module, (name, _dist) in FRAMEWORKS.items():
+        if top == module.split(".")[0]:
+            return name
+    return ""
 
 
 def _isolated_package(tmp: str) -> str:
@@ -373,9 +423,12 @@ def scratch_config_dirs(tmp: str, python: str | None = None) -> dict[str, str]:
     the home folder, and write there freely (also when the real folders are read-only), while the user's own files
     stay as they are. Packages installed with ``pip --user`` stay importable."""
     home = Path(tmp) / "user" / "home"
-    home.mkdir(parents=True, exist_ok=True)
     out = {k: str(Path(tmp) / "user" / k.lower()) for k in _USER_DIRS}
     out.update({"HOME": str(home), "USERPROFILE": str(home)})
+    # every redirected folder exists before the run, and so do the per-user folders each OS's libraries look up
+    # under the (scratch) home: an import-time lookup (CrewAI appdirs + pywin32 on Windows) must find a folder
+    for d in [*out.values(), *(str(home / sub) for sub in _HOME_SUBDIRS)]:
+        Path(d).mkdir(parents=True, exist_ok=True)
     base = _user_base(python)
     if base:
         out["PYTHONUSERBASE"] = base
@@ -447,7 +500,9 @@ def discover(
     from agenticreq.data import load_yaml
 
     with tempfile.TemporaryDirectory(prefix="agenticreq-") as tmp:
-        env.update(scratch_config_dirs(tmp, python))
+        redirected = scratch_config_dirs(tmp, python)
+        env.update(redirected)
+        env.update(mocks.env or {})  # env: in mocks.yml is the user's own choice: it wins (checked in build_child_env)
         wrappers = load_yaml("tool_wrappers.yml")
         env["PYTHONPATH"] = os.pathsep.join(x for x in (_isolated_package(tmp), env.get("PYTHONPATH", "")) if x)
         for run_id, spec in plan:
@@ -470,6 +525,8 @@ def discover(
                 "probe_modules": probe_modules,
                 "mocks_data": mocks.for_run(spec.name if spec is not None else None).to_dict(),
                 "allow_write": allowed,
+                # the folders this run itself redirected: the write guard never blocks them
+                "redirected": [v for k, v in redirected.items() if k not in ("PYTHONUSERBASE", "PYENV_ROOT")],
                 "call_args": run_args,
                 "providers": load_yaml("providers.yml"),
                 "wrapper_levels": wrappers["levels"],

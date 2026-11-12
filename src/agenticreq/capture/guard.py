@@ -148,19 +148,37 @@ def build_child_env(
     return env, scrubbed
 
 
-def norm_path(path: str | Path) -> str:
-    """One spelling of a path, for comparing: / and \\ alike, `..` and symlinks resolved, and on Windows the case
-    folded. A file reached through ../ or a symlink is judged where it really is."""
-    text = str(path)
-    if os.sep == "/":
+def norm_path(path: str | Path, mod: Any = os.path) -> str:
+    """One spelling of a path, for comparing: / and \\ alike, `..` and symlinks resolved, trailing separators
+    dropped, and on Windows the case folded and the long-path prefixes (``\\\\?\\``, ``\\\\?\\UNC\\``) removed. A file
+    reached through ../ or a symlink is judged where it really is. ``mod`` is the path module of the OS
+    (``ntpath`` / ``posixpath``); tests pass the other OS's one."""
+    text = os.fsdecode(path) if isinstance(path, (bytes, os.PathLike)) else str(path)
+    if mod.sep == "/":
         text = text.replace("\\", "/")
-    return os.path.normcase(os.path.realpath(os.path.abspath(text)))
+    else:
+        text = _strip_long_prefix(text.replace("/", "\\"))
+    out: str = mod.normcase(mod.realpath(mod.abspath(text)))
+    if mod.sep != "/":
+        out = _strip_long_prefix(out)
+    root = mod.splitdrive(out)[0] + mod.sep
+    return out if out == root or out.lower() == root.lower() else out.rstrip(mod.sep)
 
 
-def under(path: str | Path, roots: list[str]) -> bool:
-    """``path`` is one of ``roots`` or inside one (an allowed folder includes everything under it)."""
-    p = norm_path(path)
-    return any(p == r or p.startswith(r.rstrip(os.sep) + os.sep) for r in roots)
+def _strip_long_prefix(text: str) -> str:
+    """``\\\\?\\C:\\x`` -> ``C:\\x`` and ``\\\\?\\UNC\\srv\\share`` -> ``\\\\srv\\share`` (any case)."""
+    if text[:8].lower() == "\\\\?\\unc\\":
+        return "\\\\" + text[8:]
+    if text.startswith(("\\\\?\\", "\\\\.\\")) and text[5:6] == ":":
+        return text[4:]
+    return text
+
+
+def under(path: str | Path, roots: list[str], mod: Any = os.path) -> bool:
+    """``path`` is one of ``roots`` or inside one (an allowed folder includes everything under it). ``roots`` are
+    already normalised with :func:`norm_path` (same ``mod``)."""
+    p = norm_path(path, mod)
+    return any(p == r or p.startswith(r.rstrip(mod.sep) + mod.sep) for r in roots)
 
 
 def gate(mock_tools: str | Path | None) -> Any:

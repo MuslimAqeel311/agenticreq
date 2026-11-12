@@ -10,6 +10,7 @@ import asyncio
 import importlib
 import inspect
 import json
+import os
 import runpy
 import sys
 import traceback
@@ -249,9 +250,24 @@ def describe_failure(exc: BaseException, entry: str, phase: str) -> dict[str, An
         s = str(e).strip()
         return s.splitlines()[0][:300] if s else ""
 
+    # where inside an installed package it was raised, and whether that happened while a module was imported
+    pkg_where = ""
+    if frames and raised_in:
+        tail = _norm(frames[-1].filename)
+        for marker in ("/site-packages/", "/dist-packages/"):
+            if marker in tail:
+                pkg_where = f"{tail.split(marker, 1)[1]}:{frames[-1].lineno}"
+    importing = phase == "run" and any("importlib._bootstrap" in f.filename for f in frames)
+    filename = getattr(exc, "filename", None)
     return {
         "type": type(exc).__name__,
         "message": text(exc),
+        "package": raised_in,
+        # every installed package the traceback passes through, outermost first (the framework being imported)
+        "packages": list(dict.fromkeys(p for p in (_package_of(fr.filename) for fr in frames) if p)),
+        "package_where": pkg_where,
+        "importing": importing,
+        "filename": os.fsdecode(filename) if isinstance(filename, (str, bytes, os.PathLike)) else "",
         "where": rel,
         "phase": phase,
         "entry_missing": entry_missing,
@@ -337,7 +353,12 @@ def main(cfg_path: str) -> int:
     # writes are allowed in the temp folder, the project's .agenticreq/ and the paths under allow_write: in
     # mocks.yml; nothing else (no library cache folders either)
     procs = ProcessGuard(
-        [*(cfg.get("allow_write") or []), str(Path(cfg["out"]).resolve().parent), str(Path.cwd() / ".agenticreq")],
+        [
+            *(cfg.get("allow_write") or []),
+            *(cfg.get("redirected") or []),
+            str(Path(cfg["out"]).resolve().parent),
+            str(Path.cwd() / ".agenticreq"),
+        ],
         cache_dirs=False,
         project=str(Path.cwd()),
     )
