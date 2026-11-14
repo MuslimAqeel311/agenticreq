@@ -5,6 +5,23 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
+### Fixed
+- Approval gates of LangChain (HumanInTheLoopMiddleware), LlamaIndex (wait_for_event), Strands (hook events),
+  Claude Agent SDK (PreToolUse hooks) and Haystack (ConfirmationHook), and project helpers that ask a person, are
+  recognised; a gate decided at run time is "Check with a mock run", never a gap or a pass (data/approval_gates.yml).
+- A mock run older than the code (content or time) is never evidence: its items return to "Check with a mock run"
+  and the result is not a pass.
+- Mock runs: platform lookups start no program; every redirected per-user folder exists; `env:` wins; a blocked
+  program and an import failure each have their own message; each handoff is taken once per run.
+- Limits read from class attributes, helper call sites and per-agent factories; several values or a run-time value go
+  to sign-off. Gemini / ADK upper-case schema types. `$` inside spec text is kept.
+
+### Added
+- `--entry` on `audit` / `check`, and `include:` / `exclude:` in `spec.yml`; the report header names what was scanned.
+- `--spec` resolves against the folder being checked.
+- `mocks` stubs tools that reach a database or HTTP service and names connections the run will block.
+- Windows classifier; `httpx>=0.28,<1`; docs linked from `--help`.
+
 ## [0.1.0a1] - 2026-11-02
 
 First alpha release. Packaging, repository and CI work only; the checks, rules, report text, exit codes and spec
