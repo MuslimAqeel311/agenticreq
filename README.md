@@ -198,7 +198,8 @@ The report header says what was scanned.
 ## Supported frameworks
 
 agenticreq has been tested on a multi-agent project in each of these 15 frameworks, and verified at every step:
-`audit`, `init`, `validate`, `check`, `mocks`, `mock-run`, the `confirmed:` sign-off, and `check` again.
+`audit`, `init`, `validate`, `check`, `mocks`, `mock-run`, the `confirmed:` sign-off, and `check` again
+([docs/verification.md](docs/verification.md) has the results).
 
 1. LangGraph
 2. LangChain
