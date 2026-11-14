@@ -40,6 +40,7 @@ from agenticreq.ast.extract_support import (
     MODEL_KWARGS,
     NAME_KEYS,
     PERSON_IN_LOOP,
+    SESSION_BOUNDS,
     TOOL_LIST_KWARGS,
     TOOL_WRAPPERS,
     _GENERIC_BUILDER,
@@ -350,7 +351,8 @@ def _call_facts(ex: ProjectExtractor, fc: FileCtx, call: ast.Call, assigned_to: 
         ex._model_from_node(fc, call.args[0], ref, provider)
     # bounds (an expanded agent call recorded its own, one per agent). A bound on an agent's own constructor belongs
     # to that agent; one on a run / graph call applies to every agent.
-    owner = built[0].name if fname in ex.agent_ctors and len(built) == 1 else None
+    # ClaudeAgentOptions(max_turns=...) bounds the whole session, its subagents too: a run-level bound
+    owner = built[0].name if fname in ex.agent_ctors and len(built) == 1 and fname not in SESSION_BOUNDS else None
     limits = {**BOUND_KWARGS, **AGENT_BOUND_KWARGS} if fname in ex.agent_ctors else BOUND_KWARGS
     for k in call.keywords if id(call) not in ex._agent_bounds else []:
         if k.arg in limits:
@@ -693,9 +695,24 @@ def _declared_agent(
         else None
     )
     own_key = sv(NAME_KEYS[fname]) if fname in NAME_KEYS else None
+    # agents={"billing": AgentDefinition(...)} (Claude Agent SDK subagents): the key is the agent's name
+    holder = ev.parents(fc).get(id(call))
+    dict_key = (
+        next(
+            (
+                k.value
+                for k, v in zip(holder.keys, holder.values)
+                if v is call and isinstance(k, ast.Constant) and isinstance(k.value, str)
+            ),
+            None,
+        )
+        if isinstance(holder, ast.Dict)
+        else None
+    )
     name = (
         sv("name")
         or positional
+        or dict_key
         or sv("role")
         or own_key
         or cv("name")

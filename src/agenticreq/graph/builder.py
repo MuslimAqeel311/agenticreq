@@ -60,10 +60,17 @@ def _node_name(
     ]
     if by_prompt:
         return max(by_prompt, key=lambda a: len(a.system_prompt or "")).name
-    named = [a for a in obs.declared_agents if a.name and a.name in prompt and a.name not in taken]
+    import re
+
+    def at(name: str) -> int:
+        """Where ``name`` stands as a word of its own (``billing`` is not inside ``ask_billing``), else -1."""
+        m = re.search(rf"(?<![\w]){re.escape(name)}(?![\w])", prompt or "")
+        return m.start() if m else -1
+
+    named = [a for a in obs.declared_agents if a.name and at(a.name) >= 0 and a.name not in taken]
     if not named:
         return None
-    return min(named, key=lambda a: prompt.find(a.name or "")).name  # "You are <role>" comes first
+    return min(named, key=lambda a: at(a.name or "")).name  # "You are <role>" comes first
 
 
 def _target_from_call(name: str, args: dict[str, object]) -> str | None:

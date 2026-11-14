@@ -346,11 +346,32 @@ def _local_list_tools(ex: ProjectExtractor, fc: FileCtx, fn: FuncDef, var: str, 
     return out
 
 
+def _in_process_servers(ex: ProjectExtractor, fc: FileCtx, node: ast.AST) -> bool:
+    """Every server in this mapping is built in the project with its tools listed (Claude Agent SDK
+    ``create_sdk_mcp_server(name=..., tools=[a, b])``), so no tool arrives from outside the code."""
+    if not isinstance(node, ast.Dict) or not node.values:
+        return False
+    for v in node.values:
+        target: ast.AST | None = v
+        if isinstance(v, (ast.Name, ast.Attribute)):
+            r = ex.symbols.resolve(fc, v)
+            target = r.node if r is not None and r.kind == "const" else None
+        if not (
+            isinstance(target, ast.Call)
+            and (_name(target.func) or "").lower() == "create_sdk_mcp_server"
+            and _kw(target, "tools") is not None
+        ):
+            return False
+    return True
+
+
 def _dynamic_source(ex: ProjectExtractor, fc: FileCtx, x: ast.AST) -> str | None:
     """Why this node hands the agent tools the code does not name (MCP server, toolset, registry), else None."""
     if isinstance(x, ast.keyword) and x.arg in DYNAMIC_TOOL_KWARGS:
         if _registry_names(ex, x.value) is not None:
             return None  # a toolset the code fills itself: its tools are read from the registrations, not unknown
+        if _in_process_servers(ex, fc, x.value):
+            return None  # mcp_servers={"shop": create_sdk_mcp_server(tools=[...])}: the tools are written in the code
         return f"`{x.arg}=` supplies tools at run time"
     if isinstance(x, ast.Dict):  # a hosted MCP server: {"type": "mcp", "server_url": ...}
         for k, v in zip(x.keys, x.values):

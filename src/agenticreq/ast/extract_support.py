@@ -332,6 +332,8 @@ _CALLBACK_KEYS = {"callbacks", "callback_manager"}
 #: agent constructors whose first positional argument is the agent's name (AutoGen)
 _NAMED_FIRST_ARG = set(_AGENT_CLASSES["named_first_arg"])
 NAME_KEYS: dict[str, str] = dict(_AGENT_CLASSES["name_keys"])
+#: agent constructors whose bounds cover the whole session (subagents included)
+SESSION_BOUNDS = frozenset(_AGENT_CLASSES.get("session_bounds") or ())
 #: multi-agent groups: every participant takes turns / is selected by a coordinator (AutoGen teams,
 #: LlamaIndex AgentWorkflow, CrewAI hierarchical crews, AutoGen 0.2 GroupChat)
 _GROUP_CTORS = set(_AGENT_CLASSES["groups"])

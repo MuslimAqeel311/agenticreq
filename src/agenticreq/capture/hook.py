@@ -27,6 +27,9 @@ from agenticreq.models.observed import CapturedCall
 HOOKED_LIBS = ("httpx", "httpx2")
 #: other HTTP clients agents reach a model with; each is hooked when it is installed
 OTHER_LIBS = ("requests", "aiohttp")
+#: libraries that carry their own HTTP transport (module -> the CaptureSession method that patches it); each is
+#: patched when the agent imports it
+OWN_TRANSPORTS = {"dspy._vendor.lm15.transports": "_patch_lm15"}
 
 
 class EgressBlocked(RuntimeError):
@@ -235,8 +238,104 @@ class CaptureSession:
     def record_response(self, call: CapturedCall, response_json: dict[str, Any]) -> None:
         call.tool_calls = parse_response_tool_calls(call.provider, response_json)
 
+    # ------------------------------------------------------------ libraries with their own HTTP transport
+    def _patch_lm15(self, mod: ModuleType) -> None:
+        """DSPy's vendored lm15 transport (stdlib sockets, no httpx): answer model requests the same way."""
+        session = self
+        sync_cls, async_cls = mod.StdlibTransport, mod.StdlibAsyncTransport
+        sync_resp, async_resp = mod.TransportResponse, mod.AsyncTransportResponse
+        orig_stream: Callable[..., Any] = sync_cls.stream
+        orig_do: Callable[..., Any] = async_cls._do_stream
+
+        def _answer(request: Any) -> tuple[int, dict[str, str], bytes] | None:
+            url = str(request.url)
+            body = session._llm_body(url, str(request.method), request.body)
+            headers = dict(request.headers or [])
+            return session.answer(url, body, "lm15", trace_header(headers)) if body is not None else None
+
+        def stream(self_: Any, request: Any) -> Any:
+            a = _answer(request)
+            if a is None:
+                return orig_stream(self_, request)
+            return sync_resp(
+                status=a[0],
+                reason="OK" if a[0] == 200 else "Bad Request",
+                headers=list(a[1].items()),
+                http_version="HTTP/1.1",
+                chunks=iter([a[2]]),
+                release=lambda _consumed: None,
+            )
+
+        async def _do_stream(self_: Any, request: Any) -> Any:
+            a = _answer(request)
+            if a is None:
+                return await orig_do(self_, request)
+
+            async def chunks() -> Any:
+                yield a[2]
+
+            async def release(_consumed: bool) -> None:
+                return None
+
+            return async_resp(
+                status=a[0],
+                reason="OK" if a[0] == 200 else "Bad Request",
+                headers=list(a[1].items()),
+                http_version="HTTP/1.1",
+                chunks=chunks(),
+                release=release,
+            )
+
+        self._originals += [(sync_cls, "stream", orig_stream), (async_cls, "_do_stream", orig_do)]
+        sync_cls.stream = stream
+        async_cls._do_stream = _do_stream
+        if "lm15" not in self.libs_hooked:
+            self.libs_hooked.append("lm15")
+
+    def _own_transports(self) -> None:
+        """Patch each library in OWN_TRANSPORTS when it is imported (or now, when it already is): the agent's run
+        never imports a library it does not use."""
+        import sys
+
+        session = self
+        for name, method in OWN_TRANSPORTS.items():
+            if name in sys.modules:
+                getattr(session, method)(sys.modules[name])
+
+        class _Finder:
+            busy = False
+
+            def find_spec(self, name: str, path: Any = None, target: Any = None) -> Any:
+                if name not in OWN_TRANSPORTS or self.busy:
+                    return None
+                import importlib.util
+
+                self.busy = True
+                try:
+                    spec = importlib.util.find_spec(name)
+                finally:
+                    self.busy = False
+                if spec is None or spec.loader is None:
+                    return None
+                loader = spec.loader
+
+                class _Loader:
+                    def create_module(self, s: Any) -> Any:
+                        return loader.create_module(s)
+
+                    def exec_module(self, module: ModuleType) -> None:
+                        loader.exec_module(module)
+                        getattr(session, OWN_TRANSPORTS[name])(module)
+
+                spec.loader = _Loader()  # type: ignore[assignment]
+                return spec
+
+        self._finder = _Finder()
+        sys.meta_path.insert(0, self._finder)
+
     # ------------------------------------------------------------ install / uninstall
     def install(self) -> list[str]:
+        self._own_transports()
         for libname in HOOKED_LIBS:
             try:
                 lib = importlib.import_module(libname)
@@ -328,6 +427,11 @@ class CaptureSession:
             self.errors.append(f"response could not be recorded ({type(e).__name__}); its tool calls are missing")
 
     def uninstall(self) -> None:
+        import sys
+
+        finder = getattr(self, "_finder", None)
+        if finder is not None and finder in sys.meta_path:
+            sys.meta_path.remove(finder)
         for cls, attr, orig in reversed(self._originals):
             setattr(cls, attr, orig)
         self._originals.clear()

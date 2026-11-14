@@ -21,6 +21,8 @@ frameworks:
 groups: [RoundRobinGroupChat, SelectorGroupChat, Swarm, MagenticOneGroupChat, GroupChat, AgentWorkflow, Crew, Team, AgentGroupChat]
 #: constructors whose first positional argument is the agent's name
 named_first_arg: [AssistantAgent, UserProxyAgent, ConversableAgent, CodeExecutorAgent]
+#: agent constructors whose bounds (max_turns ...) cover the whole session, subagents included: run-level bounds
+session_bounds: [ClaudeAgentOptions]
 #: constructors with no name= of their own, and the keyword that stands for it
 name_keys:
   AgentDefinition: description

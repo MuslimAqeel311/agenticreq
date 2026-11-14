@@ -105,6 +105,21 @@ def _decorated_tool(ex: ProjectExtractor, fc: FileCtx, fn: FuncDef) -> None:
         return
 
 
+_PY_TYPES = {"str": "string", "int": "integer", "float": "number", "bool": "boolean", "list": "array", "dict": "object"}
+
+
+def _params_from_schema_arg(node: ast.Dict) -> list[ParamSchema]:
+    """``{"order_id": str, "amount": float}`` (name -> Python type) or a JSON-schema dict with ``properties``."""
+    ok, js = literal(node)
+    if ok and isinstance(js, dict) and "properties" in js:
+        return params_from_json_schema(js)
+    out = []
+    for k, v in zip(node.keys, node.values):
+        if isinstance(k, ast.Constant) and isinstance(k.value, str):
+            out.append(ParamSchema(name=k.value, type=_PY_TYPES.get(_name(v) or "", None), required=True))
+    return out
+
+
 def _function_tool(
     ex: ProjectExtractor,
     fc: FileCtx,
@@ -139,6 +154,10 @@ def _function_tool(
     schema_node = _kw(opts, "args_schema") if opts is not None else None
     if schema_node is not None and (sc := ex._resolve_class(fc, schema_node)) is not None:
         params = params_from_model_class(sc) or params
+    # Claude Agent SDK @tool("name", "description", {"order_id": str, "amount": float}) or a JSON-schema dict
+    if opts is not None and len(opts.args) >= 3 and isinstance(opts.args[2], ast.Dict):
+        params = _params_from_schema_arg(opts.args[2]) or params
+        desc_override = desc_override or _str(opts.args[1])
     if "browser_use" in fc.imports:  # browser-use fills these special parameters itself
         params = [p for p in params if p.name not in _BROWSER_USE_INJECTED]
     t = ToolSchema(

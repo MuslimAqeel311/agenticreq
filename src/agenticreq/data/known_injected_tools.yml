@@ -25,6 +25,9 @@ frameworks:
   autogen:
     prefix: [transfer_to_]
     note: Swarm handoffs=["x"] become transfer_to_x tools
+  dspy:
+    exact: [submit, finish]
+    note: dspy.ReAct adds the tool the model ends with (finish in older releases, submit in newer)
   agno:
     exact: [delegate_task_to_member, delegate_task_to_members, transfer_task_to_member, forward_task_to_member]
     note: Team(members=[...]) gives the team leader these tools to pass work to a member
