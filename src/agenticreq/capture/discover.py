@@ -231,6 +231,8 @@ def explain(
         return (
             f"{head} The agent may wait for input or loop. Raise --timeout, or fix what it waits for, then run: {_NEXT}"
         )
+    if "agenticreq mock run: starting a program is blocked" in msg:  # a blocked process: its own message
+        return f"{lead}. The run stopped{at} when the agent started a program. {msg.removeprefix('agenticreq mock run: ')} Then run: {_NEXT}"
     if "agenticreq mock run:" in msg:  # the write guard stopped it: say which file, and the key that allows it
         return f"{lead}. The run stopped{at} at a blocked write. {msg.removeprefix('agenticreq mock run: ')}. Then run: {_NEXT}"
     if f.get("entry_missing"):

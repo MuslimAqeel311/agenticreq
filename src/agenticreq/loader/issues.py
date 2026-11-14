@@ -352,6 +352,13 @@ def unknown_field_message(loc: PathKey, ref: SourceRef | None, near: list[str]) 
     """Unknown field `max_iterations` in spec.yml (line 12). Did you mean `bounds.max_steps`? Fix it, or run: ..."""
     where = f"{Path(ref.file).name} (line {ref.line})" if ref is not None and ref.file else "spec.yml"
     head = f"Unknown field `{fmt_path(loc)}` in {where}."
+    last = str(loc[-1]) if loc else ""
+    if " " in last or ":" in last:  # `reason: checked, see agent.py:42` in a {...} entry: YAML split the value
+        return (
+            f"{head} This looks like part of a value that YAML split at a comma or a colon: a value that contains a "
+            'comma or a colon must be quoted, e.g. reason: "checked, see agent.py:42" (or write the entry in block '
+            "style, one key per line)."
+        )
     if near:
         return f"{head} Did you mean {_quote(near)}? Fix it, or run: agenticreq validate --fix"
     return (

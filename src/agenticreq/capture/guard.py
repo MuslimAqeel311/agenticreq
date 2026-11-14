@@ -540,6 +540,12 @@ class ProcessGuard:
             self.blocked.append(what)
 
     def _deny(self, what: str, event: str) -> None:
+        if what.startswith("exec:"):  # a program start has its own message: no folder can allow it
+            self._note(what)
+            raise PermissionError(
+                f"agenticreq mock run: starting a program is blocked ({what.removeprefix('exec:')}, {event}). A mock "
+                "run starts no other program: replace the function that starts it with patch: in mocks.yml."
+            )
         folder = os.path.dirname(what.removeprefix("write:"))
         self._denied[folder] = self._denied.get(folder, 0) + 1
         if self._denied[folder] > RETRY_CAP:

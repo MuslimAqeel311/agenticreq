@@ -563,15 +563,21 @@ def mock_run(
     for line in _never_offered(never, obs, cap, skipped):
         err.print(f"never offered to the model: {escape(line)}")
     if not res.zero_touch:
-        err.print(f"[red]the run changed the agent's files:[/red] {escape(', '.join(res.changed_files[:5]))}")
+        err.print(
+            f"[red]the run changed the agent's files:[/red] {escape(', '.join(res.changed_files[:5]))}"
+            + _more(len(res.changed_files), 5)
+        )
     for rel, size in res.wrote:
         err.print(f"wrote {escape(rel)}, {_size(size)} (allowed by allow_write: in mocks.yml)")
-    for path in res.blocked_writes()[:5]:
+    blocked = res.blocked_writes()
+    for path in blocked[:5]:
         rel_path = _rel(path)
         err.print(f"blocked write to {escape(rel_path)}; to allow it, add it under allow_write: in mocks.yml")
+    if len(blocked) > 5:
+        err.print(f"blocked writes to {len(blocked) - 5} more file(s), not listed")
     other = list(dict.fromkeys(b for b in res.egress_blocked if not b.startswith("write:")))
-    if other:
-        err.print(f"blocked during the run (network / other programs): {other[:5]}")
+    if other:  # the line an external benchmark parses: same shape, plus how many were not listed
+        err.print(f"blocked during the run (network / other programs): {other[:5]}{_more(len(other), 5)}")
     for n in res.notes:
         err.print(f"[yellow]note:[/yellow] {escape(n)}")
     if res.scrubbed_env:
@@ -1030,6 +1036,11 @@ def params(
         for k in meta:
             con.print(f"  [bold]{k}[/bold]")
             show(k)
+
+
+def _more(total: int, shown: int) -> str:
+    """' (+N more)' when a list was shortened: a shortened list always says how many were hidden."""
+    return f" (+{total - shown} more)" if total > shown else ""
 
 
 def _record_scope(report: Any, obs: ObservedAgent) -> None:

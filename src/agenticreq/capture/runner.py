@@ -396,7 +396,7 @@ def main(cfg_path: str) -> int:
                 "missing_module": None,
             }
     except BaseException as e:  # the agent may raise anything; record it and keep the captures
-        error = traceback.format_exc(limit=8)
+        error = traceback.format_exc()  # every frame: the one that matters is often deeper than 8
         failure = describe_failure(e, cfg["entry"], phase)
     finally:
         progress.stop()
