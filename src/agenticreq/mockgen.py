@@ -269,12 +269,12 @@ def _tool_modules_used(tree: ast.Module) -> dict[str, set[str]]:
             for n in ast.walk(fn)
             if isinstance(n, ast.Attribute) and isinstance(n.value, ast.Name) and n.value.id in imported
         }
-        for n in ast.walk(fn):  # text(...) from `from sqlalchemy import text`, or the module's engine
-            if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Load):
-                if n.id in built:
-                    out.add(built[n.id])
-        for n in ast.walk(fn):
-            if isinstance(n, ast.Call) and isinstance(n.func, ast.Name) and n.func.id in imported:
+        # only the body: a decorator (@tool from crewai / langchain_core) is the framework, not a service the tool uses
+        body = [n for st in getattr(fn, "body", []) for n in ast.walk(st)]
+        for n in body:  # the module's engine / client, or text(...) from `from sqlalchemy import text`
+            if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Load) and built.get(n.id) in _SERVICE_MODULES:
+                out.add(built[n.id])
+            if isinstance(n, ast.Call) and isinstance(n.func, ast.Name) and imported.get(n.func.id) in _SERVICE_MODULES:
                 out.add(imported[n.func.id])
         return out
 
@@ -287,6 +287,30 @@ def _tool_modules_used(tree: ast.Module) -> dict[str, set[str]]:
     return out
 
 
+#: the database / HTTP client libraries whose names (a bare imported call, a module variable built from one) mean
+#: the tool reaches a service; an attribute use (``yf.Ticker``) keeps the older, wider rule
+_SERVICE_MODULES = frozenset(
+    {
+        "sqlalchemy",
+        "oracledb",
+        "cx_Oracle",
+        "psycopg2",
+        "psycopg",
+        "asyncpg",
+        "pymysql",
+        "mysql",
+        "pymongo",
+        "motor",
+        "redis",
+        "pyodbc",
+        "elasticsearch",
+        "requests",
+        "httpx",
+        "aiohttp",
+        "urllib3",
+        "boto3",
+    }
+)
 #: standard-library modules that do reach the network
 _STDLIB_NETWORK = frozenset({"urllib", "http", "socket", "smtplib", "ftplib", "imaplib", "poplib", "telnetlib", "ssl"})
 

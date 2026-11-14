@@ -58,6 +58,17 @@ def test_m7_c_local_and_stdlib_modules_are_not_the_network(tmp_path: Path) -> No
     assert "patch" not in data["tools"]["read_note"]
 
 
+def test_m7_c_a_framework_decorator_is_not_a_service(tmp_path: Path) -> None:
+    (tmp_path / "agent.py").write_text(
+        "from crewai.tools import tool\nfrom crewai import Agent\n\n"
+        "@tool('lookup')\ndef lookup(q: str) -> str:\n    '''Look up.'''\n    return q\n\n"
+        "a = Agent(role='r', goal='g', backstory='b', tools=[lookup])\n",
+        encoding="utf-8",
+    )
+    _, data = _mocks(tmp_path)
+    assert "patch" not in data["tools"]["lookup"]
+
+
 def _call(system: str, tools: list[str]) -> CapturedCall:
     return CapturedCall(
         run_id="r",
