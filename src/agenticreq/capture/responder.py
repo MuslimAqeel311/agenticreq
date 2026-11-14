@@ -15,7 +15,7 @@ from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
-from agenticreq.jsonschema_util import example_arguments, example_instance
+from agenticreq.jsonschema_util import example_arguments, example_instance, lower_types
 from agenticreq.models.observed import CapturedCall, ToolCall
 
 
@@ -206,7 +206,9 @@ def _tool_schema(body: dict[str, Any], provider: str, name: str) -> dict[str, An
         elif provider == "gemini":
             for fn in t.get("functionDeclarations") or t.get("function_declarations") or []:
                 if fn.get("name") == name:
-                    schema: dict[str, Any] | None = fn.get("parametersJsonSchema") or fn.get("parameters")
+                    schema: dict[str, Any] | None = lower_types(
+                        fn.get("parametersJsonSchema") or fn.get("parameters_json_schema") or fn.get("parameters")
+                    )
                     return schema
     return None
 

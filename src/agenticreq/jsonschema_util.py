@@ -20,6 +20,24 @@ _CONSTRAINT_KEYS = (
 )
 
 
+def lower_types(schema: Any) -> Any:
+    """The same schema with every ``type`` in lower case: Gemini / Google ADK send NUMBER, STRING, BOOLEAN, OBJECT,
+    ARRAY, which are the JSON Schema types number, string, boolean, object, array."""
+    if isinstance(schema, list):
+        return [lower_types(x) for x in schema]
+    if not isinstance(schema, dict):
+        return schema
+    out: dict[str, Any] = {}
+    for k, v in schema.items():
+        if k == "type" and isinstance(v, str):
+            out[k] = v.lower()
+        elif k == "type" and isinstance(v, list):
+            out[k] = [x.lower() if isinstance(x, str) else x for x in v]
+        else:
+            out[k] = lower_types(v)
+    return out
+
+
 def _type_of(prop: dict[str, Any]) -> str | None:
     t = prop.get("type")
     if isinstance(t, str):

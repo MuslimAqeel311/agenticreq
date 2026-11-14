@@ -17,7 +17,7 @@ import json
 import re
 from typing import Any
 
-from agenticreq.jsonschema_util import tool_from_json_schema
+from agenticreq.jsonschema_util import lower_types, tool_from_json_schema
 from agenticreq.models.observed import CapturedCall, Provider, ToolCall, ToolResult, ToolSchema
 
 
@@ -196,7 +196,9 @@ def _parse_gemini(url: str, body: dict[str, Any], c: CapturedCall) -> None:
         for fn in (
             (t.get("functionDeclarations") or t.get("function_declarations") or []) if isinstance(t, dict) else []
         ):
-            schema = fn.get("parametersJsonSchema") or fn.get("parameters")
+            schema = lower_types(
+                fn.get("parametersJsonSchema") or fn.get("parameters_json_schema") or fn.get("parameters")
+            )
             c.tools.append(tool_from_json_schema(fn["name"], fn.get("description"), schema, "wire", "wire:gemini"))
     c.message_count = len(body.get("contents") or [])
 
