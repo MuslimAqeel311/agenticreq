@@ -118,9 +118,28 @@ def _project_root(start: Path) -> Path:
     return cur
 
 
+def in_scope(rel: str, include: list[str] | None, exclude: list[str] | None) -> bool:
+    """``rel`` (posix, relative to the scanned folder) is scanned: it matches an include pattern (all when none is
+    given) and no exclude pattern. A pattern is a glob (``scripts/*``, ``**/batch_*.py``) or a folder (``scripts/``)."""
+    from fnmatch import fnmatch
+
+    def hit(pat: str) -> bool:
+        pat = pat.replace("\\", "/").strip()
+        if pat.endswith("/"):
+            return rel.startswith(pat) or ("/" + pat) in ("/" + rel)
+        return fnmatch(rel, pat) or fnmatch(rel, f"**/{pat}") or rel == pat
+
+    if include and not any(hit(p) for p in include):
+        return False
+    return not (exclude and any(hit(p) for p in exclude))
+
+
 class SymbolTable:
-    def __init__(self, root: Path) -> None:
+    def __init__(self, root: Path, include: list[str] | None = None, exclude: list[str] | None = None) -> None:
         self.root = root
+        #: scan scope (--entry / spec include: and exclude:): which files the scan starts from, and which it never reads
+        self.include = include or None
+        self.exclude = exclude or None
         self.base = root if root.is_dir() else root.parent
         self.project_root = _project_root(root)
         self.by_path: dict[Path, FileCtx] = {}
@@ -130,12 +149,25 @@ class SymbolTable:
     def load(self) -> list[FileCtx]:
         """Parse the scanned files, then the local modules they import (transitively)."""
         # test code configures models, bounds and fake tools too, but it is not what ships
-        queue = [(p, False) for p in iter_py_files(self.root, include_tests=False)]
+        base = self.root if self.root.is_dir() else self.root.parent
+        starts = [
+            p
+            for p in iter_py_files(self.root, include_tests=False)
+            if in_scope(p.relative_to(base).as_posix(), self.include, None)
+        ]
+        queue = [(p, False) for p in starts]
         while queue:
             p, via = queue.pop(0)
             p = p.resolve()
             if p in self.by_path:
                 continue
+            if self.exclude:  # an excluded file is never read, also when an included one imports it
+                try:
+                    rel_ex = p.relative_to(base.resolve()).as_posix()
+                except ValueError:
+                    rel_ex = ""
+                if rel_ex and not in_scope(rel_ex, None, self.exclude):
+                    continue
             fc = self._parse(p, via)
             if fc is None:
                 continue

@@ -1857,6 +1857,60 @@
         }
       ]
     },
+    "include": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Include"
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
+    "exclude": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Exclude"
+        },
+        {
+          "const": "TODO",
+          "description": "not written yet: `agenticreq check` reports it as a gap"
+        },
+        {
+          "const": "not_needed",
+          "description": "this does not apply to the project"
+        }
+      ]
+    },
     "waivers": {
       "anyOf": [
         {

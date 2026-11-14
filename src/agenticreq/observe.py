@@ -97,8 +97,10 @@ def build_observed(
     mcp_tools: list[ToolSchema] | None = None,
     use_recognizers: bool = True,
     runtime_versions: dict[str, str] | None = None,
+    include: list[str] | None = None,
+    exclude: list[str] | None = None,
 ) -> ObservedAgent:
-    obs = extract(path)
+    obs = extract(path, include, exclude)
     if runtime_versions:
         _apply_runtime_frameworks(obs, runtime_versions)
     if captures:

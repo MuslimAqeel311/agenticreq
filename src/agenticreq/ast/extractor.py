@@ -72,11 +72,13 @@ def _guard_after_write(g: GateRef, tool: str, write_line: int, fc: FileCtx, fn: 
 
 
 class ProjectExtractor:
-    def __init__(self, root: str | Path) -> None:
+    def __init__(self, root: str | Path, include: list[str] | None = None, exclude: list[str] | None = None) -> None:
         self.root = Path(root).resolve()
         self.base = self.root if self.root.is_dir() else self.root.parent
         self.obs = ObservedAgent(root=str(self.root))
-        self.symbols = SymbolTable(self.root)
+        self.symbols = SymbolTable(self.root, include, exclude)
+        if include or exclude:
+            self.obs.scope = {"include": list(include or []), "exclude": list(exclude or [])}
         self.files: list[FileCtx] = []
         self.var_to_tool: dict[str, str] = {}  # python identifier -> tool name
         self.node_tool: dict[int, str] = {}  # id(def / class node) -> tool name
@@ -691,5 +693,5 @@ class ProjectExtractor:
         signals._framework(self)
 
 
-def extract(path: str | Path) -> ObservedAgent:
-    return ProjectExtractor(path).extract()
+def extract(path: str | Path, include: list[str] | None = None, exclude: list[str] | None = None) -> ObservedAgent:
+    return ProjectExtractor(path, include, exclude).extract()

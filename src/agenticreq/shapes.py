@@ -34,6 +34,8 @@ EXAMPLES: dict[str, Any] = {
         }
     ],
     "tool_effects": {"read_file": "read", "save_report": "write"},
+    "include": ["agent.py"],
+    "exclude": ["scripts/", "**/batch_*.py"],
     "waivers": [
         {
             "rule_id": "AS-213",

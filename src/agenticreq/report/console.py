@@ -133,6 +133,16 @@ def _header(report: Report, sym: dict[str, str]) -> str:
     parts.append(f"spec: {spec}" if spec else "no spec")
     if report.command != "validate":  # validate reads the spec on its own: no code, no run
         parts.append(_mock_run_text(report))
+    scope = report.metadata.get("scope")
+    if isinstance(scope, dict):  # a scoped scan names where it started and what it left out
+        files = [str(f) for f in scope.get("files") or []]
+        shown = ", ".join(files[:5]) + (f" (+{len(files) - 5} more)" if len(files) > 5 else "")
+        what = f"scanned {len(files)} file{'s' if len(files) != 1 else ''}: {shown or 'none'}"
+        if scope.get("include"):
+            what = f"entry {', '.join(scope['include'])}; " + what
+        if scope.get("exclude"):
+            what += f"; excluded {', '.join(scope['exclude'])}"
+        parts.append(what)
     return dot.join(parts)
 
 

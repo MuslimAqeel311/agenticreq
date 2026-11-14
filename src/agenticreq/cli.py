@@ -145,7 +145,13 @@ def _never_offered(
 
 
 def _observe(
-    path: Path, captures: Optional[Path], traces: Optional[Path], mcp: Optional[str], mcp_tools: Optional[Path]
+    path: Path,
+    captures: Optional[Path],
+    traces: Optional[Path],
+    mcp: Optional[str],
+    mcp_tools: Optional[Path],
+    include: Optional[list[str]] = None,
+    exclude: Optional[list[str]] = None,
 ) -> ObservedAgent:
     from agenticreq.capture.discover import load_capture_bundle, load_patched_tools, load_unsupported
     from agenticreq.observe import build_observed
@@ -170,7 +176,9 @@ def _observe(
         from agenticreq.mcp import list_tools_stdio
 
         tools += list_tools_stdio(mcp)
-    obs = build_observed(path, captures=calls, spans=spans, mcp_tools=tools, runtime_versions=versions)
+    obs = build_observed(
+        path, captures=calls, spans=spans, mcp_tools=tools, runtime_versions=versions, include=include, exclude=exclude
+    )
     if captures:
         obs.patched_tools = load_patched_tools(captures)
         obs.mock_unsupported = load_unsupported(captures)
@@ -272,6 +280,13 @@ def _load_call_args(raw: Optional[str]) -> Any:
 
 
 MocksOpt = typer.Option(Path("mocks.yml"), "--mocks", help="the mocks file (`agenticreq mocks` writes it)")
+EntryScanOpt = typer.Option(
+    None,
+    "--entry",
+    "-e",
+    help="scan only from this file (repeat for several; relative to the agent's folder); the files it imports are "
+    "read too. Default: every file in the folder",
+)
 #: where `agenticreq mock-run` saves the latest run, and where `check` looks for it
 CAPTURES = Path(".agenticreq") / "captures.json"
 
@@ -741,6 +756,7 @@ def audit(
     fail_on: FailOn = FailOnOpt,
     verbose: bool = VerboseOpt,
     quiet: bool = QuietOpt,
+    entry: Optional[list[str]] = EntryScanOpt,
 ) -> None:
     """Step 1 (audit): a quick scan of the project, with no setup.
 
@@ -772,12 +788,14 @@ def audit(
             raise typer.Exit(2)
         waivers = loaded.spec.waivers
     run_file = captures or _latest_mock_run(path)
-    obs = _observe(path, run_file, traces, mcp, mcp_tools)
+    include = list(entry) if entry else None
+    obs = _observe(path, run_file, traces, mcp, mcp_tools, include)
     info = _mock_run_info(run_file, obs) if run_file is not None else None
     stale_obs = None
     if info is not None and info.get("stale"):  # as in check: out-of-date run results are never read as evidence
-        stale_obs, obs = obs, _observe(path, None, traces, mcp, mcp_tools)
+        stale_obs, obs = obs, _observe(path, None, traces, mcp, mcp_tools, include)
     report = run(mode="audit", observed=obs, waivers=waivers)
+    _record_scope(report, obs)
     if stale_obs is not None:
         _keep_stale_items(report, run(mode="audit", observed=stale_obs, waivers=waivers))
     if info is not None:
@@ -817,6 +835,7 @@ def check(
         "and where its value came from (spec, default, code)",
     ),
     quiet: bool = QuietOpt,
+    entry: Optional[list[str]] = EntryScanOpt,
 ) -> None:
     """Step 3 (check): compare spec.yml with the project, and read the latest mock run.
 
@@ -831,13 +850,17 @@ def check(
     spec = resolve_spec(path, spec_opt)
     _need_spec(spec)
     run_file = captures or _latest_mock_run(path)
-    obs = _observe(path, run_file, traces, mcp, mcp_tools)
     loaded = load_spec(spec)
+    # scope: --entry wins over the spec's include:; the spec's exclude: always applies
+    include = list(entry) if entry else (loaded.spec.include if loaded.spec is not None else None)
+    exclude = loaded.spec.exclude if loaded.spec is not None else None
+    obs = _observe(path, run_file, traces, mcp, mcp_tools, include, exclude)
     info = _mock_run_info(run_file, obs) if run_file is not None else None
     stale_obs = None
     if info is not None and info.get("stale"):  # the code changed since: its run results would be out of date
-        stale_obs, obs = obs, _observe(path, None, traces, mcp, mcp_tools)
+        stale_obs, obs = obs, _observe(path, None, traces, mcp, mcp_tools, include, exclude)
     report = run(mode="check", loaded=loaded, observed=obs)
+    _record_scope(report, obs)
     if stale_obs is not None:
         _keep_stale_items(report, run(mode="check", loaded=loaded, observed=stale_obs))
     report.metadata["spec_file"] = str(spec)
@@ -926,7 +949,7 @@ def params(
     rows = [p for p in PARAMS if (level is None or p.level == level) and (field is None or p.name == field)]
     meta = [
         k
-        for k in ("spec_version", "extends", "confirmed", "tool_effects", "waivers", "_derived")
+        for k in ("spec_version", "extends", "confirmed", "tool_effects", "include", "exclude", "waivers", "_derived")
         if level is None and (field is None or k == field)
     ]
     if field and not rows and not meta:
@@ -1007,6 +1030,12 @@ def params(
         for k in meta:
             con.print(f"  [bold]{k}[/bold]")
             show(k)
+
+
+def _record_scope(report: Any, obs: ObservedAgent) -> None:
+    """A scoped scan says so in the report header: where it started, what it left out, and the files it read."""
+    if obs.scope:
+        report.metadata["scope"] = {**obs.scope, "files": list(obs.files)}
 
 
 def resolve_spec(path: Path, given: Optional[Path]) -> Path:

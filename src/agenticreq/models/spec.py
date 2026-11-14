@@ -306,6 +306,10 @@ class AgentSpec(_Strict):
     #: what each tool does, declared by the person: {read_file: read, save_report: write}. Decides a tool whose body
     #: cannot be followed; a body that writes while declared read is a gap (AS-232)
     tool_effects: dict[str, Literal["read", "write"]] | None = None
+    #: scan scope, relative to the agent's folder (globs or folders ending in /): the files the scan starts from
+    #: (default: all) and the files it never reads (batch scripts, tools of another agent). Imports are followed.
+    include: list[str] | None = None
+    exclude: list[str] | None = None
     waivers: list[Waiver] = Field(default_factory=list)
 
     # ---- Tier 1

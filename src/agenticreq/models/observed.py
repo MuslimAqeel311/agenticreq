@@ -301,6 +301,8 @@ class ObservedAgent(BaseModel):
     #: how `framework` was found: "import" (the code imports it: static-proven), "runtime" (it was loaded in a
     #: captured run: observed), "dependency" (only declared in requirements/pyproject: a guess)
     framework_source: str | None = None
+    #: the scan was scoped (--entry, spec include: / exclude:): the patterns used; empty = the whole folder
+    scope: dict[str, list[str]] = Field(default_factory=dict)
     execution_model: ExecutionModel = "unknown"
     execution_model_evidence: str = ""
     execution_model_ref: SourceRef | None = None
