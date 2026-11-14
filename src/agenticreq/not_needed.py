@@ -28,7 +28,8 @@ if TYPE_CHECKING:
 PathKey = tuple[str | int, ...]
 
 VALUE = "not_needed"
-NO_REASON = "(no reason given)"
+#: shown only when the entry has neither key: it names the keys that answer it
+NO_REASON = "(no reason given: write reason: or evidence: under confirmed:)"
 #: every project has these: they cannot be not_needed at any risk level
 ALWAYS: dict[str, str] = {
     "agent_id": "every project has an id",

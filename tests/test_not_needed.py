@@ -136,7 +136,11 @@ def _line(out: dict, param: str) -> dict:  # type: ignore[type-arg]
 def test_without_a_reason_it_stays_in_the_left_count() -> None:
     out = _check(_spec("conflict_resolution: not_needed"))
     ln = _line(out, "conflict_resolution")
-    assert ln["status"] == "NOT NEEDED" and ln["group"] == "sign_off" and ln["reason"] == "(no reason given)"
+    assert (
+        ln["status"] == "NOT NEEDED"
+        and ln["group"] == "sign_off"
+        and ln["reason"] == "(no reason given: write reason: or evidence: under confirmed:)"
+    )
     assert ln.get("open") is True and out["counts"]["not_needed"] == 0
 
 
