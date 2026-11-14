@@ -238,39 +238,109 @@ def output_schema(body: dict[str, Any], provider: str) -> dict[str, Any] | None:
 #: tools a framework adds to pass the task to another agent (stdlib only: this runs in the agent's environment)
 _HANDOFF = re.compile(
     r"^(transfer_to_\w+|transfer_back_to_\w+|transfer_to_agent|handoff|delegate_work_to_coworker|"
-    r"delegate_task_to_members?)$",
+    r"delegate_task_to_members?|Task|Agent)$",
     re.IGNORECASE,
 )
 
 
 #: the argument of a generic handoff tool that names the agent (LlamaIndex to_agent, ADK agent_name, Agno member_id)
-_AGENT_ARG = re.compile(r"^(to_agent|agent_name|agent|target_agent|to|member_id)$")
+_AGENT_ARG = re.compile(r"^(to_agent|agent_name|agent|target_agent|to|member_id|subagent_type)$")
 
 
 def _agent_choices(description: str, system: str = "") -> list[str]:
     """Agent names a handoff tool's description lists (``{'billing': '...'}`` or ``billing: ...`` lines after
     "available agents"), else the members the system prompt names (Agno ``<member id="researcher" ...>``)."""
-    names = re.findall(r"'([\w.-]+)'\s*:", description)
-    if not names and "agents" in description.lower():
-        tail = description.lower().split("agents", 1)[1]
-        names = re.findall(r"^\s*-?\s*([\w.-]+)\s*:", tail, re.M)
+    names: list[str] = []
+    for text in (description, system):
+        # a heading that ends with a colon ("Currently available agents:", "Available agent types for the Agent
+        # tool:"), then the agents: "- billing: ..." bullets (Claude Code CLI) or a mapping {'billing': ...} (LlamaIndex)
+        m = re.search(r"available agent(?: type)?s[^\n]*:\s*\n", text, re.IGNORECASE)
+        if not m:
+            continue
+        block = text[m.end() :].split("\n\n", 1)[0]
+        names = re.findall(r"^\s*-\s*([\w.-]+)\s*:", block, re.M) or re.findall(r"'([\w.-]+)'\s*:", block)
+        if names:
+            break
     if not names:
         names = re.findall(r'<member id="([^"]+)"', system)
-    return list(dict.fromkeys(names))
+    # the Claude Code CLI lists its own agent types next to the project's subagents: only the project's are reached
+    return [n for n in dict.fromkeys(names) if n.lower() not in _CLI_AGENT_TYPES]
+
+
+#: agent types the Claude Code CLI brings itself (not the project's subagents)
+_CLI_AGENT_TYPES = frozenset(
+    {
+        "general-purpose",
+        "explore",
+        "plan",
+        "statusline-setup",
+        "output-style-setup",
+        "claude-code-guide",
+        "fork",
+        "claude",
+    }
+)
 
 
 def _system_text(body: dict[str, Any]) -> str:
     """The system prompt of a request, as text (chat messages, responses instructions, anthropic system)."""
     parts: list[str] = []
     for m in body.get("messages") or []:
-        if isinstance(m, dict) and m.get("role") in ("system", "developer"):
+        # system / developer messages, and the first user turn (the Claude Code CLI puts its <system-reminder>
+        # listing the agent types there)
+        if isinstance(m, dict) and m.get("role") in ("system", "developer", "user"):
             c = m.get("content")
+            if isinstance(c, list):
+                c = "\n".join(str(p.get("text", "")) for p in c if isinstance(p, dict))
             parts.append(c if isinstance(c, str) else json.dumps(c, default=str))
     for key in ("instructions", "system"):
         v = body.get(key)
         if v:
             parts.append(v if isinstance(v, str) else json.dumps(v, default=str))
     return "\n".join(parts)
+
+
+#: the Claude Code CLI's own tools: they act in the CLI's process (files, shell, network), never asked for by default.
+#: Task (a subagent) is not one of them: it is how the main agent reaches its subagents.
+_CLI_BUILTINS = frozenset(
+    {
+        "Bash",
+        "BashOutput",
+        "KillShell",
+        "KillBash",
+        "Write",
+        "Edit",
+        "MultiEdit",
+        "NotebookEdit",
+        "Read",
+        "Glob",
+        "Grep",
+        "WebFetch",
+        "WebSearch",
+        "TodoWrite",
+        "ExitPlanMode",
+        "SlashCommand",
+        "Skill",
+        "ListMcpResources",
+        "ReadMcpResource",
+        "AskUserQuestion",
+        "EnterPlanMode",
+        "NotebookRead",
+        "LS",
+    }
+)
+
+
+#: the CLI's tool that starts a subagent (named Task in older releases, Agent in newer)
+_SUBAGENT_TOOLS = frozenset({"Task", "Agent"})
+
+
+def _bare(name: str) -> str:
+    """``mcp__shop__search_orders`` -> ``search_orders`` (an MCP tool as the model sees it, and as the code names it)."""
+    if name.startswith("mcp__"):
+        parts = name.split("__", 2)
+        return parts[2] if len(parts) == 3 and parts[2] else name
+    return name
 
 
 #: tools a framework adds for the model to give its answer and end the run
@@ -319,9 +389,16 @@ class CannedResponder:
         asked = self._asked.setdefault(self.conversation_key(call, body), set())
         already = {tc.name for tc in call.prior_tool_calls} | asked
         offered = [t.name for t in call.tools if not t.name.startswith("hosted:")]
-        order = [n for n in self.mocks.order if n in offered]
+        listed = set(self.mocks.order)
+        # mocks.yml names a tool as the code does (search_orders); an MCP tool arrives as mcp__shop__search_orders
+        order = [n for o in self.mocks.order for n in offered if n == o or _bare(n) == o]
         if not self.mocks.only_order:
-            order += [n for n in offered if n not in self.mocks.order]
+            order += [n for n in offered if n not in order]
+        # the model CLI's own tools (Bash, Write, Edit, WebFetch ...) run in the CLI's process, outside every guard of
+        # the mock run: the canned model never asks for one unless the person lists it in order: on purpose
+        order = [n for n in order if n not in _CLI_BUILTINS or n in listed]
+        if call.client_lib == "claude-cli":  # the CLI offers its own tools too: only the project's are asked for
+            order = [n for n in order if n.startswith("mcp__") or n in _SUBAGENT_TOOLS or n in listed]
         # a framework's own "answer and stop" tool (smolagents final_answer, PydanticAI final_result) ends the run:
         # asked for before the other tools, it would hide every tool and agent after it. It goes last, unless the
         # person put it in order: on purpose.
@@ -330,7 +407,7 @@ class CannedResponder:
         ]
         system = _system_text(body)
         for name in order:
-            mock = self.mocks.tools.get(name)
+            mock = self.mocks.tools.get(name) or self.mocks.tools.get(_bare(name))
             if mock is not None and not mock.call:
                 continue
             handoff = bool(_HANDOFF.match(name))
@@ -346,7 +423,9 @@ class CannedResponder:
                 continue
             args = example_arguments(schema, mock.args if mock else None)
             if handoff and not (mock and mock.args):  # name a real agent: `handoff(to_agent=...)` needs one
-                for key in [k for k in args if _AGENT_ARG.match(k)]:
+                # the agent argument may be optional (the CLI's Agent(subagent_type=...)): it is filled all the same
+                keys = [k for k in ((schema or {}).get("properties") or {}) if _AGENT_ARG.match(k)]
+                for key in keys:
                     choice = next((a for a in _agent_choices(desc, system) if a not in self._handed_to), None)
                     if choice:
                         args[key] = choice

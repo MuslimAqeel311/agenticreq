@@ -30,6 +30,8 @@ def norm(name: str) -> str:
     prefixes, aliases = _aliases()
     for p in prefixes:
         name = name.removeprefix(p)
+    if name.startswith("mcp__") and name.count("__") >= 2:  # mcp__shop__search_orders is the code's search_orders
+        name = name.split("__", 2)[2] or name
     text = _SEP.sub("_", name.lower()).strip("_")
     return aliases.get(text, text)
 

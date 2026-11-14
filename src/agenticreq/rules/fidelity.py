@@ -193,6 +193,8 @@ def fidelity(ctx: CheckContext) -> Iterable[Finding]:
             continue
         if wire.kind == "wire:hosted":  # the provider's own tool: it carries no schema to compare
             continue
+        if (code.kind or "").startswith("builtin:"):  # a framework built-in (Claude CLI Bash, Agent): its schema is
+            continue  # the framework's, never written in the project, so there is nothing of the code's to compare
         issues, verbatim, total = compare_tool(code, wire)
         ctx.clause(extracted=True)
         if not issues:

@@ -490,8 +490,15 @@ class ProcessGuard:
     """
 
     def __init__(
-        self, write_roots: list[str] | None = None, *, cache_dirs: bool = True, project: str | None = None
+        self,
+        write_roots: list[str] | None = None,
+        *,
+        cache_dirs: bool = True,
+        project: str | None = None,
+        allow_exec: list[str] | None = None,
     ) -> None:
+        #: the exact programs that may start (a framework's own model CLI, answered by the local canned endpoint)
+        self.allow_exec = [norm_path(p) for p in allow_exec or []]
         import tempfile
 
         home = os.path.expanduser("~")
@@ -513,6 +520,19 @@ class ProcessGuard:
     @staticmethod
     def _norm(path: str) -> str:
         return norm_path(path)
+
+    def _allowed_program(self, args: tuple[Any, ...]) -> bool:
+        """The program being started is exactly one of ``allow_exec`` (by its resolved path, never by name)."""
+        first: Any = args[0] if args else None
+        if not first and len(args) > 1:
+            argv = _argv(args[1])
+            first = argv[0] if argv else None
+        if not isinstance(first, (str, bytes, os.PathLike)):
+            return False
+        try:
+            return norm_path(os.fsdecode(first)) in self.allow_exec
+        except (OSError, ValueError):
+            return False
 
     def _under_roots(self, path: str) -> bool:
         p = self._norm(path)
@@ -618,6 +638,8 @@ class ProcessGuard:
         if event in _EXEC_EVENTS:
             if is_platform_probe(event, args):
                 return  # the interpreter / an SDK asking what machine this is: read-only, never listed
+            if self.allow_exec and self._allowed_program(args):
+                return  # the framework's model CLI: its model calls reach the local canned endpoint
             first = args[0] if args else ""
             if not first and event == "subprocess.Popen" and len(args) > 1:  # executable=None: name it from argv
                 first = (_argv(args[1]) or [""])[0]

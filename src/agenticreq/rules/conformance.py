@@ -742,12 +742,13 @@ def role_boundary(ctx: CheckContext) -> Iterable[Finding]:
     if mine is not None:
         names = {n for n in names if canonical(n) in mine}
     extra: list[str] = []
+    in_code = {canonical(t) for t in obs.declared_tools}  # a built-in the code allows (Bash) is the code's tool
     for name in sorted(names):
         c = canonical(name)
         if (
             name.startswith("hosted:")
             or c in prohibited
-            or injected.framework_of(name)
+            or (injected.framework_of(name) and c not in in_code)
             or is_handoff_tool(name)
             or obs.framework_side_tool(name)
         ):

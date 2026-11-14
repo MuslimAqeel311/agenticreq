@@ -5,8 +5,9 @@ version: 1
 levels:
   # func / coroutine: LangChain, CrewAI, Google ADK; function: PydanticAI, Haystack; _func: AutoGen; _fn: LlamaIndex;
   # entrypoint: Agno; method: Semantic Kernel; forward: smolagents; on_invoke_tool: OpenAI Agents
-  - [func, coroutine, function, _func, fn, _fn, _async_fn, entrypoint, method, forward, on_invoke_tool]
+  # handler: Claude Agent SDK @tool (SdkMcpTool)
+  - [func, coroutine, function, _func, fn, _fn, _async_fn, entrypoint, method, forward, on_invoke_tool, handler]
   - [_run, _arun]                 # a tool class that overrides these
   - [run, arun]
 #: these hold an async function even when their wrapper hides it
-async_attrs: [coroutine, _arun, arun, on_invoke_tool, _async_fn]
+async_attrs: [coroutine, _arun, arun, on_invoke_tool, _async_fn, handler]

@@ -120,6 +120,10 @@ shows which tools the model is offered and in what order. It never shows how a r
   (`patch:` + `returns:`), so the real function never runs.
 - Writes outside `allow_write:` and starting other programs are blocked; the report lists them.
 - If you change the code after a run, the run's results go back to "Check with a mock run" until you run it again.
+- **Claude Agent SDK:** the SDK runs its own `claude` CLI. The mock run lets only that exact program start and points
+  it at a local canned endpoint (telemetry and updates off). The canned model asks it only for your project's tools
+  and subagents, never for the CLI's own tools (Bash, Write ...). Because the CLI is a separate program, the Python
+  network guard does not cover it.
 - Use it only on projects you trust: it runs the agent's own code.
 
 ## Limit the scan

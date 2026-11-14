@@ -338,6 +338,25 @@ def run_entry(entry: str, args: Any = None) -> None:
         asyncio.run(result)
 
 
+def _model_clis() -> list[str]:
+    """Programs an agent framework starts to talk to its model, which the mock run lets start because their model
+    calls come to the local canned endpoint: the Claude Agent SDK's bundled `claude` CLI. Found without importing
+    the package."""
+    import importlib.util
+
+    out = []
+    try:
+        spec = importlib.util.find_spec("claude_agent_sdk")
+    except (ImportError, ValueError):
+        spec = None
+    for loc in (spec.submodule_search_locations or []) if spec is not None else []:
+        for name in ("claude", "claude.exe"):
+            p = Path(loc) / "_bundled" / name
+            if p.is_file():
+                out.append(str(p))
+    return out
+
+
 def main(cfg_path: str) -> int:
     cfg = json.loads(Path(cfg_path).read_text(encoding="utf-8"))
     if cfg.get("mocks_data") is not None:  # the parent resolved this run's settings: no YAML reader needed here
@@ -361,11 +380,19 @@ def main(cfg_path: str) -> int:
         ],
         cache_dirs=False,
         project=str(Path.cwd()),
+        allow_exec=_model_clis(),
     )
     procs.install()
     procs.divert_writes(str(Path(cfg["out"]).resolve().parent / "blocked-writes"))
     session = CaptureSession(CannedResponder(mocks), run_id=cfg["run_id"], egress_allow=[])
     session.install()
+    # an agent that calls the model from another process (Claude Agent SDK -> the `claude` CLI) reaches this local
+    # endpoint, answered by the same canned model
+    from agenticreq.capture.cli_server import CLI_ENV, start as start_cli_server
+
+    cli_server, cli_url = start_cli_server(session)
+    os.environ["ANTHROPIC_BASE_URL"] = cli_url
+    os.environ.update(CLI_ENV)
     gates = GateProbe(session, answer=mocks.human_input)
     gates.install()
     error = None
@@ -401,6 +428,7 @@ def main(cfg_path: str) -> int:
     finally:
         progress.stop()
         gates.uninstall()
+        cli_server.shutdown()
         session.uninstall()
         guard.uninstall()
         procs.uninstall()

@@ -19,8 +19,9 @@ unsupported:
   hosts:
     - {match: bedrock-runtime, name: AWS Bedrock (signed botocore transport)}
     - {match: aiplatform.googleapis.com, name: Vertex AI (gRPC)}
-  frameworks:
-    claude_agent_sdk: Claude Agent SDK (runs the Claude CLI in its own process)
+  #: frameworks whose model calls cannot be answered by the mock run (none today: the Claude Agent SDK's CLI is
+  #: pointed at the local canned endpoint, capture/cli_server.py)
+  frameworks: {}
   #: a library's own HTTP transport (not httpx / requests / aiohttp): named when it was loaded in the run AND model
   #: calls escaped the hooks; a run of the same library through a captured client is not affected
   transport_modules:

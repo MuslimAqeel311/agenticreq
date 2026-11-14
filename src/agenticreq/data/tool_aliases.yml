@@ -10,3 +10,4 @@ aliases:
   web_search_20250305: web_search
   code_execution_20250522: code_execution
   file_search_tool: file_search
+  task: agent  # the Claude Code CLI's subagent tool: Task in older releases, Agent in newer

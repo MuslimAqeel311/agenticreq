@@ -277,6 +277,7 @@ def registry_authority(ctx: CheckContext) -> Iterable[Finding]:
     if not g or not s:
         return []
     injected = InjectedTools(ctx.injected_allowlist)
+    in_code = {canonical(t) for t in (ctx.observed.declared_tools if ctx.observed else {})}
     out = []
     for i, a in enumerate(s.agent_registry or []):
         held = g.nodes.get(a.id)
@@ -298,7 +299,7 @@ def registry_authority(ctx: CheckContext) -> Iterable[Finding]:
                         evidence=f"{a.id} tools in code: {sorted(held)}; registry prohibited: {sorted(a.prohibited)}",
                     )
                 )
-            elif allowed and c not in allowed and not injected.framework_of(tool):
+            elif allowed and c not in allowed and (not injected.framework_of(tool) or c in in_code):
                 out.append(
                     make_finding(
                         "AS-206",
@@ -367,7 +368,11 @@ def authority(ctx: CheckContext) -> Iterable[Finding]:
     for e in g.edges:
         if e.src in g.groups:
             continue  # a team coordinator holds no tools by design; it routes, it does not grant authority
-        extra = sorted(t for t in g.nodes.get(e.dst, set()) - g.nodes.get(e.src, set()) if not injected.framework_of(t))
+        extra = sorted(
+            t
+            for t in g.nodes.get(e.dst, set()) - g.nodes.get(e.src, set())
+            if not injected.framework_of(t) or canonical(t) in known  # the code's own built-ins still count
+        )
         # authority is the power to ACT: a specialist that only reads more than its caller escalates nothing
         extra = [
             t

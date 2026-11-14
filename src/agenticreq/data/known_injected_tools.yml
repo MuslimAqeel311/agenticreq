@@ -36,7 +36,14 @@ frameworks:
     prefix: [final_result_]
     note: structured-output tool when output_type is set
   claude-agent-sdk:
-    note: built-in tools, allowed by name in allowed_tools= / tools=; they run in the SDK's own process
+    note: built-in tools, allowed by name in allowed_tools= / tools=; they run in the SDK's own process. The CLI offers
+      every built-in on the wire, permission-gated by allowed_tools; one the code allows is a declared tool (builtin
+      below), the rest are the framework's
+    exact: [Agent, Task, Bash, BashOutput, KillShell, KillBash, Write, Edit, MultiEdit, NotebookEdit, Read, Glob, Grep,
+      WebFetch, WebSearch, TodoWrite, ExitPlanMode, EnterPlanMode, SlashCommand, Skill, ListMcpResources,
+      ReadMcpResource, AskUserQuestion, ListAgents, SendMessage, ReportFindings, ScheduleWakeup, Monitor, Workflow,
+      CronCreate, CronDelete, CronList, EnterWorktree, ExitWorktree, TaskCreate, TaskGet, TaskList, TaskStop,
+      TaskUpdate, TaskOutput, ToolSearch, DeferredToolPlaceholder, LS, NotebookRead]
     # capability: what the tool can do, so `prohibited` and `role_boundary` can name the ability and not the spelling
     builtin:
       Read: {effect: read}
