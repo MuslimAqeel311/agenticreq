@@ -66,6 +66,15 @@ def start(session: Any) -> tuple[ThreadingHTTPServer, str]:
 
         do_HEAD = do_GET
 
-    server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+    class _Server(ThreadingHTTPServer):
+        def server_bind(self) -> None:
+            # HTTPServer.server_bind looks up socket.getfqdn(host): a reverse DNS query that can take many seconds
+            # (GitHub's macOS runners). The name is never used here, so the address is bound with no lookup.
+            import socketserver
+
+            socketserver.TCPServer.server_bind(self)
+            self.server_name, self.server_port = "127.0.0.1", self.server_address[1]
+
+    server = _Server(("127.0.0.1", 0), Handler)
     threading.Thread(target=server.serve_forever, daemon=True).start()
     return server, f"http://127.0.0.1:{server.server_address[1]}"

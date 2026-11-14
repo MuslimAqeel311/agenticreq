@@ -388,11 +388,15 @@ def main(cfg_path: str) -> int:
     session.install()
     # an agent that calls the model from another process (Claude Agent SDK -> the `claude` CLI) reaches this local
     # endpoint, answered by the same canned model
+    # only when such a CLI exists in this environment: every other run starts no server at all
     from agenticreq.capture.cli_server import CLI_ENV, start as start_cli_server
 
-    cli_server, cli_url = start_cli_server(session)
-    os.environ["ANTHROPIC_BASE_URL"] = cli_url
-    os.environ.update(CLI_ENV)
+    model_clis = _model_clis()
+    cli_server = None
+    if model_clis:
+        cli_server, cli_url = start_cli_server(session)
+        os.environ["ANTHROPIC_BASE_URL"] = cli_url
+        os.environ.update(CLI_ENV)
     gates = GateProbe(session, answer=mocks.human_input)
     gates.install()
     error = None
@@ -428,7 +432,8 @@ def main(cfg_path: str) -> int:
     finally:
         progress.stop()
         gates.uninstall()
-        cli_server.shutdown()
+        if cli_server is not None:
+            cli_server.shutdown()
         session.uninstall()
         guard.uninstall()
         procs.uninstall()
