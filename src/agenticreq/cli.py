@@ -285,6 +285,37 @@ def _latest_mock_run(path: Path) -> Optional[Path]:
     return None
 
 
+#: the line every item gets that only the out-of-date mock run had settled (R2: never dropped, never passed)
+STALE_REASON = "The code changed after the mock run; run agenticreq mock-run again"
+
+
+def _keep_stale_items(report: Any, with_stale_run: Any) -> None:
+    """Items the out-of-date mock run had settled and the code alone does not: each goes back to "Check with a mock
+    run" with one line, so it is counted and listed, never silently left out (and never a pass)."""
+    from agenticreq.models.confidence import Confidence
+    from agenticreq.models.verdict import results
+    from agenticreq.rules.registry import make_finding
+
+    have = {ln.param for ln in results(report)}
+    lost = []
+    for ln in results(with_stale_run):
+        if ln.param not in have and ln.param not in lost:
+            lost.append(ln.param)
+    for param in lost:
+        report.findings.append(
+            make_finding(
+                "AS-903",
+                confidence=Confidence.unknown(),
+                param=param,
+                status_hint="CHECK",
+                title=f"{param}: the code changed after the mock run",
+                detail=f"{param} was settled by a mock run of older code. {STALE_REASON}.",
+                reason=f"{STALE_REASON}.",
+                evidence="mock run older than the code",
+            )
+        )
+
+
 def _mock_run_info(captures: Path, obs: ObservedAgent) -> dict[str, object]:
     """What the report header says about a mock run: when, how many calls, and whether the code changed since."""
     import datetime as dt
@@ -309,8 +340,26 @@ def _mock_run_info(captures: Path, obs: ObservedAgent) -> dict[str, object]:
                 captured, total = int(a), int(b)
     run_at = captures.stat().st_mtime
     root = Path(obs.root)
+    saved_hashes = data.get("source_hashes") if isinstance(data, dict) else None
     stale = False
-    for f in obs.files:
+    if isinstance(saved_hashes, dict) and saved_hashes:
+        # by content: a copied or checked-out file keeps an old timestamp but is still new code
+        import hashlib
+
+        for f in obs.files:
+            p = Path(f) if Path(f).is_absolute() else root / f
+            key = Path(f).as_posix() if not Path(f).is_absolute() else ""
+            try:
+                digest = hashlib.sha256(p.read_bytes()).hexdigest()
+            except OSError:
+                continue
+            if saved_hashes.get(key) != digest:
+                stale = True
+                break
+        files = {Path(f).as_posix() for f in obs.files}
+        if any(k not in files and not (root / k).is_file() for k in saved_hashes):
+            stale = True  # a file the run used was removed
+    for f in [] if stale else obs.files:  # and by time: a file saved after the run (content unchanged or not)
         p = Path(f) if Path(f).is_absolute() else root / f
         try:
             if os.path.getmtime(p) > run_at + 1:
@@ -716,9 +765,15 @@ def audit(
         waivers = loaded.spec.waivers
     run_file = captures or _latest_mock_run(path)
     obs = _observe(path, run_file, traces, mcp, mcp_tools)
+    info = _mock_run_info(run_file, obs) if run_file is not None else None
+    stale_obs = None
+    if info is not None and info.get("stale"):  # as in check: out-of-date run results are never read as evidence
+        stale_obs, obs = obs, _observe(path, None, traces, mcp, mcp_tools)
     report = run(mode="audit", observed=obs, waivers=waivers)
-    if run_file is not None:
-        report.metadata["mock_run"] = _mock_run_info(run_file, obs)
+    if stale_obs is not None:
+        _keep_stale_items(report, run(mode="audit", observed=stale_obs, waivers=waivers))
+    if info is not None:
+        report.metadata["mock_run"] = info
     _emit(report, format, output, show_passed, scanned=path, verbose=verbose, fail_on=fail_on)
     from agenticreq.progress import folder_of, record_audit
 
@@ -768,9 +823,12 @@ def check(
     obs = _observe(path, run_file, traces, mcp, mcp_tools)
     loaded = load_spec(spec)
     info = _mock_run_info(run_file, obs) if run_file is not None else None
+    stale_obs = None
     if info is not None and info.get("stale"):  # the code changed since: its run results would be out of date
-        obs = _observe(path, None, traces, mcp, mcp_tools)
+        stale_obs, obs = obs, _observe(path, None, traces, mcp, mcp_tools)
     report = run(mode="check", loaded=loaded, observed=obs)
+    if stale_obs is not None:
+        _keep_stale_items(report, run(mode="check", loaded=loaded, observed=stale_obs))
     report.metadata["spec_file"] = str(spec)
     if info is not None:
         report.metadata["mock_run"] = info

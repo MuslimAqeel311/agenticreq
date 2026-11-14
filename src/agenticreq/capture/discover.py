@@ -55,6 +55,9 @@ class DiscoverResult:
     saved_at: str = ""  # local time the run finished, ISO 8601 (the report header shows it)
     #: every mock run in this result, in order (the ones kept from an earlier save included)
     run_ids: list[str] = field(default_factory=list)
+    #: sha256 of every Python file of the project when the run started (posix relative path -> hash): `check`
+    #: compares them with the code it reads, so a copied file with an old timestamp still makes the run stale
+    source_hashes: dict[str, str] = field(default_factory=dict)
     #: run id -> its own llm_misses / egress_blocked, so --keep can replace one run and keep the rest
     by_run: dict[str, dict[str, list[str]]] = field(default_factory=dict)
     #: run ids kept from the file that was already saved (--keep), not run now
@@ -136,6 +139,7 @@ class DiscoverResult:
             "by_run": self.by_run,
             "patched_tools": self.patched_tools,
             "unsupported": self.unsupported,
+            "source_hashes": self.source_hashes,
             "calls": [c.model_dump(mode="json", exclude={"raw_request"}) for c in self.calls],
         }
 
@@ -591,6 +595,7 @@ def discover(
             res.rejections += [r for r in data.get("rejections") or [] if r not in res.rejections]
 
     res.unsupported = unsupported_transports(res, load_yaml("providers.yml"))
+    res.source_hashes = {k.replace("\\", "/"): v for k, v in before.items() if k.endswith(".py")}
     after = tree_hashes(root)
     changed = sorted(k for k in set(before) | set(after) if before.get(k) != after.get(k))
     inside = [k for k in changed if allowed and under(root / k, allowed)]

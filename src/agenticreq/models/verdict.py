@@ -849,6 +849,8 @@ def overall(report: Report, lines: list[ResultLine] | None = None, fail_on: Fail
     run = report.metadata.get("mock_run")
     if isinstance(run, dict) and not run.get("captured") and not run.get("stale") and not run.get("unsupported"):
         return "FAIL"  # the latest mock run crashed or made no model call: nothing ran, so nothing passed
+    if isinstance(run, dict) and run.get("stale") and fail_on != "never":
+        return "FAIL"  # evidence older than the code: never a pass
     lines = results(report) if lines is None else lines
     return "FAIL" if _fails(totals(lines), fail_on) else "PASS"
 
@@ -863,4 +865,7 @@ def exit_code(report: Report, fail_on: FailOn = "gaps") -> int:
         return 3  # no agent / readable code found: a pass here would be a false "all clear"
     if report.spec_status == "invalid":
         return 2
+    run = report.metadata.get("mock_run")
+    if isinstance(run, dict) and run.get("stale"):
+        return 1  # the mock run is older than the code: its items are open again, so this is not a pass
     return 1 if _fails(totals(results(report)), fail_on) else 0
