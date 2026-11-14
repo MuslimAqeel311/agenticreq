@@ -19,7 +19,10 @@ from agenticreq.models.observed import ObservedAgent
 from agenticreq.report.term import make_console
 
 app = typer.Typer(
-    add_completion=False, help="agenticreq — is what the agent's spec declares actually enforced in its code? (no LLM)"
+    add_completion=False,
+    help="agenticreq — is what the agent's spec declares actually enforced in its code? (no LLM)",
+    epilog="Docs: https://github.com/MuslimAqeel311/agenticreq/tree/main/docs (README, architecture, numbers, "
+    "tools and mock runs, GitHub Action)",
 )
 
 #: `agenticreq` with no command

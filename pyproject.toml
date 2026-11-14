@@ -21,6 +21,7 @@ classifiers = [
   "Intended Audience :: Developers",
   "License :: OSI Approved :: Apache Software License",
   "Operating System :: MacOS",
+  "Operating System :: Microsoft :: Windows",
   "Operating System :: POSIX :: Linux",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
@@ -44,11 +45,11 @@ dependencies = [
 
 [project.optional-dependencies]
 # the mock run hooks httpx / httpx2 inside the agent's own environment; this extra is only for running the tests
-capture = ["httpx>=0.25"]
+capture = ["httpx>=0.28,<1"]
 test = [
   "pytest>=8.0",
   "pytest-cov>=5.0",
-  "httpx>=0.25",
+  "httpx>=0.28,<1",
   "httpx2>=2.0",
   "cedarpy>=4.0",  # used by tests/test_export_types.py (skipped when absent)
   "requests>=2.31",  # the mock run hooks it when an agent uses it (skipped when absent)
