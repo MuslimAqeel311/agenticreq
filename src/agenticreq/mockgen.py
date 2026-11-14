@@ -428,12 +428,17 @@ def guess_entry(root: Path, obs: ObservedAgent) -> EntryGuess:
 
     best: tuple[int, int, str, ast.FunctionDef | ast.AsyncFunctionDef, ast.Module, Path] | None = None
     agent_vars = frozenset(a.var for a in obs.declared_agents if a.var)
+    # a tool (even one that runs another agent, `ask_billing`) is called by the model, never the run's entry
+    tool_funcs = {(t.code_ref.file, t.func_name) for t in obs.declared_tools.values() if t.code_ref and t.func_name}
     for i, p in enumerate(iter_py_files(root, include_tests=False)):
         tree = _load_tree(p)
         if tree is None:
             continue
+        rel = p.relative_to(root).as_posix()
         for node in tree.body:
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                if (rel, node.name) in tool_funcs:
+                    continue
                 sc = _score(node, agent_vars)
                 if sc is None:
                     continue
@@ -583,8 +588,10 @@ def render_mocks(
             if effect_unsure(t)
             else "  # read-only"
         )
-        if name in online and target:
-            # a database / HTTP client: the first run must reach nothing, so the function is replaced
+        if name in online and target and set(online[name]) & _SERVICE_MODULES:
+            # a database / HTTP client: the first run must reach nothing, so the function is replaced. Any other
+            # library (an agent framework a tool delegates through, an SDK) keeps the comment: patching it would hide
+            # the agent behind it
             stubbed: dict[str, Any] = {
                 "args": example_arguments(_schema(t)),
                 "patch": target,

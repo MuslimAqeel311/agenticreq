@@ -421,6 +421,8 @@ def unsupported_transports(res: DiscoverResult, table: dict[str, Any]) -> list[s
         if any(h["match"] in m for m in [*res.llm_misses, *res.egress_blocked])
     ]
     out += [name for mod, name in (rows.get("frameworks") or {}).items() if f"module:{mod}" in res.versions]
+    if res.llm_misses:  # model calls escaped the hooks: a known own transport that was loaded says which one
+        out += [name for mod, name in (rows.get("transport_modules") or {}).items() if f"module:{mod}" in res.versions]
     return list(dict.fromkeys(out))
 
 
@@ -491,6 +493,10 @@ def discover(
 
     probe_dists = sorted({d for ds in DISTS.values() for d in ds})
     probe_modules = list(FRAMEWORKS)
+    from agenticreq.data import load_yaml as _load
+
+    # a library's own transport is looked for too, so a run it carried can name it (data/providers.yml)
+    probe_modules += list(((_load("providers.yml").get("unsupported") or {}).get("transport_modules") or {}))
     version_notes: list[str] = []
     check_framework_versions(root, python, version_notes)  # raises DiscoverError before anything runs
     res = DiscoverResult(entry=entry, scrubbed_env=scrubbed, notes=version_notes, mocks=mocks.source)

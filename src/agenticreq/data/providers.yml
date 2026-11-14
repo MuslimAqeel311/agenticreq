@@ -21,6 +21,10 @@ unsupported:
     - {match: aiplatform.googleapis.com, name: Vertex AI (gRPC)}
   frameworks:
     claude_agent_sdk: Claude Agent SDK (runs the Claude CLI in its own process)
+  #: a library's own HTTP transport (not httpx / requests / aiohttp): named when it was loaded in the run AND model
+  #: calls escaped the hooks; a run of the same library through a captured client is not affected
+  transport_modules:
+    dspy._vendor.lm15.transports: DSPy native lm15 transport (dspy.LM(..., engine="litellm") is captured)
 #: headers a model request may carry a trace id in (data/tracing.yml describes the mechanisms)
 trace_headers: [traceparent, x-trace-id, x-correlation-id]
 #: SDKs that refuse to start without these get a dummy value inside the run only; it is never printed

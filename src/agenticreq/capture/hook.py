@@ -108,6 +108,31 @@ class _AioResponse:
         return None
 
 
+_AIO_CLASS: Any = None
+
+
+def _aio_response(status: int, headers: dict[str, str], body: bytes, url: str) -> Any:
+    """The canned reply as a real ``aiohttp.ClientResponse`` subclass when aiohttp is installed: SDKs such as
+    google-genai check ``isinstance(response, aiohttp.ClientResponse)``. Built without ClientResponse.__init__ (it
+    needs a live connection); the subclass's plain attributes shadow the parent's read-only properties."""
+    global _AIO_CLASS
+    try:
+        import aiohttp
+    except ImportError:
+        return _AioResponse(status, headers, body, url)
+    if _AIO_CLASS is None:
+        names = {
+            k: v for k, v in vars(_AioResponse).items() if not k.startswith("__") or k in ("__aenter__", "__aexit__")
+        }
+        names.update({"status": 0, "headers": None, "reason": "", "ok": True, "content": None, "url": "", "_body": b""})
+        names["__del__"] = lambda self: None  # nothing to release: no connection behind it
+        names["__init__"] = _AioResponse.__init__
+        _AIO_CLASS = type("_AioClientResponse", (aiohttp.ClientResponse,), names)
+    obj = object.__new__(_AIO_CLASS)
+    _AioResponse.__init__(obj, status, headers, body, url)
+    return obj
+
+
 class CaptureSession:
     def __init__(
         self,
@@ -259,7 +284,7 @@ class CaptureSession:
             )
             if answer is None:
                 return await orig(self_, method, str_or_url, **kwargs)
-            return _AioResponse(answer[0], answer[1], answer[2], url)
+            return _aio_response(answer[0], answer[1], answer[2], url)
 
         self._originals.append((lib.ClientSession, "_request", orig))
         lib.ClientSession._request = _request

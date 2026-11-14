@@ -531,8 +531,11 @@ def mock_run(
     # mocks.yml may spell a tool as the code shows it ("Web Search") and the wire as the model sees it (web_search):
     # one tool, so it is never both offered and never offered
     # call: false only means "do not ask the model to call it": a call: false tool no run reached is still listed
-    never = list(not_in(listed, offered))
     obs = _run_observed(p, cap)
+    # the wire spelling of a plugin tool (Semantic Kernel `Orders-search_orders`) is the code's tool: the observed
+    # names (mapped in observe.py) count as offered too
+    seen = [*offered, *(obs.offered_tools() if obs is not None else [])]
+    never = list(not_in(listed, seen))
     schemas = [t for t in offered if obs is not None and obs.is_output_schema(t)]  # sent as tools, not tools
     if cfg.runs:  # per-run lines first, then the combined summary
         for rid, names in res.offered_by_run().items():

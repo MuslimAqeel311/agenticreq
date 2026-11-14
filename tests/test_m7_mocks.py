@@ -86,6 +86,13 @@ def _call(system: str, tools: list[str]) -> CapturedCall:
     )
 
 
+def test_m7_d_the_final_answer_tool_goes_last() -> None:
+    r = CannedResponder(MockConfig())
+    body = {"messages": [{"role": "user", "content": "task"}]}
+    names = [r.plan(_call("manager", ["search", "final_answer", "billing"]), body)[0].name for _ in range(3)]
+    assert names == ["search", "billing", "final_answer"]
+
+
 def test_m7_d_each_handoff_is_taken_once_per_run() -> None:
     r = CannedResponder(MockConfig())
     body = {"messages": [{"role": "user", "content": "task"}]}

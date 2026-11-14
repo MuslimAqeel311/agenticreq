@@ -237,8 +237,44 @@ def output_schema(body: dict[str, Any], provider: str) -> dict[str, Any] | None:
 
 #: tools a framework adds to pass the task to another agent (stdlib only: this runs in the agent's environment)
 _HANDOFF = re.compile(
-    r"^(transfer_to_\w+|transfer_back_to_\w+|transfer_to_agent|handoff|delegate_work_to_coworker)$", re.IGNORECASE
+    r"^(transfer_to_\w+|transfer_back_to_\w+|transfer_to_agent|handoff|delegate_work_to_coworker|"
+    r"delegate_task_to_members?)$",
+    re.IGNORECASE,
 )
+
+
+#: the argument of a generic handoff tool that names the agent (LlamaIndex to_agent, ADK agent_name, Agno member_id)
+_AGENT_ARG = re.compile(r"^(to_agent|agent_name|agent|target_agent|to|member_id)$")
+
+
+def _agent_choices(description: str, system: str = "") -> list[str]:
+    """Agent names a handoff tool's description lists (``{'billing': '...'}`` or ``billing: ...`` lines after
+    "available agents"), else the members the system prompt names (Agno ``<member id="researcher" ...>``)."""
+    names = re.findall(r"'([\w.-]+)'\s*:", description)
+    if not names and "agents" in description.lower():
+        tail = description.lower().split("agents", 1)[1]
+        names = re.findall(r"^\s*-?\s*([\w.-]+)\s*:", tail, re.M)
+    if not names:
+        names = re.findall(r'<member id="([^"]+)"', system)
+    return list(dict.fromkeys(names))
+
+
+def _system_text(body: dict[str, Any]) -> str:
+    """The system prompt of a request, as text (chat messages, responses instructions, anthropic system)."""
+    parts: list[str] = []
+    for m in body.get("messages") or []:
+        if isinstance(m, dict) and m.get("role") in ("system", "developer"):
+            c = m.get("content")
+            parts.append(c if isinstance(c, str) else json.dumps(c, default=str))
+    for key in ("instructions", "system"):
+        v = body.get(key)
+        if v:
+            parts.append(v if isinstance(v, str) else json.dumps(v, default=str))
+    return "\n".join(parts)
+
+
+#: tools a framework adds for the model to give its answer and end the run
+_FINAL = re.compile(r"^(final_answer|final_result(_\w+)?)$", re.IGNORECASE)
 
 
 class CannedResponder:
@@ -251,6 +287,7 @@ class CannedResponder:
         #: handoffs asked for in this run, across every agent's conversation: a handoff is taken once, so agents
         #: never pass the task back and forth (or to themselves) until the call limit
         self._handoffs: set[str] = set()
+        self._handed_to: set[str] = set()  # agents a generic handoff tool already named
         self._final = self.mocks.final_text
 
     @staticmethod
@@ -285,15 +322,35 @@ class CannedResponder:
         order = [n for n in self.mocks.order if n in offered]
         if not self.mocks.only_order:
             order += [n for n in offered if n not in self.mocks.order]
+        # a framework's own "answer and stop" tool (smolagents final_answer, PydanticAI final_result) ends the run:
+        # asked for before the other tools, it would hide every tool and agent after it. It goes last, unless the
+        # person put it in order: on purpose.
+        order = [n for n in order if not (_FINAL.match(n) and n not in self.mocks.order)] + [
+            n for n in order if _FINAL.match(n) and n not in self.mocks.order
+        ]
+        system = _system_text(body)
         for name in order:
             mock = self.mocks.tools.get(name)
-            if name in already or (mock is not None and not mock.call):
+            if mock is not None and not mock.call:
                 continue
             handoff = bool(_HANDOFF.match(name))
-            if handoff and name in self._handoffs:
-                continue
+            desc = next((t.description or "" for t in call.tools if t.name == name), "")
+            # a generic dispatch tool (handoff(to_agent), delegate_task_to_member(member_id)) is asked again while
+            # an agent it can reach has not been reached: one call per agent, never the same agent twice
             schema = _tool_schema(body, call.provider, name)
+            dispatch = handoff and any(_AGENT_ARG.match(k) for k in ((schema or {}).get("properties") or {}))
+            pending = [a for a in _agent_choices(desc, system) if a not in self._handed_to] if dispatch else []
+            if name in already and not pending:
+                continue
+            if handoff and name in self._handoffs and not pending:
+                continue
             args = example_arguments(schema, mock.args if mock else None)
+            if handoff and not (mock and mock.args):  # name a real agent: `handoff(to_agent=...)` needs one
+                for key in [k for k in args if _AGENT_ARG.match(k)]:
+                    choice = next((a for a in _agent_choices(desc, system) if a not in self._handed_to), None)
+                    if choice:
+                        args[key] = choice
+                        self._handed_to.add(choice)
             asked.add(name)
             if handoff:
                 self._handoffs.add(name)
