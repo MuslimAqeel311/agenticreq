@@ -598,7 +598,8 @@ def mocks_cmd(
         raise typer.Exit(2)
     prohibited: set[str] = set()
     effects: dict[str, str] = {}
-    spec_path = spec or (Path("spec.yml") if Path("spec.yml").is_file() else None)
+    resolved = resolve_spec(path, spec)
+    spec_path = resolved if resolved.is_file() else None
     if spec_path is not None:
         from agenticreq.loader import load_spec
 
@@ -794,7 +795,9 @@ def audit(
 @app.command(rich_help_panel="The 5 steps")
 def check(
     path: Path = typer.Argument(Path("."), exists=True, help="the agent's folder or file (default: this folder)"),
-    spec: Path = typer.Option(Path("spec.yml"), "--spec", "-s"),
+    spec_opt: Optional[Path] = typer.Option(
+        None, "--spec", "-s", help="the spec (default: spec.yml in the agent's folder, else in this folder)"
+    ),
     captures: Optional[Path] = CapturesOpt,
     traces: Optional[Path] = TracesOpt,
     mcp: Optional[str] = McpOpt,
@@ -825,6 +828,7 @@ def check(
     from agenticreq.engine import run
     from agenticreq.loader import load_spec
 
+    spec = resolve_spec(path, spec_opt)
     _need_spec(spec)
     run_file = captures or _latest_mock_run(path)
     obs = _observe(path, run_file, traces, mcp, mcp_tools)
@@ -1003,6 +1007,28 @@ def params(
         for k in meta:
             con.print(f"  [bold]{k}[/bold]")
             show(k)
+
+
+def resolve_spec(path: Path, given: Optional[Path]) -> Path:
+    """The spec a command reads. ``--spec`` wins; otherwise spec.yml in the folder being checked, then spec.yml in
+    this folder. When both exist and are different files, the agent folder's one is used and the line says so;
+    when neither exists, the path named is the agent folder's, so the "no spec" line points where it belongs."""
+    if given is not None:
+        return given
+    folder = path if path.is_dir() else path.parent
+    project, here = folder / "spec.yml", Path("spec.yml")
+    if project.is_file():
+        if here.is_file() and here.resolve() != project.resolve():
+            err.print(
+                f"using {escape(str(project))} (the agent folder's spec); {escape(str(here))} in this folder is a "
+                "different file: pass --spec to choose it"
+            )
+        return project
+    if here.is_file():
+        if folder.resolve() != Path.cwd().resolve():
+            err.print(f"using {escape(str(here))} from this folder: {escape(str(folder))} has no spec.yml")
+        return here
+    return project
 
 
 def _need_spec(spec: Path) -> None:
