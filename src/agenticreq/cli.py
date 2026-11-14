@@ -73,12 +73,21 @@ FormatOpt = typer.Option(Fmt.console, "--format", "-f")
 OutputOpt = typer.Option(None, "--output", "-o", help="write the report here instead of stdout")
 
 
-def _run_observed(run_file: Path, captured: int) -> Optional[ObservedAgent]:
-    """The code plus the run just saved, for the mock-run summary; None when there is nothing to read."""
+def _run_observed(run_file: Path, captured: int, entry: Optional[str] = None) -> Optional[ObservedAgent]:
+    """The code plus the run just saved, for the mock-run summary; None when there is nothing to read. The folder
+    read is the project the entry runs (``--entry path/to/agent.py:main``), else this folder: never a whole tree
+    the agent is only part of."""
     if not captured:
         return None
+    root = Path.cwd()
+    if entry:
+        from agenticreq.capture.entry import split_entry
+
+        target = split_entry(entry)[0]
+        if target.endswith(".py") and Path(target).is_file():
+            root = Path(target).resolve().parent
     try:
-        return _observe(Path.cwd(), run_file, None, None, None)
+        return _observe(root, run_file, None, None, None)
     except Exception:  # noqa: BLE001 - the summary must not hide the run's own result
         return None
 
@@ -531,7 +540,7 @@ def mock_run(
     # mocks.yml may spell a tool as the code shows it ("Web Search") and the wire as the model sees it (web_search):
     # one tool, so it is never both offered and never offered
     # call: false only means "do not ask the model to call it": a call: false tool no run reached is still listed
-    obs = _run_observed(p, cap)
+    obs = _run_observed(p, cap, entry)
     # the wire spelling of a plugin tool (Semantic Kernel `Orders-search_orders`) is the code's tool: the observed
     # names (mapped in observe.py) count as offered too
     seen = [*offered, *(obs.offered_tools() if obs is not None else [])]

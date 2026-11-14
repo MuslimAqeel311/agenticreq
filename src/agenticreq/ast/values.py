@@ -136,6 +136,22 @@ def _param_index(fn: ast.FunctionDef | ast.AsyncFunctionDef, name: str) -> tuple
     return None
 
 
+def _calls_named(ex: ProjectExtractor, name: str) -> list[tuple[FileCtx, ast.Call]]:
+    """Every call of a function named ``name`` in the project: one walk of every file, kept on the extractor (a big
+    project would otherwise be walked once per value read)."""
+    index: dict[str, list[tuple[FileCtx, ast.Call]]] | None = getattr(ex, "_calls_by_name", None)
+    if index is None:
+        index = {}
+        for fc in ex.files:
+            for c in ast.walk(fc.tree):
+                if isinstance(c, ast.Call):
+                    n = _name(c.func)
+                    if n:
+                        index.setdefault(n, []).append((fc, c))
+        ex._calls_by_name = index  # type: ignore[attr-defined]
+    return index.get(name, [])
+
+
 def from_call_sites(
     ex: ProjectExtractor, fc: FileCtx, node: ast.AST, call: ast.AST | None, depth: int = 0
 ) -> tuple[float | None, list[str], str | None]:
@@ -158,28 +174,25 @@ def from_call_sites(
         default = defaults[pos - (len(plain) - len(defaults))]
     found: list[tuple[float, str]] = []
     unreadable = False
-    for other in ex.files:
-        for c in ast.walk(other.tree):
-            if not isinstance(c, ast.Call) or _name(c.func) != fn.name:
-                continue
-            arg: ast.AST | None = next((k.value for k in c.keywords if k.arg == node.id), None)
-            if arg is None and pos >= 0:
-                p = pos - (1 if is_method and isinstance(c.func, ast.Attribute) else 0)
-                if 0 <= p < len(c.args) and not any(isinstance(a, ast.Starred) for a in c.args[: p + 1]):
-                    arg = c.args[p]
-            if arg is None:
-                arg = default
-            v = _number(arg)
-            if v is None and isinstance(arg, (ast.Name, ast.Attribute)):
-                r = ex.symbols.resolve(other, arg)
-                v = _number(r.node) if r is not None and r.kind == "const" else None
-                if v is None:
-                    v2, sev, _ = from_call_sites(ex, other, arg, c, depth + 1)
-                    v = v2 if not sev else None
+    for other, c in _calls_named(ex, fn.name):
+        arg: ast.AST | None = next((k.value for k in c.keywords if k.arg == node.id), None)
+        if arg is None and pos >= 0:
+            p = pos - (1 if is_method and isinstance(c.func, ast.Attribute) else 0)
+            if 0 <= p < len(c.args) and not any(isinstance(a, ast.Starred) for a in c.args[: p + 1]):
+                arg = c.args[p]
+        if arg is None:
+            arg = default
+        v = _number(arg)
+        if v is None and isinstance(arg, (ast.Name, ast.Attribute)):
+            r = ex.symbols.resolve(other, arg)
+            v = _number(r.node) if r is not None and r.kind == "const" else None
             if v is None:
-                unreadable = True
-                continue
-            found.append((v, f"{other.rel}:{c.lineno}"))
+                v2, sev, _ = from_call_sites(ex, other, arg, c, depth + 1)
+                v = v2 if not sev else None
+        if v is None:
+            unreadable = True
+            continue
+        found.append((v, f"{other.rel}:{c.lineno}"))
     if not found:
         return None, [], None
     values = {v for v, _ in found}
