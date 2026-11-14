@@ -1,0 +1,14 @@
+agent_id: m5
+risk_level: medium
+goal: {statement: Answer, done_criteria: [answered]}
+out_of_scope: [legal advice]
+prohibited: []
+approval_required: []
+limits: []
+escalation:
+  - {metric: risk_score, op: ">=", threshold: 8, to: lead}
+untrusted_inputs: []
+owner: owner@example.com
+technical_owner: eng@example.com
+data_rules: {}
+bounds: {max_steps: 6}

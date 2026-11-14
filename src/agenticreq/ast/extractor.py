@@ -158,10 +158,17 @@ class ProjectExtractor:
         self.obs.tool_vars = dict(self.var_to_tool)
         self.obs.tool_groups = _merge_groups(list(self._groups.values()))
         self._framework()
-        seen_bounds: set[tuple[str, float | None, str, int]] = set()
+        seen_bounds: set[tuple[str, float | None, str, int, str]] = set()
         unique: list[BoundRef] = []
         for b in self.obs.bounds:  # the same bound reached through two spellings on one line is one bound
-            k = (b.kind, b.value, b.code_ref.file if b.code_ref else "", b.code_ref.line or 0 if b.code_ref else 0)
+            # ... but one factory line that builds several agents gives each of them its own bound
+            k = (
+                b.kind,
+                b.value,
+                b.code_ref.file if b.code_ref else "",
+                b.code_ref.line or 0 if b.code_ref else 0,
+                b.agent or "",
+            )
             if k not in seen_bounds:
                 seen_bounds.add(k)
                 unique.append(b)
@@ -421,6 +428,11 @@ class ProjectExtractor:
         return env_default(self.symbols, fc, node, self._dotenv_cache)
 
     def _bound_ref(self, fc: FileCtx, kind: str, name: str, node: ast.expr, call: ast.Call | None = None) -> BoundRef:
+        from agenticreq.ast import values
+
+        several = values.several_definitions(self, fc, node)
+        if several:  # the project sets this name to different values: none is picked
+            return BoundRef(kind=kind, name=name, value=None, several=several, code_ref=_ref(fc.rel, node))
         ok, val = literal(node)
         if not ok and isinstance(node, (ast.Name, ast.Attribute)):
             rr = self.symbols.resolve(fc, node)
@@ -448,13 +460,21 @@ class ProjectExtractor:
                 hit = _default_in(node)
                 if hit is not None:
                     ok, val, assumed = True, hit[0], f"default in code of env {hit[1]}" if hit[1] else "default in code"
-        return BoundRef(
-            kind=kind,
-            name=name,
-            value=float(val) if ok and isinstance(val, (int, float)) and not isinstance(val, bool) else None,
-            assumed_from=assumed,
-            code_ref=_ref(fc.rel, node),
-        )
+        number = float(val) if ok and isinstance(val, (int, float)) and not isinstance(val, bool) else None
+        ref = _ref(fc.rel, node)
+        if number is None:  # a class attribute, or a parameter the project passes a constant for
+            got = values.class_attribute(self, fc, node)
+            if got is not None:
+                number = got[0]
+            else:
+                v, sev, _where = values.from_call_sites(self, fc, node, call)
+                if sev:
+                    return BoundRef(kind=kind, name=name, value=None, several=sev, code_ref=ref)
+                number = v
+        if number is None:
+            text, at_runtime = values.unread_expression(node)
+            return BoundRef(kind=kind, name=name, value=None, unread=text, runtime=at_runtime, code_ref=ref)
+        return BoundRef(kind=kind, name=name, value=number, assumed_from=assumed, code_ref=ref)
 
     # ------------------------------------------------------------ tool body facts
     _non_idempotent = staticmethod(body_analysis._non_idempotent)

@@ -127,6 +127,11 @@ class BoundRef(BaseModel):
     #: the agent whose constructor carries the bound; None = a run-level bound (graph.compile, Runner.run ...)
     #: that applies to every agent
     agent: str | None = None
+    #: the value was not read: file:line of each definition when the project sets it to different values
+    several: list[str] = Field(default_factory=list)
+    #: the value was not read: the expression it comes from (``int(sys.argv[1])``), and whether it is decided at run time
+    unread: str | None = None
+    runtime: bool = False
 
     @property
     def label(self) -> str:

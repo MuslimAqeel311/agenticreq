@@ -1,0 +1,17 @@
+from agents import Agent, Runner, function_tool
+
+
+@function_tool
+def lookup(q: str) -> str:
+    """Look something up."""
+    return q
+
+
+agent = Agent(name="a", model="gpt-4o-2024-08-06", tools=[lookup])
+
+MAX_TURNS = 6
+
+
+def run(task):
+    turns = MAX_TURNS
+    return Runner.run_sync(agent, task, max_turns=turns)

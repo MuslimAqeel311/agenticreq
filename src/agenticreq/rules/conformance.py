@@ -32,6 +32,7 @@ from agenticreq.data import InjectedTools
 from agenticreq.models.confidence import Confidence
 from agenticreq.models.finding import Finding, PassedCheck, SourceRef
 from agenticreq.models.observed import (
+    BoundRef,
     CapturedCall,
     ModelRef,
     ObservedAgent,
@@ -977,12 +978,46 @@ def _agents_of_run(obs: ObservedAgent) -> list[str]:
     return names if len(names) > 1 else []
 
 
+def unread_bound(b: BoundRef, param: str, rule_id: str = "AS-209") -> Finding:
+    """A limit whose value the code does not fix: several values in the project (none is picked), a value read at
+    run time, or one agenticreq cannot read. A person confirms it; it is never a pass and never "no limit"."""
+    if b.several:
+        files = ", ".join(dict.fromkeys(w.rsplit(":", 1)[0] for w in b.several))
+        reason = (
+            f"Several values for {b.label} found in {files} ({', '.join(b.several[:4])}); agenticreq cannot pick "
+            "the one the agent uses. Confirm it under confirmed:."
+        )
+    elif b.runtime:
+        reason = (
+            f"{b.label} is set at run time ({b.unread} at {b.code_ref}); agenticreq cannot read it. Confirm the "
+            "value under confirmed:."
+        )
+    else:
+        reason = (
+            f"{b.label} is set from a value agenticreq cannot read ({b.unread or 'an expression'} at {b.code_ref}). "
+            "Confirm the value under confirmed:."
+        )
+    return make_finding(
+        rule_id,
+        confidence=U(),
+        code_ref=b.code_ref,
+        param=param,
+        agent=b.agent,
+        status_hint="SIGN-OFF",
+        reason=reason,
+        title=f"{b.label} is not a literal",
+        detail=f"{b.label} value could not be read statically",
+        evidence=f"{b.label} at {b.code_ref}" + (f"; definitions: {', '.join(b.several)}" if b.several else ""),
+    )
+
+
 @rule("conformance", "AS-208", "AS-209", modes=_BOTH)
 def step_bounds(ctx: CheckContext) -> Iterable[Finding]:
     """bounds.max_steps. A step bound passes when it exists, and when it is at least as strict as the spec's max_steps
     if the spec has one (agenticreq/thresholds.py). The library proposes no number."""
     obs = ctx.observed
-    if not obs or not obs.declared_tools:
+    # an agent with no tools still loops on model calls (CrewAI max_iter, AutoGen max_turns): it is checked too
+    if not obs or not (obs.declared_tools or obs.declared_agents):
         return []
     if not obs.declared_agents and all(is_mcp_server_tool(t) for t in obs.declared_tools.values()):
         return []  # a tool server only: there is no agent loop here to bound
@@ -1052,18 +1087,7 @@ def step_bounds(ctx: CheckContext) -> Iterable[Finding]:
     out: list[Finding] = []
     for b in steps:
         if b.value is None:
-            out.append(
-                make_finding(
-                    "AS-209",
-                    confidence=U(),
-                    code_ref=b.code_ref,
-                    param=p.key,
-                    agent=b.agent,
-                    title=f"{b.label} is not a literal",
-                    detail=f"{b.label} value could not be read statically",
-                    evidence=f"{b.label} at {b.code_ref}",
-                )
-            )
+            out.append(unread_bound(b, p.key))
             continue
         # a value that is the default of an environment read is assumed: the bound exists, the deployment may retune it
         conf = H() if b.assumed_from else P()
