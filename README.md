@@ -2,9 +2,11 @@
 
 **AgenticReq supports both Specification-Driven Development and Existing-Code Auditing for Agentic AI applications.**
 
-You write what your agent must and must not do in `spec.yml`. agenticreq reads the agent's code, without running it,
-and tells you which requirements the code enforces, which it does not, and which need a person or a test run to
-confirm. No LLM is called.
+agenticreq is a requirements tool for the whole life of an agentic AI project. At the start, before any code exists,
+you write the agent's requirements in `spec.yml`, the way an SRS is written for traditional software, and build the
+agent against them. At the end, for an agent that is already built, you audit the code you have and draw a spec from
+it. Either way, agenticreq reads the agent's code, without running it, and tells you which requirements the code
+enforces, which it does not, and which need a person or a test run to confirm. No LLM is called.
 
 **agenticreq never suggests numbers. You write them; it checks your code matches.**
 
@@ -12,9 +14,10 @@ confirm. No LLM is called.
 
 | it is | it is not |
 |---|---|
-| a check that the code matches the spec you wrote | a runtime guardrail: it does not stop the agent while it runs |
-| a list of where enforcement is missing, with file and line | a security certificate: a clean report is not a guarantee |
-| a way to see which tools a model is offered, with no API key | a prompt-injection detector |
+| a place to write an agent's requirements before the code: what it must and must not do, who approves what, its limits | a code generator: it writes no agent code |
+| a check, while you build and after, that the code matches the spec you wrote | a runtime guardrail: it does not stop the agent while it runs |
+| an audit of an agent that already exists, with findings before any spec is written | a security certificate: a clean report is not a guarantee |
+| a list of where enforcement is missing, with file and line, plus run evidence from a mock run with no API key | a prompt-injection detector |
 
 It can also export the spec as a policy for OPA or Cedar.
 
@@ -29,26 +32,51 @@ Python 3.10 or newer, on Windows, Linux and macOS. Installing writes nothing int
 
 ## Quick start
 
-Run these from the agent's folder:
+Run the commands from the agent's folder. `agenticreq guide` always shows where the folder stands and the next
+command.
+
+### New project (spec first)
+
+Start before any code exists. Write the requirements, then build the agent against them:
 
 ```bash
-pip install agenticreq     # 1. writes nothing into your project
-agenticreq audit           # 2. findings immediately: no spec, no setup
-agenticreq init            # 3. writes spec.yml; replace every TODO
-agenticreq mocks           # 4. writes mocks.yml for a test run with mock tools
-agenticreq mock-run        #    runs the agent with a canned model
-agenticreq check           # 5. compares spec.yml and the latest mock run with the code
-agenticreq guide           #    where this folder stands, and the next command
+pip install agenticreq     # writes nothing into your project
+agenticreq init            # in the empty folder: writes spec.yml; replace every TODO
+# ... build the agent against spec.yml ...
+agenticreq check           # while you build: compares spec.yml with the code
+agenticreq mocks           # writes mocks.yml for a test run with mock tools
+agenticreq mock-run        # runs the agent with a canned model
+agenticreq check           # reads the run evidence too
+agenticreq guide           # where this folder stands, and the next command
 ```
 
-## Two ways to start
+The spec has three levels:
 
-| NEW project: write the spec first | EXISTING project: audit the code you have |
-|---|---|
-| 1. `agenticreq init` in the empty folder | 1. `agenticreq audit`: findings with no setup |
-| 2. Fill `spec.yml`: what the agent must and must not do | 2. `agenticreq init`: drafts `spec.yml` from your code |
-| 3. Build the agent to match it | 3. Review the draft and replace every `TODO` |
-| 4. `agenticreq check` as you go | 4. `agenticreq check` |
+- **Level 1, the project's requirements (you write them):** `agent_id`, `risk_level`, `goal`, `out_of_scope`,
+  `role_boundary`, `prohibited` tools and actions, `approval_required`, `limits`, `escalation`, `untrusted_inputs`,
+  `data_rules`, and the owners (`owner`, `technical_owner`). `check` reports every `TODO` as a gap.
+- **Level 2, the agent-level requirements:** agenticreq sets them from `risk_level` (yes/no and choice settings only;
+  numbers are always yours).
+- **Level 3, multi-agent systems only:** `topology`, `agent_registry`, `declared_delegation`, `conflict_resolution`
+  (you write these; the rest have defaults).
+
+What code cannot prove, a person confirms under `confirmed:` in `spec.yml` (the sign-off).
+
+### Existing project (audit first)
+
+The agent is already built. Start from the code you have:
+
+```bash
+pip install agenticreq     # writes nothing into your project
+agenticreq audit           # findings immediately: no spec, no setup
+agenticreq init            # draws spec.yml from the code: a TODO for each decision only you can make
+agenticreq check           # compares spec.yml with the code
+agenticreq mocks           # writes mocks.yml for a test run with mock tools
+agenticreq mock-run        # runs the agent with a canned model
+agenticreq check           # reads the run evidence too
+```
+
+Then sign off under `confirmed:` what code cannot prove.
 
 A short spec looks like this:
 

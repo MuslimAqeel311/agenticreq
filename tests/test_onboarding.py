@@ -250,10 +250,17 @@ def test_agentspec_round_trips_through_yaml(tmp_path: Path) -> None:
 
 # ------------------------------------------------------------------ 6. README journey
 def test_readme_documents_the_journey_in_order() -> None:
+    # two paths, spec first (README: "New project (spec first)", then "Existing project (audit first)")
     text = (ROOT / "README.md").read_text(encoding="utf-8")
     start = text.index("## Quick start")
     section = text[start : text.index("\n## ", start + 5)]
-    steps = ["pip install", "agenticreq audit", "agenticreq init", "agenticreq check"]
-    pos = [section.index(s) for s in steps]
-    assert pos == sorted(pos), "README must show install -> audit -> init -> check, in that order"
-    assert "discover" not in section[: pos[2]], "value first: no capture setup before init"
+    spec_first = section[section.index("### New project (spec first)") : section.index("### Existing project")]
+    audit_first = section[section.index("### Existing project (audit first)") :]
+    assert section.index("### New project (spec first)") < section.index("### Existing project (audit first)")
+    for path, steps in (
+        (spec_first, ["pip install", "agenticreq init", "agenticreq check"]),
+        (audit_first, ["pip install", "agenticreq audit", "agenticreq init", "agenticreq check"]),
+    ):
+        pos = [path.index(s) for s in steps]
+        assert pos == sorted(pos), f"README must show {' -> '.join(steps)}, in that order"
+        assert "discover" not in path[: path.index("agenticreq init")], "no capture setup before init"
