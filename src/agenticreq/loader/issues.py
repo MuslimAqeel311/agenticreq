@@ -34,7 +34,10 @@ PROSE_FIELDS = (
 #: list fields whose string items are names (tools / sources): a multi-word string is prose, not a name
 NAME_LISTS = {"prohibited": "tool", "approval_required": "tool", "untrusted_inputs": "source"}
 _NAME = re.compile(r"^[A-Za-z_][\w.:/@-]*$")
-_PLACEHOLDER = re.compile(r"\$\{[^}]*\}|\$[A-Z_][A-Z0-9_]*\b")
+#: a value that is ONLY an environment-variable reference (``${OWNER}``, ``$OWNER``, ``$HOME``): agenticreq never
+#: expands one, so the field stays undeclared. Text that merely contains a $ (``SYS.V$VERSION``, ``price is $5``,
+#: ``$$HOME`` the escaped literal) is a value and is kept exactly as written.
+_PLACEHOLDER = re.compile(r"^\s*(?:\$\{[A-Za-z_][A-Za-z0-9_]*(?::?-[^}]*)?\}|\$[A-Za-z_][A-Za-z0-9_]*)\s*$")
 
 
 def is_name(s: str) -> bool:
