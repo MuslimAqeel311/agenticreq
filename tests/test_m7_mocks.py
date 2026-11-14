@@ -69,6 +69,11 @@ def test_m7_c_a_framework_decorator_is_not_a_service(tmp_path: Path) -> None:
     assert "patch" not in data["tools"]["lookup"]
 
 
+def test_m7_a_a_graph_node_is_not_the_entry() -> None:
+    _, data = _mocks(Path(__file__).parent / "fixtures" / "agents" / "langgraph_po")
+    assert data["entry"] != "agent:agent"
+
+
 def _call(system: str, tools: list[str]) -> CapturedCall:
     return CapturedCall(
         run_id="r",

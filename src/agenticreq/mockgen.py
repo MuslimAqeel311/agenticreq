@@ -170,6 +170,8 @@ def _ann(a: ast.arg) -> str:
 def _score(fn: ast.FunctionDef | ast.AsyncFunctionDef, agent_vars: frozenset[str] = frozenset()) -> int | None:
     if fn.name.startswith("_") or not _calls_agent(fn, agent_vars) or _reads_command_line(fn):
         return None
+    if any(_ann(a).endswith("State") for a in _required(fn)):
+        return None  # a graph node (LangGraph `def agent(state: MessagesState)`): the graph calls it, not a run
     score = 5
     if any(h in fn.name.lower() for h in _NAME_HINTS):
         score += 2
