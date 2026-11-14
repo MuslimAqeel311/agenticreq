@@ -118,9 +118,13 @@ def test_version_table_is_well_formed() -> None:
 
 
 def test_readme_documents_the_ranges() -> None:
+    """The README names every framework and points to the data file for versions (it prints no version numbers)."""
     readme = (Path(__file__).resolve().parents[1] / "README.md").read_text(encoding="utf-8")
+    assert "src/agenticreq/data/supported_versions.yml" in readme
     for row in load_yaml("supported_versions.yml")["frameworks"].values():
-        assert f"{row['dist']} >={row['min']},<{row['below']}" in readme
+        assert row["dist"] not in readme or f"{row['dist']} >=" not in readme  # no range in prose
+    for name in ("LangGraph", "CrewAI", "OpenAI Agents", "Claude Agent SDK", "DSPy", "Strands", "Semantic Kernel"):
+        assert name in readme
 
 
 @pytest.mark.parametrize("version,flagged", [("0.86.0", True), ("1.15.28", False), ("2.1.0", True)])

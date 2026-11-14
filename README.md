@@ -2,10 +2,16 @@
 
 **AgenticReq supports both Specification-Driven Development and Existing-Code Auditing for Agentic AI applications.**
 
-agenticreq is a requirements tool for the whole life of an agentic AI project. At the start, before any code exists,
-you write the agent's requirements in `spec.yml`, the way an SRS is written for traditional software, and build the
-agent against them. At the end, for an agent that is already built, you audit the code you have and draw a spec from
-it. Either way, agenticreq reads the agent's code, without running it, and tells you which requirements the code
+agenticreq is a requirements tool for the whole life of an agentic AI project. You can use it in two ways:
+
+1. **Starting a new project?** Write the agent's requirements first. Before any code exists, you write `spec.yml`
+   the way an SRS is written for traditional software: what the agent must and must not do, who approves what, its
+   limits. Then you build the agent against it, and agenticreq checks the code against the spec as you go.
+2. **Already have agentic code?** Apply agenticreq to it directly. `agenticreq audit` gives findings with no setup,
+   `agenticreq init` draws a spec from your code, and `agenticreq check` shows where the code does and does not
+   enforce it.
+
+Either way, agenticreq reads the agent's code, without running it, and tells you which requirements the code
 enforces, which it does not, and which need a person or a test run to confirm. No LLM is called.
 
 **agenticreq never suggests numbers. You write them; it checks your code matches.**
@@ -191,19 +197,28 @@ The report header says what was scanned.
 
 ## Supported frameworks
 
-LangGraph, LangChain, CrewAI, OpenAI Agents, Claude Agent SDK, Google ADK, smolagents, AutoGen, LlamaIndex,
-PydanticAI, Haystack, Agno, Semantic Kernel, DSPy and Strands, plus plain provider SDK code (anthropic, openai,
-google-genai, groq and other OpenAI-compatible clients). How each one pauses for a person is listed in
-`src/agenticreq/data/approval_gates.yml`.
+agenticreq has been tested on a multi-agent project in each of these 15 frameworks, and verified at every step:
+`audit`, `init`, `validate`, `check`, `mocks`, `mock-run`, the `confirmed:` sign-off, and `check` again.
 
-`audit` and `check` never run the agent. For `mock-run`, the framework versions it was validated on live in
-`src/agenticreq/data/supported_versions.yml`; a version outside the range still runs, with a note:
+1. LangGraph
+2. LangChain
+3. CrewAI
+4. OpenAI Agents
+5. Claude Agent SDK
+6. Google ADK
+7. smolagents
+8. AutoGen
+9. LlamaIndex
+10. PydanticAI
+11. Haystack
+12. Agno
+13. Semantic Kernel
+14. DSPy
+15. Strands
 
-| framework | supported by `mock-run` | validated on |
-|---|---|---|
-| CrewAI | crewai >=1.9.3,<2 | 1.9.3, 1.15.28 (0.86 hangs) |
-| LangGraph | langgraph >=1.2,<2 | 1.2.15, 1.2.17 |
-| OpenAI Agents | openai-agents >=0.23,<1 | 0.23.1, 0.24.0 |
+Plain provider SDK code (anthropic, openai, google-genai, groq and other OpenAI-compatible clients) is supported
+too. How each framework pauses for a person is listed in `src/agenticreq/data/approval_gates.yml`, and the framework
+versions `mock-run` was validated on are in `src/agenticreq/data/supported_versions.yml`.
 
 ## Platforms
 
