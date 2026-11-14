@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
 from typing import Any
@@ -232,6 +233,12 @@ def output_schema(body: dict[str, Any], provider: str) -> dict[str, Any] | None:
     return None
 
 
+#: tools a framework adds to pass the task to another agent (stdlib only: this runs in the agent's environment)
+_HANDOFF = re.compile(
+    r"^(transfer_to_\w+|transfer_back_to_\w+|transfer_to_agent|handoff|delegate_work_to_coworker)$", re.IGNORECASE
+)
+
+
 class CannedResponder:
     def __init__(self, mocks: MockConfig | None = None) -> None:
         self.mocks = mocks or MockConfig()
@@ -239,6 +246,9 @@ class CannedResponder:
         # Tools already requested per conversation. Needed because some frameworks
         # (smolagents ToolCallingAgent) do not replay prior tool calls in wire format.
         self._asked: dict[str, set[str]] = {}
+        #: handoffs asked for in this run, across every agent's conversation: a handoff is taken once, so agents
+        #: never pass the task back and forth (or to themselves) until the call limit
+        self._handoffs: set[str] = set()
         self._final = self.mocks.final_text
 
     @staticmethod
@@ -277,9 +287,14 @@ class CannedResponder:
             mock = self.mocks.tools.get(name)
             if name in already or (mock is not None and not mock.call):
                 continue
+            handoff = bool(_HANDOFF.match(name))
+            if handoff and name in self._handoffs:
+                continue
             schema = _tool_schema(body, call.provider, name)
             args = example_arguments(schema, mock.args if mock else None)
             asked.add(name)
+            if handoff:
+                self._handoffs.add(name)
             return [ToolCall(name=name, arguments=args, id=f"call_ac_{self.calls}_{name}"[:64])]
         return []
 

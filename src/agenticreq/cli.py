@@ -618,6 +618,13 @@ def mocks_cmd(
         f"wrote {escape(str(out))}: {len(tools)} tool(s), entry {escape(str(entry))}"
         + ("" if entry and entry != "TODO" else " - fill entry: and args:, then run `agenticreq mock-run`")
     )
+    from agenticreq.mockgen import connections
+
+    for where, client, _call in connections(root):  # one line each: the mock run blocks it, never reaches it
+        err.print(
+            f"{escape(where)} opens a {escape(client)} connection: the mock run blocks it; set its URL under env: in "
+            f"{escape(str(out))} or replace that function with patch:"
+        )
     if not quiet:
         _show_progress(root, spec_path)
 

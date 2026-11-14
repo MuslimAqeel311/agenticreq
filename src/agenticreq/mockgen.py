@@ -45,6 +45,11 @@ _RUN_CALLS = frozenset(
         "run_stream",
         "query",
         "aquery",
+        "get_response",  # Semantic Kernel agents
+        "invoke_async",  # Strands
+        "stream_async",
+        "forward",  # DSPy modules
+        "acall",
     }
 )
 _NAME_HINTS = ("run", "ask", "agent", "chat", "answer", "invoke", "handle", "respond", "query", "solve")
@@ -117,12 +122,16 @@ def _module_name(root: Path, file: Path) -> str:
     return ".".join(parts)
 
 
-def _calls_agent(fn: ast.AST) -> bool:
+def _calls_agent(fn: ast.AST, agent_vars: frozenset[str] = frozenset()) -> bool:
+    """The function runs an agent: a run call (invoke, kickoff, run_sync ...), a provider SDK call, or the agent
+    object called directly (Strands ``agent(task)``, a DSPy module ``react(question=q)``)."""
     for node in ast.walk(fn):
         if isinstance(node, ast.Call):
             f = node.func
             name = f.attr if isinstance(f, ast.Attribute) else f.id if isinstance(f, ast.Name) else ""
             if name in _RUN_CALLS or _provider_sdk_call(f):
+                return True
+            if isinstance(f, ast.Name) and f.id in agent_vars:
                 return True
     return False
 
@@ -158,8 +167,8 @@ def _ann(a: ast.arg) -> str:
     return ast.unparse(a.annotation) if a.annotation is not None else ""
 
 
-def _score(fn: ast.FunctionDef | ast.AsyncFunctionDef) -> int | None:
-    if fn.name.startswith("_") or not _calls_agent(fn) or _reads_command_line(fn):
+def _score(fn: ast.FunctionDef | ast.AsyncFunctionDef, agent_vars: frozenset[str] = frozenset()) -> int | None:
+    if fn.name.startswith("_") or not _calls_agent(fn, agent_vars) or _reads_command_line(fn):
         return None
     score = 5
     if any(h in fn.name.lower() for h in _NAME_HINTS):
@@ -241,12 +250,33 @@ def _tool_modules_used(tree: ast.Module) -> dict[str, set[str]]:
         elif isinstance(node, ast.ImportFrom) and node.module and node.level == 0:
             imported.update({a.asname or a.name: node.module.split(".")[0] for a in node.names})
 
+    # module variables built from an imported client: engine = create_engine(URL), client = OpenAI()
+    built: dict[str, str] = {}
+    for node in tree.body:
+        if isinstance(node, ast.Assign) and isinstance(node.value, ast.Call):
+            f = node.value.func
+            base = f
+            while isinstance(base, ast.Attribute):
+                base = base.value
+            if isinstance(base, ast.Name) and base.id in imported:
+                for t in node.targets:
+                    if isinstance(t, ast.Name):
+                        built[t.id] = imported[base.id]
+
     def direct(fn: ast.AST) -> set[str]:
-        return {
+        out = {
             imported[n.value.id]
             for n in ast.walk(fn)
             if isinstance(n, ast.Attribute) and isinstance(n.value, ast.Name) and n.value.id in imported
         }
+        for n in ast.walk(fn):  # text(...) from `from sqlalchemy import text`, or the module's engine
+            if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Load):
+                if n.id in built:
+                    out.add(built[n.id])
+        for n in ast.walk(fn):
+            if isinstance(n, ast.Call) and isinstance(n.func, ast.Name) and n.func.id in imported:
+                out.add(imported[n.func.id])
+        return out
 
     out: dict[str, set[str]] = {}
     for name, fn in funcs.items():
@@ -255,6 +285,20 @@ def _tool_modules_used(tree: ast.Module) -> dict[str, set[str]]:
             used |= direct(funcs[helper])
         out[name] = used
     return out
+
+
+#: standard-library modules that do reach the network
+_STDLIB_NETWORK = frozenset({"urllib", "http", "socket", "smtplib", "ftplib", "imaplib", "poplib", "telnetlib", "ssl"})
+
+
+def _local_or_stdlib(root: Path, module: str) -> bool:
+    """A module of the project itself, or a standard-library one that stays on this machine."""
+    if (root / f"{module}.py").is_file() or (root / module).is_dir():
+        return True
+    import sys
+
+    names: frozenset[str] = getattr(sys, "stdlib_module_names", frozenset())
+    return module in names and module not in _STDLIB_NETWORK
 
 
 def outside_services(obs: ObservedAgent) -> dict[str, list[str]]:
@@ -272,7 +316,9 @@ def outside_services(obs: ObservedAgent) -> dict[str, list[str]]:
                 cache[p] = _tool_modules_used(ast.parse(p.read_text(encoding="utf-8-sig")))
             except (OSError, SyntaxError, ValueError):
                 cache[p] = {}
-        mods = sorted(m for m in cache[p].get(t.func_name, set()) if m not in _OFFLINE)
+        mods = sorted(
+            m for m in cache[p].get(t.func_name, set()) if m not in _OFFLINE and not _local_or_stdlib(root, m)
+        )
         if mods:
             out[name] = mods
     return out
@@ -330,24 +376,46 @@ def _known_lists(tree: ast.Module, root: Path, module: str) -> dict[str, list[st
     return out
 
 
+def _no_entry_hint(obs: ObservedAgent) -> str:
+    """Why no entry was written, and the function to add: the agent object the scan found and how its framework
+    runs it (data/entry_calls.yml). A mock run needs a function to call; a module that only builds an agent has none."""
+    from agenticreq.data import load_yaml
+
+    agent = next((a for a in obs.declared_agents if a.var), None)
+    if agent is None or agent.var is None:
+        return (
+            "no function that runs the agent was found: name the function that starts one run of your agent "
+            "(it calls the model and returns the answer)"
+        )
+    calls = (load_yaml("entry_calls.yml") or {}).get("frameworks") or {}
+    template = calls.get(obs.framework or "")
+    call = template.format(agent=agent.var) if template else f"{agent.var}.run(task)"
+    where = f" ({agent.code_ref})" if getattr(agent, "code_ref", None) else ""
+    return (
+        f"no function runs the agent `{agent.var}`{where}: add one, e.g. `def run(task): return {call}`, "
+        "and name it here as module:run"
+    )
+
+
 def guess_entry(root: Path, obs: ObservedAgent) -> EntryGuess:
     from agenticreq.ast.symbols import iter_py_files
 
     best: tuple[int, int, str, ast.FunctionDef | ast.AsyncFunctionDef, ast.Module, Path] | None = None
+    agent_vars = frozenset(a.var for a in obs.declared_agents if a.var)
     for i, p in enumerate(iter_py_files(root, include_tests=False)):
         tree = _load_tree(p)
         if tree is None:
             continue
         for node in tree.body:
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                sc = _score(node)
+                sc = _score(node, agent_vars)
                 if sc is None:
                     continue
                 key = (-sc, len(p.relative_to(root).parts), str(p.relative_to(root)))
                 if best is None or key < (best[0], best[1], best[2]):
                     best = (key[0], key[1], key[2], node, tree, p)
     if best is None:
-        return EntryGuess(why="no function that runs the agent was found")
+        return EntryGuess(why=_no_entry_hint(obs))
     _, _, _, fn, tree, p = best
     module = _module_name(root, p)
     entry = f"{module}:{fn.name}"
@@ -448,9 +516,17 @@ def render_mocks(
         t.declared_effect = declared.get(norm(t.name), t.declared_effect)  # type: ignore[assignment]
     guess = guess_entry(root, obs)
     lines = [HEADER]
+    for where, client, call in connections(root):
+        lines.append(
+            f"# {where} opens a {client} connection ({call}) when it runs: the mock run blocks it. Point it at a "
+            "local stub under env: (its URL / DSN variable), or replace the function that opens it with patch:"
+        )
     if guess.entry:
         lines.append(f"entry: {guess.entry}  # {guess.why}")
         lines.append(f"args: {_flow(guess.args)}")
+    elif guess.why.startswith("no function runs the agent `"):  # the agent was found: the comment says what to add
+        lines.append(f"entry: TODO  # {guess.why}")
+        lines.append('args: TODO  # its inputs, e.g. {task: "What can you help me with?"}')
     else:
         lines.append(
             "entry: TODO  # the function that runs your agent, e.g. my_package.agent:run (module:function)"
@@ -481,6 +557,19 @@ def render_mocks(
             if effect_unsure(t)
             else "  # read-only"
         )
+        if name in online and target:
+            # a database / HTTP client: the first run must reach nothing, so the function is replaced
+            stubbed: dict[str, Any] = {
+                "args": example_arguments(_schema(t)),
+                "patch": target,
+                "returns": f"mock result for {name}",
+            }
+            unsure = "cannot tell whether it writes; " if effect_unsure(t) else ""
+            lines.append(
+                f"  {key}: {_flow(stubbed)}  # {unsure}uses {', '.join(online[name])} (network / database): replaced "
+                "so the run reaches nothing; remove patch: and returns: to run the real function"
+            )
+            continue
         if name in online:
             note += f"; uses {', '.join(online[name])}, which may reach the network: add patch + returns so it does not"
         lines.append(f"  {key}: {_flow({'args': example_arguments(_schema(t))})}{note}")
@@ -499,6 +588,58 @@ def render_mocks(
             "write anywhere else is blocked"
         )
     return "\n".join(lines) + "\n"
+
+
+#: client libraries that open a connection to a database or a remote service, by top-level module
+DB_CLIENTS = {
+    "sqlalchemy": "SQLAlchemy",
+    "oracledb": "Oracle",
+    "cx_Oracle": "Oracle",
+    "psycopg2": "PostgreSQL",
+    "psycopg": "PostgreSQL",
+    "asyncpg": "PostgreSQL",
+    "pymysql": "MySQL",
+    "mysql": "MySQL",
+    "pymongo": "MongoDB",
+    "motor": "MongoDB",
+    "redis": "Redis",
+    "pyodbc": "ODBC",
+    "elasticsearch": "Elasticsearch",
+}
+_CONNECT_CALLS = {"connect", "create_engine", "create_async_engine", "MongoClient", "Redis", "from_url", "create_pool"}
+
+
+def connections(root: Path) -> list[tuple[str, str, str]]:
+    """(file:line, client, call) for every place the project opens a database / service connection
+    (``create_engine(URL)``, ``oracledb.connect(...)``, ``MongoClient(...)``), in any function or at import."""
+    from agenticreq.ast.symbols import iter_py_files
+
+    out: list[tuple[str, str, str]] = []
+    for p in iter_py_files(root, include_tests=False):
+        tree = _load_tree(p)
+        if tree is None:
+            continue
+        imported: dict[str, str] = {}
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                imported.update({(a.asname or a.name).split(".")[0]: a.name.split(".")[0] for a in node.names})
+            elif isinstance(node, ast.ImportFrom) and node.module and node.level == 0:
+                imported.update({a.asname or a.name: node.module.split(".")[0] for a in node.names})
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            f = node.func
+            name = f.attr if isinstance(f, ast.Attribute) else f.id if isinstance(f, ast.Name) else ""
+            if name not in _CONNECT_CALLS:
+                continue
+            base = f.value if isinstance(f, ast.Attribute) else f
+            while isinstance(base, ast.Attribute):
+                base = base.value
+            mod = imported.get(base.id, "") if isinstance(base, ast.Name) else ""
+            if mod in DB_CLIENTS:
+                rel = p.relative_to(root).as_posix()
+                out.append((f"{rel}:{node.lineno}", DB_CLIENTS[mod], ast.unparse(node)[:60]))
+    return out
 
 
 def write_folders(root: Path) -> dict[str, list[str]]:

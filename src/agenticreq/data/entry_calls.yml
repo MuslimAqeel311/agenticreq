@@ -1,0 +1,19 @@
+# How each framework's agent object is run, for the comment `agenticreq mocks` writes when no function in the
+# project runs the agent: "add def run(task): <call>". {agent} is the variable that holds the agent.
+version: 1
+frameworks:
+  langgraph: "{agent}.invoke({{'messages': [('user', task)]}})"
+  langchain: "{agent}.invoke({{'input': task}})"
+  crewai: "{agent}.kickoff(inputs={{'topic': task}})"
+  openai-agents: "Runner.run_sync({agent}, task)"
+  claude-agent-sdk: "asyncio.run(client.query(task))"
+  google-adk: "InMemoryRunner(agent={agent}).run(user_id='u', session_id='s', new_message=task)"
+  smolagents: "{agent}.run(task)"
+  autogen: "asyncio.run({agent}.run(task=task))"
+  llamaindex: "asyncio.run({agent}.run(user_msg=task))"
+  pydantic-ai: "{agent}.run_sync(task)"
+  haystack: "{agent}.run(messages=[ChatMessage.from_user(task)])"
+  agno: "{agent}.run(task)"
+  semantic-kernel: "asyncio.run({agent}.get_response(messages=task))"
+  dspy: "{agent}(question=task)"
+  strands: "{agent}(task)"
