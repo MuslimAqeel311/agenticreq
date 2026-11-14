@@ -262,7 +262,15 @@ def compute(
             else f"{_plural(todo, 'field')} still TODO in spec.yml"
         ),
         "spec matches" if done[2] else "spec vs project",
-        "test run with mock tools",
+        "test run with mock tools"  # (its ✓ says it is done; the text stays as the golden snapshots show it)
+        if done[3]
+        else (
+            "mock run saved; run agenticreq check to read it"
+            if done[2] and fresh_run and not check_saw_run
+            else f"mock run read; {_plural(int((summary or {}).get('mock_run') or 0), 'item')} left to check"
+            if done[2] and fresh_run and check_saw_run
+            else "test run with mock tools"
+        ),
         "owner confirmed every item"
         if done[4]
         else (
