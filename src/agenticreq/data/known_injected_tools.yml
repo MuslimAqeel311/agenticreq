@@ -16,8 +16,9 @@ frameworks:
     prefix: [transfer_to_, transfer_back_to_]
     note: langgraph-supervisor / swarm handoff tools
   google-adk:
-    exact: [transfer_to_agent]
-    note: LlmAgent(sub_agents=[...]) lets the model call transfer_to_agent(agent_name=...)
+    exact: [transfer_to_agent, set_model_response]
+    note: LlmAgent(sub_agents=[...]) lets the model call transfer_to_agent(agent_name=...); output_schema= with tools
+      adds set_model_response, the tool the model answers through
   llamaindex:
     exact: [handoff]
     note: AgentWorkflow(agents=[...]) adds handoff(to_agent=..., reason=...) to every agent
