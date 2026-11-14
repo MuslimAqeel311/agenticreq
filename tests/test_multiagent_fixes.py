@@ -97,6 +97,13 @@ def test_a_tool_that_delegates_through_a_framework_is_not_patched(tmp_path: Path
     assert "patch" not in data["tools"]["ask_billing"]
 
 
+def test_agno_team_tools_are_injected_by_the_framework() -> None:
+    from agenticreq.data import InjectedTools
+
+    for name in ("delegate_task_to_member", "delegate_task_to_members"):
+        assert InjectedTools().framework_of(name) == "agno"
+
+
 def test_dspy_native_transport_is_named_not_a_failure() -> None:
     table = load_yaml("providers.yml")
     res = DiscoverResult(entry="agent:run", llm_misses=["127.0.0.1:9"])
