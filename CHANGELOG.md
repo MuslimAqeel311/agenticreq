@@ -5,6 +5,10 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 
 ## [Unreleased]
 
+## [0.1.0a3] - 2026-11-15
+
+Checked end to end on a multi-agent project in each of 15 frameworks ([docs/verification.md](docs/verification.md)).
+
 ### Fixed
 - Approval gates of LangChain (HumanInTheLoopMiddleware), LlamaIndex (wait_for_event), Strands (hook events),
   Claude Agent SDK (PreToolUse hooks) and Haystack (ConfirmationHook), and project helpers that ask a person, are
