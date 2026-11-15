@@ -298,6 +298,9 @@ class ObservedAgent(BaseModel):
     #: "installed" (analyzer's environment), "requirements" (pin in requirements/pyproject)
     framework_version_source: str | None = None
     frameworks: list[str] = Field(default_factory=list)
+    #: frameworks only the captured run saw loaded (not imported by the scanned code): installed next to the agent, or
+    #: pulled in by another library. They never say what the agent is built with, so no rule treats one as the project's
+    runtime_only_frameworks: list[str] = Field(default_factory=list)
     #: how `framework` was found: "import" (the code imports it: static-proven), "runtime" (it was loaded in a
     #: captured run: observed), "dependency" (only declared in requirements/pyproject: a guess)
     framework_source: str | None = None

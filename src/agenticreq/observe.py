@@ -73,6 +73,7 @@ def _apply_runtime_frameworks(obs: ObservedAgent, runtime_versions: dict[str, st
         if m in FRAMEWORKS and FRAMEWORKS[m][0] not in GENERIC
     ]
     if loaded:
+        obs.runtime_only_frameworks = sorted({f for f in loaded if f not in obs.frameworks})
         obs.frameworks = sorted({*obs.frameworks, *loaded}, key=lambda f: _PRIORITY.index(f) if f in _PRIORITY else 99)
         if (
             obs.framework not in loaded and obs.framework_source != "import"

@@ -16,6 +16,10 @@ All notable changes to this project. Format: [Keep a Changelog](https://keepacha
 - Limits read from class attributes, helper call sites and per-agent factories; several values or a run-time value go
   to sign-off. Gemini / ADK upper-case schema types. `$` inside spec text is kept.
 
+- A framework that was only installed or loaded next to the agent (seen in the mock run, not imported by the code) is
+  no longer taken as the project's own: a LangGraph project is not credited with the OpenAI Agents SDK's default
+  tracing, so its `audit_log` gap is reported whichever environment ran the mock run.
+
 ### Added
 - `--entry` on `audit` / `check`, and `include:` / `exclude:` in `spec.yml`; the report header names what was scanned.
 - `--spec` resolves against the folder being checked.

@@ -368,7 +368,10 @@ def audit_hook(ctx: CheckContext) -> Iterable[Finding]:
         # the SDK exports its default traces to the OpenAI platform only: with a model from another provider
         # (Groq, a custom OpenAI-compatible client) nothing is recorded unless a processor is configured
         other_provider = any(m.provider for m in obs.models)
-        if "openai-agents" in obs.frameworks and not sites and not other_provider:
+        # only a project that is built with the OpenAI Agents SDK gets its default tracing: the SDK merely being
+        # installed or loaded in the run (another framework's project, a library that imports it) says nothing
+        uses_sdk = "openai-agents" in obs.frameworks and "openai-agents" not in obs.runtime_only_frameworks
+        if uses_sdk and not sites and not other_provider:
             ctx.pass_(
                 PassedCheck(
                     rule_id="AS-225",
